@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Exvius · Browser Play</title><link rel="stylesheet" href="/style.css"></head>
+<body><header><div><span class="eyebrow">EXVIUS OFFLINE</span><h1>Your adventure, on this screen.</h1></div><span id="connection" role="status">Ready</span></header>
+<main>
+<section class="panel" id="login-panel"><h2>Connect to your Mac</h2><p>Enter the access code shown in the browser launcher on your Mac.</p><form id="login"><label for="code">Access code</label><input id="code" inputmode="numeric" autocomplete="off" pattern="[0-9]{8}" maxlength="8" required><button>Connect</button></form></section>
+<section class="panel controls"><button id="play" disabled>Play</button><button id="disconnect" disabled>Disconnect</button><button id="back" disabled>← Back</button><button id="fullscreen">Full screen</button><label>Volume <input id="volume" type="range" min="0" max="1" value="0.8" step="0.05"></label></section>
+<p id="message" role="status">The game runs on your Mac. One player can connect at a time.</p>
+<div id="stage"><canvas id="screen" tabindex="0" aria-label="Android game screen; use touch or mouse to play"></canvas></div>
+<form id="text-entry" class="controls"><label for="text">Game text</label><input id="text" maxlength="256" autocomplete="off" placeholder="Type here for Android text fields"><button id="send-text" disabled>Send</button></form>
+<p class="hint">Tap or drag to play. Escape goes back. Disconnect leaves Android and your save on the Mac.</p>
+</main><script type="module" src="/app.js"></script></body></html>
