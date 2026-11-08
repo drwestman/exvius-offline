@@ -206,7 +206,7 @@ class Emulator:
     def adb(self, serial, *args, timeout=60):
         return self.run([self.paths.adb, '-s', serial, *args], env=self.paths.env, timeout=timeout)
 
-    def boot(self):
+    def boot(self, *, headless=False):
         p = self.paths
         if not p.emulator.is_file() or not p.adb.is_file():
             raise SetupError('Android tools are missing. Run the setup command first.')
@@ -232,7 +232,8 @@ class Emulator:
             p.logs.mkdir(parents=True, exist_ok=True)
             with (p.logs / 'emulator.log').open('a') as log:
                 process = subprocess.Popen([str(p.emulator), '-avd', AVD, '-port', str(port),
-                                            '-gpu', 'auto', '-no-snapshot'], env=p.env,
+                                            '-gpu', 'auto', '-no-snapshot',
+                                            *(['-no-window'] if headless else [])], env=p.env,
                                            stdin=subprocess.DEVNULL, stdout=log, stderr=log,
                                            start_new_session=True)
             print(f'Starting {AVD}; log: {p.logs / "emulator.log"}', flush=True)
@@ -313,6 +314,8 @@ class Emulator:
         self.require_host()
         with self.lock():
             serial = self.boot()
+            if 'headless' in self.adb(serial, 'emu', 'avd', 'windowtype'):
+                raise SetupError('Android is running headless. Use browser mode, or stop then launch for a visible window.')
             if 'versionCode=' not in self.adb(serial, 'shell', 'dumpsys', 'package', PACKAGE):
                 raise SetupError('Exvius is not installed. Run the setup command first.')
             output = self.adb(serial, 'shell', 'am', 'start', '-W', '-n', ACTIVITY)
@@ -327,6 +330,8 @@ class Emulator:
             print('The emulator is not installed.')
             return
         with self.lock():
+            from browser_launcher import BrowserLauncher
+            BrowserLauncher(self).stop()
             serial = self.target()
             if serial:
                 self.adb(serial, 'emu', 'kill')
@@ -337,12 +342,38 @@ class Emulator:
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('doctor', 'setup', 'launch', 'stop'))
+    parser.add_argument('command', choices=('doctor', 'setup', 'launch', 'stop', 'setup-browser', 'browser', 'browser-status', 'browser-stop'))
     parser.add_argument('--sdk-root', type=Path, default=Path.home() / 'Library/Android/sdk')
+    parser.add_argument('--lan', action='store_true', help='Enable browser access on the home network')
+    parser.add_argument('--lan-address', help='Private LAN IPv4 address (implies --lan)')
+    parser.add_argument('--port', type=int, default=8443)
+    parser.add_argument('--browser', action='store_true', help='Include browser prerequisite checks in doctor')
+    parser.add_argument('--no-open', action='store_true', help='Print browser addresses without opening a tab')
     args = parser.parse_args(argv)
     controller = Emulator(Locations(Path.home(), args.sdk_root.expanduser().resolve()))
     try:
-        outcome = getattr(controller, args.command)()
+        from browser_launcher import BrowserLauncher
+        browser = BrowserLauncher(controller)
+        lan = args.lan or bool(args.lan_address)
+        if args.command == 'setup-browser':
+            with controller.lock():
+                browser.setup(lan, args.lan_address)
+            outcome = True
+        elif args.command == 'browser':
+            outcome = browser.launch(lan, args.lan_address, args.port, not args.no_open)
+        elif args.command == 'browser-status':
+            status = browser.query()
+            print(json.dumps({k: v for k, v in (status or {'phase': 'stopped'}).items() if k != 'code'}, indent=2))
+            outcome = True
+        elif args.command == 'browser-stop':
+            with controller.lock():
+                browser.stop()
+            print('Browser streaming stopped. Android and its save are retained.')
+            outcome = True
+        else:
+            outcome = getattr(controller, args.command)()
+            if args.command == 'doctor' and args.browser:
+                outcome = browser.doctor() and outcome
         return 1 if outcome is False else 0
     except (SetupError, OSError, ValueError, subprocess.SubprocessError) as error:
         print(f'Exvius: {error}', file=sys.stderr)

@@ -115,6 +115,24 @@ existing AVD is left untouched. The launcher waits up to five minutes for Androi
 and uses cold boots with persistent userdata, avoiding large Quick Boot snapshots.
 Intel Macs and importing existing phone saves are outside this helper's scope.
 
+## Play through a browser on your home network
+
+The Mac can stream its existing Android game to Chrome/Edge or Safari, including
+iPhone and iPad, while keeping the same Android installation and save.
+
+After the Android setup above, run:
+
+```sh
+python3 source/exvius/macos_emulator.py setup-browser --lan
+python3 source/exvius/macos_emulator.py browser --lan
+```
+
+Subsequent launches can use **Play Exvius in Browser.command**. The terminal prints
+the LAN URL and access code. Other devices need a one-time local certificate trust
+step; see [browser setup, controls, and troubleshooting](source/browser_bridge/README.md).
+One player can connect at a time. Keep the Mac awake and the launcher terminal open.
+Disconnecting preserves Android and its save; Ctrl+C stops streaming.
+
 ## Updates and offline play
 
 When you open the app online, it checks GitHub for updates. If there is nothing new, it uses the files already on your phone. If you are offline, it skips the check and uses your downloaded data.

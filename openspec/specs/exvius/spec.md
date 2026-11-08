@@ -31633,3 +31633,31 @@ The system SHALL the block shall expose all values in the totals mapping.
 ### Calls into
 - `content` → `exbonusText`
 - `server` → `eventArt`, `raidArchive`, `colosseumNames`
+
+## Mac Emulator Browser Integration
+
+### Requirement: SupportPersistentHeadlessBoot
+
+The macOS launcher SHALL preserve its visible boot default and SHALL support a
+headless browser boot that reuses the existing named AVD and persistent userdata.
+It SHALL NOT restart an already-running AVD to change display modes.
+
+- **Implementation**: `Emulator::source/exvius/macos_emulator.py`
+
+#### Scenario: BrowserBootPreservesUserdata
+- **GIVEN** the configured Exvius AVD is stopped
+- **WHEN** browser mode requests a headless boot
+- **THEN** the launcher adds -no-window without wiping or recreating the AVD.
+
+### Requirement: StopBrowserBeforeAndroid
+
+The existing stop command SHALL stop the owned browser bridge before shutting
+down the verified Exvius emulator. Other devices SHALL remain untouched.
+Browser capture and authentication behavior are specified in browser-streaming.
+
+- **Implementation**: `Emulator::source/exvius/macos_emulator.py`
+
+#### Scenario: StopOwnedBridgeAndDevice
+- **GIVEN** the browser bridge and named emulator are running
+- **WHEN** the existing stop command is invoked
+- **THEN** bridge shutdown precedes the emulator shutdown command.
