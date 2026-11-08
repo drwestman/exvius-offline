@@ -1,0 +1,25 @@
+schema: spec-driven
+openlore:
+  version: 1.2.0
+  generatedAt: 2026-11-07T20:24:20.650Z
+  domains:
+    - battle
+    - gacha
+    - event
+    - server
+    - exvius
+    - harness
+    - memorial
+    - server-app
+  confidence: 0.9
+context: |-
+  # User-provided context (preserved)
+  # Auto-detected by openlore
+  Tech stack: Rust
+  Architecture: Layered (routes → controllers → services → repositories)
+  Domains: battle, gacha, event, quest, colosseum, server
+
+  # Auto-detected by openlore
+  Tech stack: Rust
+  Architecture: Layered (routes → controllers → services → repositories)
+  Domains: battle, gacha, event, quest, colosseum, server

@@ -61,6 +61,60 @@ If the download stops, reopen the app to continue. You do not have to choose or 
 
 To update, install the newer APK over the existing app. **Uninstalling the app can erase your save.**
 
+## Play on an Apple silicon Mac
+
+You can run the Android APK in a persistent Android 13 virtual phone. This setup uses
+Homebrew, Python 3.9 or newer, and the official Android tools; it does not rebuild the APK.
+Allow **40 GiB free on your Mac** for Android, the game data, and working space.
+
+From this repository, run the one-time setup:
+
+```sh
+python3 source/exvius/macos_emulator.py setup
+```
+
+Setup installs ARM64 OpenJDK 25 and Android command-line tools through Homebrew,
+accepts the required Android SDK licenses, and creates `Exvius_Offline_API_33` with
+4 CPU cores, 4 GB RAM, and 32 GiB internal storage. It downloads the APK described by
+`release/app.json`, verifies its size and SHA-256, and installs it into that device.
+Install [Homebrew](https://brew.sh) first if it is not already installed.
+
+Then double-click **`Play Exvius.command`** in Finder, or run:
+
+```sh
+python3 source/exvius/macos_emulator.py launch
+```
+
+Keep the Mac awake and online while the app completes its approximately **14.65 GB**
+first-run download. The app resumes interrupted downloads when reopened. Once the
+game opens, you can play offline. Closing the launcher terminal leaves the emulator
+running; close the emulator window or use the stop command below to shut it down.
+
+```sh
+python3 source/exvius/macos_emulator.py doctor  # inspect without changing anything
+python3 source/exvius/macos_emulator.py stop    # stop only the Exvius virtual phone
+```
+
+The scripts work without changes to your shell configuration. SDK packages live in
+`~/Library/Android/sdk` (override with `--sdk-root PATH` on each command). The virtual
+phone and its saves live in `~/.android/avd/Exvius_Offline_API_33.avd`, or under your
+existing `ANDROID_AVD_HOME`. Verified APKs are cached in
+`~/Library/Caches/exvius-offline/emulator`. Startup logs are in
+`~/Library/Logs/Exvius Offline/emulator.log`.
+
+**Keep the AVD and its userdata to keep your save.** Setup safely reuses the existing
+device and installs updates over the app; daily launching never reinstalls it. An
+already-installed newer version is retained. Do not uninstall the app, clear its
+storage, delete the AVD, or use Android's Wipe Data action. To back up the whole
+virtual phone, stop it first and copy its `.avd` directory and matching `.ini` file
+from `~/.android/avd` (or your configured AVD directory).
+
+If startup fails, inspect the log and rerun `doctor`. Fix missing tools with `setup`.
+A signing mismatch needs the correctly signed APK, not an uninstall. An incompatible
+existing AVD is left untouched. The launcher waits up to five minutes for Android
+and uses cold boots with persistent userdata, avoiding large Quick Boot snapshots.
+Intel Macs and importing existing phone saves are outside this helper's scope.
+
 ## Updates and offline play
 
 When you open the app online, it checks GitHub for updates. If there is nothing new, it uses the files already on your phone. If you are offline, it skips the check and uses your downloaded data.
