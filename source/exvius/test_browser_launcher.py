@@ -77,32 +77,63 @@ class BrowserLauncherBehavior(unittest.TestCase):
 
     def test_given_game_already_visible_when_ensuring_visibility_then_no_activity_commands(self):
         activity = ('topResumedActivity=ActivityRecord{abc u0 '
-                    + app.PACKAGE + '/com.square_enix.android_googleplay.FFBEWW.Lapis} t14}')
+                    + app.PACKAGE + '/com.square_enix.android_googleplay.FFBEWW.Lapis t14}')
         with patch.object(self.emulator, 'adb', side_effect=['versionCode=9065', activity]) as adb:
             self.browser.ensure_game_visible('emulator-5556')
         self.assertFalse(any('am' in call.args for call in adb.call_args_list))
 
     def test_given_background_game_task_when_ensuring_visibility_then_focus_existing_task(self):
-        activities = ('topResumedActivity=ActivityRecord{abc u0 com.android.launcher/.Launcher} t12}\n'
+        activities = ('topResumedActivity=ActivityRecord{abc u0 com.android.launcher/.Launcher t12}\n'
                       '    * Hist  #0: ActivityRecord{def u0 ' + app.PACKAGE
-                      + '/com.square_enix.android_googleplay.FFBEWW.Lapis} t14}')
+                      + '/com.square_enix.android_googleplay.FFBEWW.Lapis t14}')
         with patch.object(self.emulator, 'adb', side_effect=[
                 'versionCode=9065', activities, 'Setting focus to task 14']) as adb:
             self.browser.ensure_game_visible('emulator-5556')
         self.assertEqual(adb.call_args.args,
                          ('emulator-5556', 'shell', 'am', 'task', 'focus', '14'))
+        self.assertEqual(adb.call_count, 3)
+        self.assertTrue(all(call.args[0] == 'emulator-5556' for call in adb.call_args_list))
         self.assertFalse(any('start' in call.args for call in adb.call_args_list))
 
-    def test_given_background_process_without_game_task_when_ensuring_visibility_then_start_launcher(self):
-        home = 'topResumedActivity=ActivityRecord{abc u0 com.android.launcher/.Launcher} t12}'
-        with patch.object(self.emulator, 'adb', side_effect=[
-                'versionCode=9065', home, 'Status: ok']) as adb:
-            self.browser.ensure_game_visible('emulator-5556')
-        self.assertEqual(adb.call_args.args,
-                         ('emulator-5556', 'shell', 'am', 'start', '-W',
-                          '-a', 'android.intent.action.MAIN',
-                          '-c', 'android.intent.category.LAUNCHER',
-                          '-f', '0x10000000', '-n', app.ACTIVITY))
+    def test_given_no_valid_game_task_when_ensuring_visibility_then_start_launcher(self):
+        home = 'topResumedActivity=ActivityRecord{abc u0 com.android.launcher/.Launcher t12}'
+        game_record = ('    * Hist  #0: ActivityRecord{def u0 ' + app.PACKAGE
+                       + '/com.square_enix.android_googleplay.FFBEWW.Lapis')
+        records = {
+            'no activity': '',
+            'unrelated package': '    * Hist  #0: ActivityRecord{def u0 com.android.settings/.Settings t14}',
+            'similar package': '    * Hist  #0: ActivityRecord{def u0 ' + app.PACKAGE + '.extra/.Lapis t14}',
+            'task outside record': game_record + '} t14}',
+            'missing task': game_record + '}',
+            'task across newline': game_record + '\n t14}',
+        }
+        for case, record in records.items():
+            with self.subTest(case=case):
+                with patch.object(self.emulator, 'adb', side_effect=[
+                        'versionCode=9065', home + '\n' + record, 'Status: ok']) as adb:
+                    self.browser.ensure_game_visible('emulator-5556')
+                self.assertEqual(adb.call_args.args,
+                                 ('emulator-5556', 'shell', 'am', 'start', '-W',
+                                  '-a', 'android.intent.action.MAIN',
+                                  '-c', 'android.intent.category.LAUNCHER',
+                                  '-f', '0x10000000', '-n', app.ACTIVITY))
+                self.assertEqual(adb.call_count, 3)
+                self.assertFalse(any('focus' in call.args for call in adb.call_args_list))
+
+    def test_given_task_focus_failure_when_restoring_game_then_report_without_starting_activity(self):
+        activities = ('    * Hist  #0: ActivityRecord{def u0 ' + app.PACKAGE
+                      + '/com.square_enix.android_googleplay.FFBEWW.Lapis t14}')
+        for message in ('Error: task not found', 'Status: timeout'):
+            with self.subTest(message=message):
+                with patch.object(self.emulator, 'adb', side_effect=[
+                        'versionCode=9065', activities, message]) as adb:
+                    with self.assertRaises(ValueError) as error:
+                        self.browser.ensure_game_visible('emulator-5556')
+                self.assertEqual(str(error.exception), message)
+                self.assertEqual(adb.call_args.args,
+                                 ('emulator-5556', 'shell', 'am', 'task', 'focus', '14'))
+                self.assertEqual(adb.call_count, 3)
+                self.assertFalse(any('start' in call.args for call in adb.call_args_list))
 
     def test_given_activity_start_error_when_restoring_game_then_report_failure(self):
         with patch.object(self.emulator, 'adb', side_effect=[

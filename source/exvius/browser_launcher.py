@@ -191,7 +191,7 @@ class BrowserLauncher:
                      r'[^\n]*\s' + package + r'/', activities):
             return
         tasks = re.findall(r'(?m)^\s*\*\s*Hist\s+#\d+:\s*ActivityRecord\{[^}\n]*\s'
-                           + package + r'/[^}\n]*\}\s+t(\d+)\b', activities)
+                           + package + r'/[^}\n]*[ \t]+t(\d+)\b[^}\n]*\}', activities)
         if tasks:
             # Resume the existing activity/task instead of launching the downloader again.
             output = self.emulator.adb(serial, 'shell', 'am', 'task', 'focus', tasks[0])
