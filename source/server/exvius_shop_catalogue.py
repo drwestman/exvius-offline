@@ -10,13 +10,22 @@ from exvius_actions_shops import (_action, _feature, _grant, _int, _node, _pay,
                                   _reply, _require, _rewards, _rows, _store)
 from exvius_rewards import parse
 from ffbe_state import State
+from engine_profile import current_profile
 
 START = '2020-01-01 00:00:00'
 END = '2099-12-31 23:59:59'
 
 
-@lru_cache(maxsize=1)
 def catalogue():
+    raw = _catalogue()
+    if current_profile().name == 'ios-revival':
+        from revival_exchanges import policy
+        return policy(State.player.data if State.player else {}).filter_catalogue(raw)
+    return raw
+
+
+@lru_cache(maxsize=1)
+def _catalogue():
     # Fragment exchanges retain their original currency, quantity and limits.
     names = {}
     path = Path(TEXT_DIR) / 'F_TEXT_ITEM_NAME.ndjson'
@@ -83,6 +92,16 @@ def catalogue():
         for position, row in enumerate(shop['products']):
             product(940001000 + index * 1000 + position, did, row['reward'], row['price'],
                     row['limit'], (kind, currency), shop['reset_months'])
+    if current_profile().name == 'ios-revival':
+        from revival_exchanges import event_shops
+        for index, shop in enumerate(event_shops()):
+            did = 850002000 + index
+            kind, currency = shop['currency']
+            detail(did, shop['name'], kind, currency, shop.get('category', 4))
+            for position, row in enumerate(shop['products']):
+                pid = 950000000 + index * 1000 + position
+                product(pid, did, row['reward'], row['price'], row['limit'], (kind, str(currency)))
+                offers[str(pid)]['event_areas'] = list(shop['event_areas'])
     return details, products, offers
 
 
@@ -90,13 +109,29 @@ def receipt_key(pid, offer):
     if not offer['monthly']:
         return pid
     months = int(offer['monthly'])
+    if current_profile().name == 'ios-revival':
+        from replay_calendar import read_anchor
+        from engine_profile import IOS_REVIVAL
+        from revival_summons import clock
+        from zoneinfo import ZoneInfo
+        saved = read_anchor(State.player.data)
+        now = clock().astimezone(ZoneInfo((saved[1] if saved else IOS_REVIVAL.replay).timezone))
+        return pid + '/' + str((now.year * 12 + now.month - 1) // months)
     now = time.localtime()
     period = (now.tm_year * 12 + now.tm_mon - 1) // months
     return pid + '/' + str(period)
 
 
-@lru_cache(maxsize=1)
 def labels():
+    rows = _labels()
+    if current_profile().name == 'ios-revival':
+        offered = catalogue()[2]
+        return {pid: row for pid, row in rows.items() if pid in offered}
+    return rows
+
+
+@lru_cache(maxsize=1)
+def _labels():
     names = {}
     for kind, table in [(20, 'ITEM'), (23, 'IMPORTANT_ITEM'), (10, 'UNITS'), (27, 'VISION_CARD'),
                         (21, 'ITEM_EQUIP'), (22, 'MATERIA'), (60, 'RECIPE_BOOK')]:
@@ -105,7 +140,7 @@ def labels():
             row = json.loads(line)
             names[kind, row['key'].rsplit('_', 1)[-1]] = row['v'][0].strip()
     result = {}
-    for pid, offer in catalogue()[2].items():
+    for pid, offer in _catalogue()[2].items():
         texts = []
         for row in offer['rewards']:
             name = names[row['kind'], str(row['id'])]
@@ -131,8 +166,18 @@ def entry(spec, req):
     return out
 
 
-@_action
 def purchase(spec, req):
+    if current_profile().name == 'ios-revival':
+        spec = dict(spec or {})
+        spec.pop('4owH1uT2', None)  # A recorded success row must never survive a refused purchase.
+    return _purchase(spec, req)
+
+
+@_action
+def _purchase(spec, req):
+    if current_profile().name == 'ios-revival':
+        from replay_calendar import read_anchor
+        _require(read_anchor(State.player.data) is not None, 'iOS campaign is not initialized')
     node = _node(req, '4mrD6JuA') or {}
     pid = str(node.get('jPV7Xc4N', ''))
     offer = catalogue()[2].get(pid)

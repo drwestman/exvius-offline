@@ -87,7 +87,14 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
     if reply_id == user_info_id:
         from exvius_actions_shops import archived_store_schedules
         existing = {str(row.get('Z20mNDvL')): dict(row) for row in out.get('3VS1Bhmf', [])}
-        existing.update({row['Z20mNDvL']: dict(row) for row in archived_store_schedules()})
+        available = archived_store_schedules()
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            from exvius_actions_shops import _archived_store_schedules
+            known = {row['Z20mNDvL'] for row in _archived_store_schedules()}
+            opened = {row['Z20mNDvL'] for row in available}
+            existing = {key: row for key, row in existing.items() if key not in known or key in opened}
+        existing.update({row['Z20mNDvL']: dict(row) for row in available})
         out['3VS1Bhmf'] = list(existing.values())
     definitions, items = {}, {}
     for payload in list(State.replies.values()) + [out]:
@@ -803,20 +810,28 @@ def serve_switches(spec, reply_id=None):
     """
     if not isinstance(spec, dict):
         return spec
-    # Track an empty mission container for a fresh campaign. Never inherit the
-    # captured response's tutorial and first-stage completion flags.
-    if SWITCH_TYPE_MISSION not in State.player.switches:
-        State.player.switches[SWITCH_TYPE_MISSION] = set(SWITCH_BASE_INDICES)
-    # The offline event archive is available from Home. Use its original
-    # feature switch so the displayed Vortex button and native handler agree.
-    from player_state import _load_ndjson, switch_position
-    vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
-    unlock = switch_position(vortex.get('juA0Z4m7'))
-    if unlock:
-        State.player.grant_switch(*unlock)
+    from engine_profile import current_profile
+    if current_profile().name != 'ios-revival':
+        # Track an empty mission container for a fresh campaign. Never inherit the
+        # captured response's tutorial and first-stage completion flags.
+        if SWITCH_TYPE_MISSION not in State.player.switches:
+            State.player.switches[SWITCH_TYPE_MISSION] = set(SWITCH_BASE_INDICES)
+        # The offline event archive is available from Home. Use its original
+        # feature switch so the displayed Vortex button and native handler agree.
+        from player_state import _load_ndjson, switch_position
+        vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
+        unlock = switch_position(vortex.get('juA0Z4m7'))
+        if unlock:
+            State.player.grant_switch(*unlock)
+    switches = State.player.switches
+    if current_profile().name == 'ios-revival':
+        # Before initialization, project a fresh mission container without
+        # adopting captured completion flags or mutating the campaign.
+        switches = dict(switches)
+        switches.setdefault(SWITCH_TYPE_MISSION, set(SWITCH_BASE_INDICES))
     wanted = {}
-    for stype in list(State.player.switches):
-        c = _switch_container(spec, stype)
+    for stype in list(switches):
+        c = _switch_container(spec, stype, switches=switches)
         if c is not None:
             wanted[stype] = c
     # Only groups that ALREADY carry switch rows may be rewritten or receive a synthesised type.
@@ -2880,34 +2895,46 @@ def serve_event_gate(spec, reply_id):
     shipped tables. AUTHORED: the window, the tab (qnUhs32P, 1-BASED, 1 = Event), the 1/2 selector, and
     the art (reused from a shipped row so the client can resolve it -- see the config's collision note).
 
-    APPENDED, never replaced: the list is replace-on-read, so this rides only the carriers that already
-    serve it (EVENT_GATE_CARRIERS), and an area already present in the carrier's rows is left alone.
+    Legacy appends on the existing carriers and preserves their rows. iOS also removes closed archive
+    gates and bounds the selected gates to the saved rotation week.
     """
     from exvius_events import native_gate_dates
     spec = native_gate_dates(spec)
     if State.player is None or reply_id not in EVENT_GATE_CARRIERS:
         return spec
-    try:
-        policy = load_policy(DATA_ROOT, EVENT_GATE_AREAS)
-        archive_events = None
-        from exvius_events import policy_path
-        saved_policy = policy_path(DATA_ROOT)
-        if (os.environ.get('EXVIUS_EVENT_ARCHIVE') == '1' and
-                not (saved_policy is not None and saved_policy.exists())):
-            from event_archive import area_ids, events
-            archive_events = events()
-            policy = dict(policy, areas=area_ids(), permanent=True)
-    except (OSError, ValueError) as exc:
-        _note("event policy invalid; no extra gates served: " + str(exc))
-        return spec
+    from engine_profile import current_profile
+    revival = None
+    if current_profile().name == 'ios-revival':
+        from revival_events import plan
+        revival = plan(State.player.data)
+        archive_events = revival.events
+        policy = {'version': 1, 'areas': list(revival.areas), 'permanent': True}
+    else:
+        try:
+            policy = load_policy(DATA_ROOT, EVENT_GATE_AREAS)
+            archive_events = None
+            from exvius_events import policy_path
+            saved_policy = policy_path(DATA_ROOT)
+            if (os.environ.get('EXVIUS_EVENT_ARCHIVE') == '1' and
+                    not (saved_policy is not None and saved_policy.exists())):
+                from event_archive import area_ids, events
+                archive_events = events()
+                policy = dict(policy, areas=area_ids(), permanent=True)
+        except (OSError, ValueError) as exc:
+            _note("event policy invalid; no extra gates served: " + str(exc))
+            return spec
     facts = ([(row['area'], row['first_dungeon'], row['first_mission']) for row in archive_events]
              if archive_events is not None else _event_area_facts(policy["areas"]))
-    if not facts:
+    if not facts and revival is None:
         return spec
     spec = _as_spec(spec)
     rows = [dict(r) for r in (spec.get(EVENT_GATE_TAG) or []) if isinstance(r, dict)]
+    if revival is not None:
+        missions = {mid for event in archive_events for mid in event['missions']}
+        rows = [row for row in rows if str(row.get('uv60hgDW')) not in revival.known_areas or
+                (str(row.get('uv60hgDW')) in revival.areas and str(row.get('qo3PECw6')) in missions)]
     have = {str(r.get("uv60hgDW")) for r in rows}
-    gate_changed = False
+    gate_changed = revival is not None
     selected = {f[0] for f in facts}
     from exvius_raid_progress import personal_event
     raids = {area: personal_event(dungeon_id=dungeon) for area, dungeon, _mission in facts}
@@ -2973,9 +3000,13 @@ def serve_event_gate(spec, reply_id):
                 rows.append(dict(template, U9iHsau3=str(mission_row['U9iHsau3']), qo3PECw6=mid))
                 present_missions.add(mid)
                 added += 1
+    if revival is not None:
+        order = {str(row['area']): index for index, row in enumerate(archive_events)}
+        rows.sort(key=lambda row: order.get(str(row.get('uv60hgDW')), len(order)))
     if added or gate_changed:
         spec[EVENT_GATE_TAG] = rows
-    spec = serve_switches(apply_availability(spec, policy, resolved_areas=[f[0] for f in facts]))
+    spec = serve_switches(revival.gate_windows(spec) if revival is not None else
+                          apply_availability(spec, policy, resolved_areas=[f[0] for f in facts]))
     # GateMissionScene keeps the Rewards link only when its BannerMst has an
     # active BannerScheduleMst row. The master table itself contains no dates.
     reward_ids = {raid['reward_banner_id'] for raid in raids.values() if raid}

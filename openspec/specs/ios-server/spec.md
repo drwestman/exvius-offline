@@ -2,7 +2,7 @@
 
 ## Scope
 
-This specification covers the profile/calendar foundation, replay-aware summons,
+This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges,
 and hello-only native connectivity checkpoint of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
@@ -140,6 +140,79 @@ SHALL retain the replay cutoff. Legacy bundle definitions SHALL remain unchanged
 - Given a campaign has purchased one of the one-off SP ticket bundles
 - When the campaign reloads and the purchase is submitted again
 - Then it is rejected before charging or granting another ticket.
+
+### Requirement: SelectReplayVortexEvents
+
+The iOS Vortex and archive menu SHALL use the saved replay calendar and pinned
+event run/window metadata. Selection SHALL include the first-week 14-day lookback,
+historical reruns, holiday event years, ranked periods, and deterministic recurring
+and permanent dungeon rotations. Known closed captured gates SHALL be removed;
+selected gates SHALL use the actual weekly bounds. Queries SHALL not create state
+or download artwork. Additional authored campaigns SHALL remain closed until their
+battle/art content is prepared. Legacy archive behavior SHALL remain unchanged.
+
+#### Scenario: Project a new historical week
+
+- Given a captured response includes a future event and the campaign is in replay week zero
+- When the Vortex is projected
+- Then only eligible archive gates remain alongside unrelated gate rows
+- And the selected gates carry the current Eastern week's UTC bounds
+- And player data and save bytes remain unchanged.
+
+### Requirement: AuthorizeReplayEventEntry
+
+New iOS event entries SHALL revalidate eligibility before opening an attempt or
+spending stamina/orbs. A pending previously authorized attempt SHALL remain
+resumable after rollover and retain the canonical settlement/retry protections.
+An event command SHALL not initialize a missing replay anchor. Unrelated story
+missions SHALL retain their existing entry behavior.
+
+#### Scenario: Resume across rollover
+
+- Given an event battle began before rollover
+- When its pending resource load repeats after the event closes
+- Then the same attempt can resume without creating another attempt
+- And after settlement, another entry into the closed event is refused without save changes.
+
+### Requirement: ApplyReplayExchangeEligibility
+
+Custom exchange listings, labels, and purchases SHALL use current historical unit
+eligibility. Native medal and Trust Coin purchases SHALL enforce that eligibility
+before payment. A mixed batch containing an ineligible reward SHALL be refused
+atomically. Event exchanges SHALL remain available while their event is active or
+the campaign holds their currency. Summon-ticket exemptions SHALL not open future
+exchange rewards. Weekly rollovers and restarts SHALL preserve stock receipts;
+monthly resets SHALL use the campaign's recorded timezone. Refused purchases SHALL
+not return a recorded success row or initialize a campaign.
+
+#### Scenario: Reject an unreleased exchange reward
+
+- Given a client requests an unreleased unit with sufficient payment
+- When the encrypted exchange command executes
+- Then the purchase is refused before charging or granting
+- And the eligible listing, labels, and stock counts remain consistent.
+
+#### Scenario: Redeem leftover currency
+
+- Given an event has closed and its currency remains in the campaign
+- When exchanges are projected
+- Then that event's exchange remains available
+- And spending the last currency leaves the closed exchange unavailable.
+
+### Requirement: InitializeVortexSwitchesExplicitly
+
+Campaign initialization SHALL persist the mission-switch container and the Vortex
+unlock resolved from the shipped function/switch masters. An older initialized
+campaign missing those switches SHALL be upgraded atomically by initialization
+without replacing its replay anchor. Failed saves SHALL preserve the original
+campaign. Projections SHALL derive a fresh empty mission container without writing.
+
+#### Scenario: Backfill an older campaign
+
+- Given an existing replay anchor without the Vortex unlock
+- When initialization saves successfully
+- Then only the missing initialization facts are persisted and the anchor is unchanged
+- And repeated initialization does not save again.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

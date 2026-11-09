@@ -61,4 +61,17 @@ def doctor(config) -> dict:
 
 def rotation(config, *, now=None, weeks=1) -> dict:
     from revival_summons import rotation as summon_rotation
-    return summon_rotation(_saved(config) or {}, now if now is not None else datetime.now(timezone.utc), weeks)
+    from revival_events import plan
+    from revival_exchanges import policy
+    from replay_calendar import new_anchor
+    from engine_profile import IOS_REVIVAL
+    data = _saved(config) or {}
+    now = now if now is not None else datetime.now(timezone.utc)
+    result = summon_rotation(data, now, weeks)
+    selected = data if result['anchored'] else {
+        **data, 'ios_revival': {'version': 1, 'replay': new_anchor(now, IOS_REVIVAL.replay)}}
+    for window in result['windows']:
+        events = plan(selected, datetime.fromisoformat(window['starts']))
+        window['events'] = events.describe()
+        window['event_shops'] = policy(selected, events=events).describe()
+    return result

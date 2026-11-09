@@ -21,14 +21,25 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
     player = state.player
     if player is None:
         raise ValueError('A player must be loaded before campaign initialization.')
-    if read_anchor(player.data) is not None:
+    anchored = read_anchor(player.data) is not None
+    from player_state import _load_ndjson, switch_position
+    from ffbe_config import SWITCH_TYPE_MISSION, SWITCH_BASE_INDICES
+    vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
+    unlock = switch_position(vortex.get('juA0Z4m7'))
+    needs_container = SWITCH_TYPE_MISSION not in player.switches
+    needs_unlock = unlock is not None and unlock[1] not in player.switches.get(unlock[0], set())
+    if anchored and not needs_container and not needs_unlock:
         return False
     if player.mode != 'live':
         raise ValueError('iOS campaign initialization requires live persistence.')
     moment = now if now is not None else datetime.now(timezone.utc)
     candidate = copy.deepcopy(player)
-    candidate.data['ios_revival'] = {'version': 1, 'replay': new_anchor(moment, profile.replay),
-                                     'initialized_utc': moment.astimezone(timezone.utc).isoformat()}
+    if not anchored:
+        candidate.data['ios_revival'] = {'version': 1, 'replay': new_anchor(moment, profile.replay),
+                                         'initialized_utc': moment.astimezone(timezone.utc).isoformat()}
+    candidate.switches.setdefault(SWITCH_TYPE_MISSION, set(SWITCH_BASE_INDICES))
+    if unlock:
+        candidate.grant_switch(*unlock)
     candidate.data.setdefault('meta', {})['engine_profile'] = profile.name
     candidate.dirty = True
     if not candidate.save(str(state_file)):

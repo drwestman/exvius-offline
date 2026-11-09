@@ -152,3 +152,47 @@ private save and no network.
 followed by the remaining deals, friends, arena, rewards, and economy ports. The
 native service still hosts the accepted connection check; routing the complete
 game engine/assets to the iPhone and full gameplay acceptance remain pending.
+
+## Replay-aware events and exchanges checkpoint — November 9, 2026
+
+The next Stage 1 slice applies the campaign calendar to the existing playable
+Vortex archive and exchange commands, exclusively for `ios-revival`:
+
+- A read-only event policy uses the pinned run/window metadata, first-week 14-day
+  lookback, reruns, holiday catch-up years, ranked-event periods, and deterministic
+  recurring/permanent dungeon rotations. The Vortex and archive menu share it;
+  closed captured gates are removed and active gates use the real weekly bounds.
+- New event entry is checked before opening an attempt or spending stamina/orbs.
+  A pending battle can resume after rollover; completion keeps the existing
+  repeat/raid settlement protections. Settled attempts cannot reopen a closed event.
+- Exchange catalogues and labels exclude unreleased units and refresh across
+  rollover. Custom, native medal, and Trust Coin commands enforce eligibility before
+  payment. Event exchanges remain redeemable while their event is active or the
+  campaign holds its currency. Stock counters retain their IDs across rollover and
+  reload; monthly resets use the recorded campaign timezone.
+- Pinned Skeleton Key exchange definitions are included. The nine added campaigns
+  declared by `event_history.json`, including the Halloween Castle, remain closed
+  pending their separate authored battle/art content port. No query downloads art.
+- The real-data read-only check found that `serve_switches` implicitly granted the
+  Vortex unlock. iOS initialization now persists it and the initial mission-switch
+  container atomically. Older anchors can receive missing switches through the same
+  command without restarting history. Views project missing containers in memory.
+- `rotation --weeks 8` now lists actual events and event exchanges alongside summons.
+
+Validation: **18 event/exchange BDD checks, 42 existing iOS foundation/summon checks,
+48 legacy summon/event/repeat/raid checks, 65 shop-action checks, and 18 mode checks
+passed** (191 distinct checks). The new scenarios include encrypted requests,
+read-only projections, expired entries, pending resumes, persistent exchange stock,
+atomic mixed medal batches, Eastern monthly reset boundaries, and failed/successful
+Vortex-switch backfills. A comparison with the pinned fork agreed on all **201 weekly
+event selections** using the destination catalogue and pinned run/window metadata.
+The real prepared-data smoke test projected **18 events, 450 gate rows, and 1,901
+exchange products/labels**, then completed an encrypted 200-Lapis exchange purchase.
+It used a disposable private save, denied network access, and verified projection
+state/save immutability.
+
+**Stage 1 remains in progress.** Next are the remaining summon deals/guarantees and
+their exchange sources, followed by friends, arena, rewards, economy, and added
+authored content. Native gameplay routing, asset preparation/installation, and full
+iPhone gameplay acceptance remain pending; the native service is still the accepted
+connection check.

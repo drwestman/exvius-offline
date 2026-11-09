@@ -23,14 +23,25 @@ def events():
     return document()['events']
 
 
+def weekly_events(player=None, now=None):
+    from engine_profile import current_profile
+    if current_profile().name != 'ios-revival':
+        return events()
+    if player is None:
+        from ffbe_state import State
+        player = State.player
+    from revival_events import plan
+    return list(plan(player.data if player else {}, now).events)
+
+
 def area_ids():
     return [str(event['area']) for event in events()]
 
 
-def listings():
+def listings(rows=None):
     """One tile per published campaign, with every original area retained."""
     campaigns = {}
-    for row in events():
+    for row in events() if rows is None else rows:
         identity = (row.get('source_page'), row.get('banner_title'),
                     row.get('release'), row.get('group'))
         # Unidentified records must never collapse merely because fields are empty.
@@ -45,7 +56,8 @@ def menu(player, selection=''):
     if ':' in selection:
         return activate_mode(player, selection)
     members = defaultdict(list)
-    campaigns = listings()
+    available = weekly_events(player)
+    campaigns = listings(available)
     rows = [row for row, _aliases in campaigns]
     permanent = [str(row['area']) for row in rows if row['group'] == 'permanent']
     for row in rows:
@@ -67,7 +79,7 @@ def menu(player, selection=''):
     group = next((row for row in groups if row['id'] == selected), groups[0])
     from player_state import _load_ndjson
     missions = _load_ndjson('F_MISSION_MST.ndjson', 'qo3PECw6')
-    modes = {str(row['area']): row['native_mode'] for row in events() if row.get('native_mode')}
+    modes = {str(row['area']): row['native_mode'] for row in available if row.get('native_mode')}
     mode_dungeon_ids = sorted({str(m['U9iHsau3']) for m in missions.values()
                                if str(m.get('uv60hgDW')) in modes})
     dungeons = {str(m['U9iHsau3']): {'mode': modes[str(m['uv60hgDW'])], 'area': str(m['uv60hgDW'])}
@@ -76,9 +88,9 @@ def menu(player, selection=''):
     names = {}
     from exvius_fortuna import level_rewards
     cow = level_rewards()
-    dark = sorted((r for r in events() if r['name'] == 'Dark Visions'), key=lambda r: int(r['area']))
+    dark = sorted((r for r in available if r['name'] == 'Dark Visions'), key=lambda r: int(r['area']))
     numbered = {r['area']: n for n, r in enumerate(dark, 1)}
-    for row in events():
+    for row in available:
         candidates = [did for did in row['dungeons'] if did in dungeons]
         if not candidates:
             continue
@@ -104,6 +116,11 @@ def activate_mode(player, selection):
     if (player is None or player.mode == 'frozen' or not rows or mode not in ('tfa', 'parade')
             or any(allowed.get(str(r.get('uv60hgDW'))) != mode for r in rows)):
         raise ValueError('Unknown event season')
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_events import can_enter
+        if not all(can_enter(player.data, row) for row in rows):
+            raise ValueError('This event is outside the current replay rotation.')
     area = str(rows[0]['uv60hgDW'])
     feature = deepcopy(player.data.get('exvius_' + mode, {}))
     if feature.get('active'):

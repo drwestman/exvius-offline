@@ -97,7 +97,8 @@ on November 9, 2026. Ordinary browsing and gameplay remain separate device check
 release sets, holiday selections, and ticket-pool exemptions for each calendar
 window (`to` is exclusive). Before initialization it reports `anchored: false`
 and uses one provisional anchor for the whole preview; viewing it does not begin
-the campaign. Events and shops do not yet follow this calendar.
+the campaign. Each window also lists the selected Vortex events and available
+event exchanges, including exchanges retained for leftover currency.
 
 The engine uses the same policy for encrypted summon lists, purchases, and drop
 rates. Historical pools include units released before the window's end, with the
@@ -108,6 +109,27 @@ before spending, so a banner opened before rollover cannot be pulled afterward.
 Unavailable guaranteed rewards also decline without spending. The two SP ticket
 bundles are one-off purchases on iOS; the plain SP ticket bundle is removed, while
 already held plain SP tickets retain the historical pool limit.
+
+Vortex events follow that calendar too: the first week includes the preceding
+14 days, reruns retain their own run dates, ranked events use their original
+periods, and recurring dungeons rotate deterministically. Closed captured gates
+are removed and selected gates carry the actual weekly bounds. New entries after
+rollover are refused before creating an attempt or spending stamina/orbs. A pending
+battle can still resume and settle through the existing reward/raid ledger.
+
+Exchange listings and purchases share historical unit eligibility. This includes
+the native medal and Trust Coin purchase paths. Event exchanges stay open while
+the event is active or the campaign holds its currency; spending the last currency
+after the event closes removes the exchange. Stock receipts persist across weekly
+rollovers and restarts; monthly resets follow the recorded campaign timezone.
+Summon-ticket full-pool exemptions do not apply to exchange rewards.
+
+The Vortex unlock and initial mission-switch container are now persisted by the
+explicit campaign-initialization command. Initializing an older iOS campaign
+backfills missing switches atomically while preserving its replay anchor. Views
+do not create them. The nine additional campaigns declared by the pinned history
+metadata remain closed until their battle/art content port; no art is downloaded
+by previews or gameplay projections.
 
 This is engine integration; the running native service still serves the connection
 check. Full iPhone gameplay hosting and the remaining revival ports are pending.
@@ -189,6 +211,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_connectivity.py
 .venv-ios/bin/python -B source/exvius/test_ios_server.py
 .venv-ios/bin/python -B source/exvius/test_ios_summons.py
+.venv-ios/bin/python -B source/exvius/test_ios_events.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -201,6 +224,10 @@ symlink rejection. Valid resource and art fallbacks are also checked.
 The summon suite covers historical/holiday selection, pool and guarantee limits,
 one-off ticket purchases across reloads, Eastern weekly limits, read-only summon
 views, and encrypted catalogue/purchase requests before and after rollover.
+The event/exchange suite also covers event run windows, pending-battle resumes,
+expired entry rejection, atomic native medal batches, persistent exchange stock,
+monthly reset boundaries, and atomic Vortex-unlock backfills. The legacy event,
+repeat, raid, mode, and shop checks retain their existing contracts.
 Legacy summon and shop checks can also use the prepared data without loading a save:
 
 ```sh

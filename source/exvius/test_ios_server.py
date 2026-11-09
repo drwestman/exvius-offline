@@ -131,8 +131,11 @@ class IosServerBehavior(unittest.TestCase):
         masters = self.root / 'fixture-masters'
         masters.mkdir(exist_ok=True)
         self.write_masters(masters)
-        with patch.object(player_state, 'MST_DIR', str(masters)), patch.object(player_state, '_TABLES', {}):
-            player = player_state.PlayerState.load('', slot='campaign')
+        # Initialization commands also read masters; keep the real synthetic
+        # catalogue bound until this scenario finishes.
+        self.enterContext(patch.object(player_state, 'MST_DIR', str(masters)))
+        self.enterContext(patch.object(player_state, '_TABLES', {}))
+        player = player_state.PlayerState.load('', slot='campaign')
         return SimpleNamespace(player=player, state_dirty=False)
 
     def write_masters(self, masters):

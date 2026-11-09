@@ -536,6 +536,13 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
     `validate_pipeline()` enforces at import. The audit that established them is
     `docs/notes/server_code_review_2nd_opinion.md` §C1.
     """
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival' and str(reply_id) == 'jnw49dUq' and mid:
+        from player_state import mission_row
+        from revival_events import can_enter
+        if not can_enter(State.player.data if State.player else {}, mission_row(mid), resume=True):
+            st._note(f'Replay event closed: mission {mid}; no load or mutation')
+            return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
     for step in PIPELINE:
         ctx.spec = step.call(ctx)

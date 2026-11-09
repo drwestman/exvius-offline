@@ -103,6 +103,14 @@ def _feature(name):
     return State.player.data.get("exvius_" + name, {})
 
 
+def _replay_policy():
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_exchanges import policy
+        return policy(State.player.data)
+    return None
+
+
 def _store(name, value):
     State.player.data["exvius_" + name] = value
     State.player.dirty = True
@@ -401,7 +409,12 @@ def exchange_shop(spec, req):
 @_action
 def shop_exchange_list(spec, req):
     out = _reply(spec)
-    out["E4r63ukD"] = list(_service_master('trust_exchange').values())
+    rows = list(_service_master('trust_exchange').values())
+    replay = _replay_policy()
+    if replay is not None:
+        from exvius_rewards import parse
+        rows = [row for row in rows if replay.rewards_allowed(parse(row['7iJpH5zZ']))]
+    out["E4r63ukD"] = rows
     out["ibt8aCI7"] = [{"d9gKeu0T": str(i), "0zBQbX4N": str(count)}
                         for i, count in _feature("exchange").get("counts", {}).items()]
     return out
@@ -442,6 +455,9 @@ def shop_exchange_item(spec, req):
         rewards.append(reward)
     for reward in rewards:
         reward['count'] *= quantity
+    replay = _replay_policy()
+    if replay is not None:
+        _require(replay.anchored and replay.rewards_allowed(rewards), 'reward is outside the current replay')
     _rewards(rewards)
     _pay([{'kind': 23, 'id': 300, 'count': _int(product['Yc8Mm6y7'], 1) * quantity}])
     _grant(rewards)
@@ -525,8 +541,40 @@ def variable_store_check(spec, req):
     return out
 
 
-@lru_cache(maxsize=1)
 def archived_store_schedules():
+    rows = _archived_store_schedules()
+    replay = _replay_policy()
+    if replay is None:
+        return rows
+    return [dict(row) for row in rows if _replay_merchant_open(replay, row['Z20mNDvL'])]
+
+
+@lru_cache(maxsize=1)
+def _replay_stores():
+    stores = {}
+    for row in _rows('F_GACHA_STORE_MST'):
+        stores.setdefault(str(row['Z20mNDvL']), {'banners': set(), 'products': []})['banners'].add(str(row['X1IuZnj2']))
+    medals = _table('F_MEDAL_EXCHANGE_MST', 'S21FT3L8')
+    for row in _rows('F_STORE_ITEM_MST'):
+        store = stores.get(str(row['Z20mNDvL']))
+        product = medals.get(str(row.get('6uIYE15X')))
+        if store is not None and row.get('YWF08vZS') == '50' and product:
+            store['products'].append(product)
+    return stores
+
+
+def _replay_merchant_open(replay, store):
+    stock = _replay_stores().get(str(store))
+    if stock is None:
+        return True
+    currencies = {str(row['ak2dhKm3']) for row in stock['products']}
+    rewards = [[{'kind': entry.split(':')[0], 'id': entry.split(':')[1]}
+                for entry in row['7iJpH5zZ'].split(',') if entry] for row in stock['products']]
+    return replay.merchant_open(stock['banners'], currencies) and any(replay.rewards_allowed(row) for row in rewards)
+
+
+@lru_cache(maxsize=1)
+def _archived_store_schedules():
     """Open recovered exchange stock through the native store schedule format."""
     products = {}
     medals = _table('F_MEDAL_EXCHANGE_MST', 'S21FT3L8')
@@ -553,6 +601,9 @@ def archived_store_schedules():
 def medal_exchange(spec, req):
     n = _node(req, "2d6RAkvh") or {}
     store = str(_int(n.get("Z20mNDvL"), 1))
+    replay = _replay_policy()
+    if replay is not None:
+        _require(replay.anchored and _replay_merchant_open(replay, store), 'exchange merchant is closed')
     _require(_table("F_TOWN_STORE_MST", "Z20mNDvL").get(store, {}).get("kaG4xf3I") == "5",
              "unknown medal merchant")
     available = {str(r["6uIYE15X"]) for r in _rows("F_STORE_ITEM_MST")
@@ -590,6 +641,8 @@ def medal_exchange(spec, req):
             rewards.append(reward)
         counts[iid] = bought + quantity
     _require(seen and rewards, "empty medal purchase")
+    if replay is not None:
+        _require(replay.rewards_allowed(rewards), 'reward is outside the current replay')
     _rewards(rewards)
     player = State.player
     before, dirty = deepcopy(player.data), player.dirty

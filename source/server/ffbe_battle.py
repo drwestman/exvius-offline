@@ -1277,7 +1277,7 @@ def _set_switch_bit(container: str, index: int) -> str:
         chars.append("0")
     chars[k] = "0123456789abcdef"[int(chars[k], 16) | (8 >> rem)]
     return "".join(chars)
-def _switch_container(spec, stype: str) -> str | None:
+def _switch_container(spec, stype: str, *, switches: dict | None = None) -> str | None:
     """The container to serve for ONE switch type, from tracked state, at the width that reply already uses.
 
     Returns None when we track nothing for `stype`, which is what keeps an unknown type (the huge `9000`
@@ -1289,9 +1289,10 @@ def _switch_container(spec, stype: str) -> str | None:
     # still has bit 117 (10001100, mission 1110100's clear flag) set. The client then believed the opening
     # was already cleared and dropped straight to the world map. `SWITCH_BASE_INDICES=0` masked it because
     # a one-element set is truthy. Found 2026-09-20.
-    if stype not in State.player.switches:
+    switches = State.player.switches if switches is None else switches
+    if stype not in switches:
         return None
-    tracked = State.player.switches[stype]
+    tracked = switches[stype]
     width = SWITCH_CONTAINER_MIN
     for rows in spec.values() if isinstance(spec, dict) else ():
         if not isinstance(rows, list):

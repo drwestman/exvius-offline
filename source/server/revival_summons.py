@@ -225,6 +225,7 @@ class SummonPlan:
     sets: tuple
     by_id: dict
     holiday: str | None
+    holiday_sets: dict
 
     @property
     def ids(self):
@@ -328,7 +329,28 @@ def plan(data, now=None, *, banners=None, families=None):
         if picked:
             shown = name
             chosen = picked + [entry for entry in chosen if entry[0] not in {key for key, _ids in picked}]
-    return SummonPlan(calendar['anchored'], window, finished, tuple(fixed), tuple(chosen), by_id, shown)
+    return SummonPlan(calendar['anchored'], window, finished, tuple(fixed), tuple(chosen), by_id, shown, holidays)
+
+
+def event_context(data, now=None, event_keys=None, *, selected=None):
+    """The pinned Vortex holiday calendar includes years with events but no summon set."""
+    now = now if now is not None else clock()
+    current = selected if selected is not None else plan(data, now)
+    anchor, settings = read_anchor(data) or (rotation_week(now).number, IOS_REVIVAL.replay)
+    week = rotation_week(now, settings)
+    held = {key for entries in current.holiday_sets.values() for key, _ids in entries}
+    dates = [date.fromisoformat(key) for key, _ids in current.sets if key not in held and not key.startswith('undated-')]
+    holiday, years = None, set()
+    occurrence = _holiday_this_week(week.starts, week.ends)
+    if occurrence:
+        name, day, slot = occurrence
+        keys = sorted({key for key, _ids in current.holiday_sets.get(name, [])} |
+                      set((event_keys or {}).get(name, [])))
+        if keys:
+            holiday = name
+            years = {key[:4] for key, _ids in current.sets if key in keys} if current.finished else \
+                set(_holiday_years([(key, []) for key in keys], name, day, slot, anchor, settings))
+    return {'summons': current, 'week': week, 'dates': dates, 'holiday': holiday, 'years': years}
 
 
 def authorize_pull(data, banner):

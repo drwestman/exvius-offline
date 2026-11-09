@@ -173,14 +173,18 @@ import ffbe_crypto as crypto
 from ffbe_config import GACHA_TAG, GACHA_MST_TAG, GACHA_SCHEDULE_TAG
 from player_state import expand_pool
 endpoints = json.loads((Path(sys.argv[2]) / 'endpoints.json').read_text())['by_class']
-def request(name, payload=None):
+def request(name, payload=None, *, allow_empty=False):
     endpoint = endpoints[name]
     key = crypto.key16(endpoint['encode_key'])
     envelope = {'TEAYk6R1': {'z5hB3P01': endpoint['request_id'], 'ytHoz4E2': '1', '9K0Pzcpd': '1167'},
                 't7n6cVWf': {'qrVcDe48': crypto.cbc_encrypt(key, json.dumps(payload or {}).encode(), double_pad=True)}}
     response = LocalGame.request(engine, 'POST', endpoint['url'], json.dumps(envelope))
     assert response.status == 200, (response.status, response.body)
-    raw = crypto.cbc_decrypt(key, json.loads(response.body)['t7n6cVWf']['qrVcDe48'])
+    encoded = json.loads(response.body)['t7n6cVWf']['qrVcDe48']
+    if not encoded:
+        assert allow_empty, response.body
+        return None
+    raw = crypto.cbc_decrypt(key, encoded)
     if raw and 1 <= raw[-1] <= 16 and raw[-raw[-1]:] == bytes([raw[-1]]) * raw[-1]:
         raw = raw[:-raw[-1]]
     return json.loads(raw)
