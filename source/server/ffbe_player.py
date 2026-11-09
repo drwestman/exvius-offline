@@ -41,7 +41,12 @@ def _global_bundles():
     if not _GLOBAL_BUNDLES:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'global_bundles.json')
         with open(path, encoding='utf-8') as fh:
-            _GLOBAL_BUNDLES.extend(json.load(fh)['bundles'])
+            rows = json.load(fh)['bundles']
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            from revival_summons import ticket_bundles
+            rows = ticket_bundles(rows)
+        _GLOBAL_BUNDLES.extend(rows)
     return _GLOBAL_BUNDLES
 
 

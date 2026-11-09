@@ -28,6 +28,8 @@ import sys
 import tempfile
 import time
 
+from engine_profile import current_profile
+
 import data_paths   # the data-root contract (`FFBE_DATA` / `--data`); see its docstring
 
 # With no data root these are exactly the checkout-relative paths this module always used.
@@ -1139,6 +1141,9 @@ def ticket_by_id(ticket_id) -> tuple | None:
 def gacha_period(banner):
     """Calendar bounds used by both purchase limits and the native used-count row."""
     from datetime import date, timedelta
+    if banner.get('weekly_limit') and banner.get('_replay_window'):
+        window = banner['_replay_window']
+        return window['from'], window['from'][:10], window['to'][:10]
     today = date.fromtimestamp(time.time())
     if banner.get('weekly_limit'):
         start = today - timedelta(days=today.weekday())
@@ -1155,8 +1160,16 @@ def expand_pool(banner: dict) -> list:
     (split equally) and the non-featured take the remainder. This keeps `gacha_authored.json` small and the
     pool real -- the unit catalogue is shipped data."""
     pool = banner.get("pool")
+    is_revival = current_profile().name == 'ios-revival'
+    if is_revival:
+        if '_replay_pool' not in banner:
+            raise ValueError('An iOS summon pool requires its replay policy context.')
+        from revival_summons import unit_allowed
+        allowed = lambda uid: unit_allowed(banner, uid)
+    else:
+        allowed = lambda uid: True
     if isinstance(pool, list):
-        return _only_named(pool)
+        return _only_named([entry for entry in pool if allowed(entry['unit_id'])] if is_revival else pool)
     roots = unit_roots_by_rarity()
     # Retail summons (Lapis, tickets) never drew the 9xxxxxxxx fusion/material units (moogles, pots):
     # those come from the Friend Point summon and events. Only a friend-point banner keeps them.
@@ -1180,6 +1193,7 @@ def expand_pool(banner: dict) -> list:
                                                           if keep_materials or not u.startswith("9")])]
         # A featured unit drawn at its own rarity (an NV unit is not a base 5★ root) still belongs here.
         units += [u for u in (str(x) for x in (tier.get("featured") or [])) if u not in units]
+        units = [u for u in units if allowed(u)]
         if not units:
             continue
         featured = [u for u in (str(x) for x in (tier.get("featured") or [])) if u in units]
@@ -1201,6 +1215,12 @@ def expand_pool(banner: dict) -> list:
                     else tier.get("rarity")
                 out.append({"unit_id": u, "rarity": rarity, "rate": per})
     return _only_named(out)
+
+
+def summon_subpool(banner: dict, pool) -> list:
+    """Guaranteed slots inherit the iOS cutoff; legacy retains its original pool context."""
+    definition = dict(banner, pool=pool) if current_profile().name == 'ios-revival' else {'pool': pool}
+    return expand_pool(definition)
 
 
 def team_level_mst(level) -> dict | None:
@@ -4102,6 +4122,11 @@ class PlayerState:
         return self.data.setdefault("gacha", {}).setdefault("user_banners", {}).setdefault(
             str(banner_id), {"term_exe_count": 0, "total_exe_count": 0})
 
+    def banner_counts(self, banner_id) -> dict:
+        """Read-only summon projection; viewing a new iOS banner never initializes its counters."""
+        return dict(self.data.get('gacha', {}).get('user_banners', {}).get(
+            str(banner_id), {'term_exe_count': 0, 'total_exe_count': 0}))
+
     def gacha_step(self, banner) -> int:
         """The current 0-based step index for a step-up banner. SERVER state (`gacha_banner_types.md` §7):
         `UserGachaStepInfo` is `{gachaId, stepNum}` and the request carries no step, so this is ours."""
@@ -4143,6 +4168,11 @@ class PlayerState:
         """
         if self.mode == "frozen":
             return None
+        if current_profile().name == 'ios-revival':
+            from revival_summons import authorize_pull
+            banner = authorize_pull(self.data, banner)
+            if banner is None:
+                return None  # Includes stale requests after rollover, before any charge or reward.
         repeats = max(1, int(repeats))
         state_id = str(banner.get('state_id', banner['id']))
         banner_counts = self.data.get('gacha', {}).get('user_banners', {}).get(state_id, {})
@@ -4178,6 +4208,10 @@ class PlayerState:
         interval = int(milestone.get('every', 0))
         if interval > 0 and (int(banner_counts.get('total_exe_count', 0)) + 1) % interval == 0:
             bonus_rewards.extend(copy.deepcopy(milestone['rewards']))
+        if current_profile().name == 'ios-revival':
+            from revival_summons import reward_allowed
+            if any(not reward_allowed(banner, reward) for reward in bonus_rewards):
+                return None
         if any(not self._can_credit(reward) for reward in bonus_rewards):
             print('    gacha refused: printed bonus reward cannot be granted', flush=True)
             return None
@@ -4185,6 +4219,8 @@ class PlayerState:
         bonus_before, bonus_dirty = (copy.deepcopy(self.data), self.dirty) if bonus_rewards or reward_pool else (None, None)
         if reward_pool:
             pool = copy.deepcopy(reward_pool)
+            if current_profile().name == 'ios-revival':
+                pool = [entry for entry in pool if reward_allowed(banner, entry)]
         else:
             effective = dict(banner)
             if isinstance(step.get("pool"), (dict, list)):
@@ -4227,6 +4263,15 @@ class PlayerState:
         if ticket_only:
             draws *= ticket_count
         guarantee = step.get("guarantee") or (offer or {}).get("guarantee") or banner.get("guarantee") or {}
+        if current_profile().name == 'ios-revival':
+            from revival_summons import unit_allowed
+            if guarantee.get('unit_id') and not unit_allowed(banner, guarantee['unit_id']):
+                return None
+            if guarantee.get('any_of'):
+                choices = [uid for uid in guarantee['any_of'] if unit_allowed(banner, uid)]
+                if not choices:
+                    return None
+                guarantee = dict(guarantee, any_of=choices)
         # An explicit count represents the printed guaranteed slots, not one
         # fallback award for the entire multi-summon. Validate before charging.
         guaranteed_count = int(guarantee.get('count', 1))
@@ -4234,7 +4279,7 @@ class PlayerState:
             return None  # Mixed item pools have their own explicit published weights.
         guaranteed_pool = [e for e in pool if int(e.get('rarity') or 0) >= int(guarantee.get('rarity') or 0)]
         if guarantee.get('pool') is not None:
-            guaranteed_pool = [e for e in expand_pool({'pool': guarantee['pool']})
+            guaranteed_pool = [e for e in summon_subpool(banner, guarantee['pool'])
                                if int(e.get('rarity') or 0) >= int(guarantee.get('rarity') or 0)]
         if (guaranteed_count < 1 or guaranteed_count > draws or
                 (guarantee.get('rarity') is not None and not guaranteed_pool)):
@@ -4243,7 +4288,7 @@ class PlayerState:
         extra_slots = []
         for slot in step.get('guarantee_slots', banner.get('guarantee_slots', [])):
             count = int(slot.get('count', 1))
-            candidates = expand_pool({'pool': slot['pool']})
+            candidates = summon_subpool(banner, slot['pool'])
             if count < 1 or not candidates:
                 return None
             extra_slots.append((count, candidates))
@@ -4452,10 +4497,11 @@ class PlayerState:
         rows = []
         today = time.strftime("%Y-%m-%d")
         daily = (self.data.get("gacha") or {}).get("daily") or {}
+        counts = self.banner_counts if current_profile().name == 'ios-revival' else self.banner_state
         for b in banners or []:
             state_id = str(b.get('state_id', b['id']))
             if b.get('steps'):
-                from ffbe_gacha import _served_start, SERVED_END
+                from ffbe_gacha import _served_start, _served_end
                 laps = int(self.data['gacha'].get('completed_laps', {}).get(state_id, 0))
                 current = self.gacha_step(b)
                 window = (b.get('schedule') or {}).get('window') or {}
@@ -4463,20 +4509,22 @@ class PlayerState:
                     count = laps + int(index < current)
                     rows.append({'X1IuZnj2': str(b['id']),
                         'nqzG3b2v': str(int(b['id']) * 10 + index + 1),
-                        'Lqenh7d2': _served_start(b, window), 'u7dM3XwK': SERVED_END,
+                        'Lqenh7d2': _served_start(b, window), 'u7dM3XwK': _served_end(b),
                         '08MuyfqD': str(count), 'L4QmV0Nz': str(count)})
                 continue
             if b.get("daily_limit") or b.get('weekly_limit'):
                 # Today's row for a once-a-day offer: the term is today, the count today's pulls.
                 used = daily.get(state_id) or {}
                 period, first, last = gacha_period(b)
+                bounds = b.get('_replay_window') if b.get('weekly_limit') else None
                 rows.append({"X1IuZnj2": str(b["id"]), "nqzG3b2v": str(b.get("detail_id", "")),
-                             "Lqenh7d2": first + " 00:00:00", "u7dM3XwK": last + " 23:59:59",
+                             "Lqenh7d2": bounds['from'] if bounds else first + " 00:00:00",
+                             "u7dM3XwK": bounds['to'] if bounds else last + " 23:59:59",
                              "08MuyfqD": str(int(used.get("count") or 0) if used.get("date") == period else 0),
-                             "L4QmV0Nz": str(self.banner_state(state_id)["total_exe_count"])})
+                             "L4QmV0Nz": str(counts(state_id)["total_exe_count"])})
                 continue
-            from ffbe_gacha import _served_start, SERVED_END   # the same never-ending window the schedule serves
-            st = self.banner_state(state_id)
+            from ffbe_gacha import _served_start, _served_end   # the same window the schedule serves
+            st = counts(state_id)
             window = (b.get("schedule") or {}).get("window") or {}
             current_detail = str(b.get('detail_id', ''))
             if b.get('boxes'):
@@ -4484,7 +4532,7 @@ class PlayerState:
                 current_detail = detail_id(self, b)
             rows.append({"X1IuZnj2": str(b["id"]), "nqzG3b2v": current_detail,
                          "Lqenh7d2": _served_start(b, window),
-                         "u7dM3XwK": SERVED_END,
+                         "u7dM3XwK": _served_end(b),
                          "08MuyfqD": str(st["term_exe_count"]),
                          "L4QmV0Nz": str(st["total_exe_count"])})
         return rows

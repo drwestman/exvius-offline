@@ -5,7 +5,7 @@ import json
 import sys
 
 from engine_profile import REVIVAL_COMMIT
-from replay_calendar import preview, read_anchor
+from replay_calendar import read_anchor
 from ios_server.runtime import read_service
 
 
@@ -60,4 +60,5 @@ def doctor(config) -> dict:
 
 
 def rotation(config, *, now=None, weeks=1) -> dict:
-    return preview(_saved(config) or {}, now if now is not None else datetime.now(timezone.utc), weeks)
+    from revival_summons import rotation as summon_rotation
+    return summon_rotation(_saved(config) or {}, now if now is not None else datetime.now(timezone.utc), weeks)

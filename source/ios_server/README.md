@@ -93,9 +93,24 @@ the iPhone. Manual DNS applies to this Wi-Fi network, not cellular service.
 Physical iPhone reachability and warning-free HTTPS were confirmed by the user
 on November 9, 2026. Ordinary browsing and gameplay remain separate device checks.
 
-`rotation` currently previews calendar windows, with `to` exclusive. It does not
-select banners, events, or shops. Before initialization it reports
-`anchored: false`; previewing does not begin the campaign.
+`rotation --weeks 8` previews the actual iOS summon catalogue: permanent banners,
+release sets, holiday selections, and ticket-pool exemptions for each calendar
+window (`to` is exclusive). Before initialization it reports `anchored: false`
+and uses one provisional anchor for the whole preview; viewing it does not begin
+the campaign. Events and shops do not yet follow this calendar.
+
+The engine uses the same policy for encrypted summon lists, purchases, and drop
+rates. Historical pools include units released before the window's end, with the
+pinned fork's featured-holiday and one-off-ticket exceptions. NV permanent
+summons appear at the NV era. After history ends, a deterministic weekly shuffle
+selects one special and two featured release sets. Purchases recheck eligibility
+before spending, so a banner opened before rollover cannot be pulled afterward.
+Unavailable guaranteed rewards also decline without spending. The two SP ticket
+bundles are one-off purchases on iOS; the plain SP ticket bundle is removed, while
+already held plain SP tickets retain the historical pool limit.
+
+This is engine integration; the running native service still serves the connection
+check. Full iPhone gameplay hosting and the remaining revival ports are pending.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -173,6 +188,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 ```sh
 .venv-ios/bin/python -B source/exvius/test_ios_connectivity.py
 .venv-ios/bin/python -B source/exvius/test_ios_server.py
+.venv-ios/bin/python -B source/exvius/test_ios_summons.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -181,6 +197,16 @@ encrypted initialization, restart/retry persistence, write failure, canonical
 corruption preservation, both data layouts, instance-lock conflicts and cleanup,
 read-only diagnostics, DST transitions, cache behavior, and CDN traversal and
 symlink rejection. Valid resource and art fallbacks are also checked.
+
+The summon suite covers historical/holiday selection, pool and guarantee limits,
+one-off ticket purchases across reloads, Eastern weekly limits, read-only summon
+views, and encrypted catalogue/purchase requests before and after rollover.
+Legacy summon and shop checks can also use the prepared data without loading a save:
+
+```sh
+FFBE_DATA=source/out/browser-data PYTHONPATH=source/server:source/exvius .venv-ios/bin/python -B -m unittest test_summon_transactions
+FFBE_DATA=source/out/browser-data PYTHONPATH=source/server .venv-ios/bin/python -B source/exvius/test_actions_shops.py
+```
 
 The connectivity suite uses temporary loopback listeners, disposable certificates
 and a fixture upstream. It requires permission to bind sockets; a restricted

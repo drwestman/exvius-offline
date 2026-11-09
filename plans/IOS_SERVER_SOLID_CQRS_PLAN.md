@@ -113,3 +113,42 @@ The page refresh exposed a stop/restart race: the control socket could close
 before the final listener and instance lock were released. Stop now waits for
 the lock as well, with a regression exercising delayed listener cleanup and an
 immediate restart. All **27 connectivity tests** pass after this fix.
+
+## Replay-aware summons checkpoint — November 9, 2026
+
+The next Stage 1 slice implements the pinned replay selection rules against the
+existing canonical summon catalogue, exclusively for `ios-revival`:
+
+- One read-only policy selects historical Global release sets, permanent summons,
+  holiday catch-up years, NV-era gates, dated permanent periods, and the deterministic
+  weekly rotation after history ends. It uses the campaign's saved settings and anchor.
+- `rotation --weeks 8` now lists actual banner names/IDs, release sets, holidays,
+  and full-pool ticket exceptions. An uninitialized preview uses one provisional
+  anchor across all weeks and creates no state.
+- Encrypted catalogue requests, drop-rate pages, and purchase commands share the
+  policy. Purchases revalidate after rollover before spending. Unit-release metadata
+  is copied unchanged from the pinned commit; unavailable units are removed before
+  tier rates are distributed, including nested guaranteed pools. Unfulfillable
+  forced/bonus rewards, finite boxes, and select purchases decline without spending.
+- Summon projections no longer initialize iOS banner counters. Weekly iOS limits
+  use the saved Eastern rotation bounds. Legacy catalogue, counters, and transaction
+  behavior retain their existing paths.
+- The two full-pool SP ticket exceptions carry their required one-purchase bundle
+  limits on iOS, and the cheap plain SP ticket bundle is removed. Other shop/economy
+  changes remain for the later port.
+
+Validation: **18 replay-summon BDD checks, 24 foundation checks, 22 existing summon
+transaction checks, and 65 existing shop-action checks passed** (129 distinct checks).
+The new checks include real encrypted catalogue/purchase requests with synthetic
+masters, stale requests preserving save bytes, read-only projections, nested
+guarantees, finite boxes, select summons, and bundle retries after reload. A separate
+comparison against the pinned fork agreed on all **201 weekly banner selections**
+using the destination catalogue, including holidays, NV transition, and post-history
+rotation. An encrypted smoke test with `source/out/browser-data` listed eight active
+banners and completed a Noctis-banner pull for 500 Lapis using only a disposable
+private save and no network.
+
+**Stage 1 remains in progress.** Next are replay-aware events and exchange shops,
+followed by the remaining deals, friends, arena, rewards, and economy ports. The
+native service still hosts the accepted connection check; routing the complete
+game engine/assets to the iPhone and full gameplay acceptance remain pending.

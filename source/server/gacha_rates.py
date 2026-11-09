@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from data_paths import TEXT_DIR
+from revival_summons import reward_allowed, unit_allowed
 
 
 @lru_cache(maxsize=1)
@@ -52,7 +53,7 @@ def _table(pool, mixed=False):
 
 def page(banner_id):
     from ffbe_gacha import all_banners
-    from player_state import expand_pool
+    from player_state import expand_pool, summon_subpool
     banner = next((b for b in all_banners() if str(b['id']) == str(banner_id)), None)
     if banner is None:
         return None
@@ -68,7 +69,7 @@ def page(banner_id):
         choices = _mst('F_GACHA_SELECT_UNIT_MST.ndjson', '3HriTp6B')
         body += '<table><thead><tr><th>Selectable unit</th><th>Select tickets</th></tr></thead><tbody>' + ''.join(
             '<tr><td>' + escape(unit_name(iid)) + '</td><td>' + row['e4mG8jTc'] + '</td></tr>'
-            for iid, row in choices.items()) + '</tbody></table>'
+            for iid, row in choices.items() if unit_allowed(banner, iid)) + '</tbody></table>'
     offers = banner.get('steps') or [banner]
     if not banner.get('steps') and banner.get('secondary_offer'):
         offers = [banner, banner['secondary_offer']]
@@ -101,22 +102,25 @@ def page(banner_id):
         if 'pool' in offer:
             definition['pool'] = offer['pool']
         pool = banner.get('reward_pool') or expand_pool(definition)
+        if banner.get('reward_pool'):
+            pool = [row for row in pool if reward_allowed(banner, row)]
         body += _table(pool, bool(banner.get('reward_pool')))
         guarantee = offer.get('guarantee', banner.get('guarantee', {}))
         if guarantee:
             count = int(guarantee.get('count', 1))
             if guarantee.get('rarity'):
                 body += '<p>' + str(count) + ' guaranteed reward(s) of rarity ' + str(guarantee['rarity']) + ' or higher.</p>'
-                restricted = expand_pool({'pool': guarantee['pool']}) if guarantee.get('pool') else pool
+                restricted = summon_subpool(definition, guarantee['pool']) if guarantee.get('pool') else pool
                 restricted = [r for r in restricted if int(r.get('rarity', 0)) >= int(guarantee['rarity'])]
                 body += '<h3>Guaranteed slot rates</h3>' + _table(restricted)
-            if guarantee.get('unit_id'):
+            if guarantee.get('unit_id') and unit_allowed(definition, guarantee['unit_id']):
                 from ffbe_gacha import unit_name
                 body += '<p>Guaranteed unit: ' + escape(unit_name(guarantee['unit_id'])) + '.</p>'
         bonuses = offer.get('bonus_rewards', banner.get('bonus_rewards', []))
         for slot in offer.get('guarantee_slots', banner.get('guarantee_slots', [])):
             body += '<h3>' + str(slot.get('count', 1)) + ' guaranteed ' + escape(slot.get('label', 'reward')) + '</h3>'
-            body += _table(expand_pool({'pool': slot['pool']}))
+            body += _table(summon_subpool(definition, slot['pool']))
+        bonuses = [reward for reward in bonuses if reward_allowed(definition, reward)]
         if bonuses:
             body += '<h3>Additional rewards</h3><ul>' + ''.join(
                 '<li>' + escape(reward_name(r)) + ' x' + str(r['count']) + '</li>' for r in bonuses) + '</ul>'
@@ -124,7 +128,8 @@ def page(banner_id):
         if choices:
             total = sum(float(choice['rate']) for choice in choices)
             body += '<h3>Bonus alternatives</h3><ul>' + ''.join('<li>' +
-                ', '.join(escape(reward_name(r)) + ' x' + str(r['count']) for r in choice['rewards']) +
+                ', '.join(escape(reward_name(r)) + ' x' + str(r['count']) for r in choice['rewards']
+                          if reward_allowed(definition, r)) +
                 ': %.2f%%</li>' % (float(choice['rate']) * 100 / total) for choice in choices) + '</ul>'
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'

@@ -18,6 +18,7 @@ import ffbe_state as st           # the REBOUND runtime state; see ffbe_state's 
 from ffbe_state import State, _note
 from player_state import COST_KINDS, cost_numeric_kind
 from data_paths import TEXT_DIR
+from engine_profile import current_profile
 
 
 __all__ = [
@@ -259,6 +260,10 @@ def all_banners() -> list:
     art/cost/pool is kept. Ids never collide (generated/catalogue 1-8xxxxx, community 9xxxxxx, curated low).
     `GACHA_CAMPAIGN` slices the result to standard + one campaign period (see `campaign_selection`);
     `GACHA_STANDARD=1` then merges the STANDARD families (`standard_banners()`) on top of that slice."""
+    if current_profile().name == 'ios-revival':
+        from revival_summons import plan
+        selected = plan(State.player.data if State.player else {})
+        return [with_global_buttons(b) for b in selected.banners()]
     by_id: dict[str, dict] = {}
     for b in catalogue_banners():
         by_id[str(b["id"])] = b
@@ -547,12 +552,18 @@ SERVED_END = "2099-12-31 23:59:59"
 
 
 def _served_start(b, window):
+    if b.get('_replay_window'):
+        return b['_replay_window']['from']
     release = (b.get("community") or {}).get("release") or b.get("release")
     try:
         year, month, day = ([int(part) for part in str(release).split("-")[:3]] + [1, 1])[:3]  # "2024-07" = 1 July
         return "%04d-%02d-%02d 00:00:00" % (year, month, day)
     except (TypeError, ValueError):
         return str(window.get("from", ""))
+
+
+def _served_end(b):
+    return (b.get('_replay_window') or {}).get('to', SERVED_END)
 
 
 def gacha_groups(banners: list) -> dict:
@@ -640,13 +651,16 @@ def gacha_groups(banners: list) -> dict:
                                                                  _gacha_art(schedule_art, "detail_banner"),
                                                                  schedule_art.get("detail_extra") or ()),
                       "VjJQ51uG": _served_start(b, window),
-                      "m8ivD4NX": SERVED_END,
+                      "m8ivD4NX": _served_end(b),
                       "N2PkD9sy": _served_start(b, window)})
         if not has_panel:
             continue
         panel.append({"LFoU0M3v": str(b.get("panel_id", "")), "X1IuZnj2": str(b["id"]),
                       "vFqVXP19": str(b.get("panel_group_id", ""))})
         pool_rows = b.get("pool") if isinstance(b.get("pool"), list) else []
+        if current_profile().name == 'ios-revival':
+            from revival_summons import unit_allowed
+            pool_rows = [entry for entry in pool_rows if unit_allowed(b, entry['unit_id'])]
         for i, entry in enumerate(pool_rows):
             pgroup.append({"vFqVXP19": str(b.get("panel_group_id", "")),
                            "q4m8aKr0": str(b.get("detail_id", "")),
@@ -671,7 +685,7 @@ def serve_gacha_info(spec, reply_id: str):
     if reply_id not in GACHA_INFO_REPLIES:
         return spec
     banners = all_banners()
-    if not banners:
+    if not banners and current_profile().name != 'ios-revival':
         return spec
     if os.environ.get('EXVIUS_SUMMON_ARCHIVE') == '1':
         from gacha_archive import visible_banners

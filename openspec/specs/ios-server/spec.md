@@ -2,8 +2,8 @@
 
 ## Scope
 
-This specification covers the profile/calendar foundation and hello-only native
-connectivity checkpoint of
+This specification covers the profile/calendar foundation, replay-aware summons,
+and hello-only native connectivity checkpoint of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -83,6 +83,63 @@ count. Recorded settings SHALL take precedence over future default changes.
 - Given a week containing an Eastern DST transition
 - When the next rotation boundary is computed
 - Then the boundary remains Sunday at 22:00 local time.
+
+### Requirement: ShareReplaySummonPolicy
+
+The iOS rotation query, encrypted summon catalogue, drop-rate pages, and summon
+commands SHALL use the same persisted calendar and banner selection policy.
+They SHALL select Global release sets in the historical window, retain permanent
+families with the pinned NV-era/dated-period gates, deduplicate calendar aliases,
+and use the pinned holiday catch-up and deterministic post-history rotation rules.
+The legacy catalogue SHALL retain its existing behavior.
+
+#### Scenario: Inspect future summons before initialization
+
+- Given no initialized iOS campaign
+- When rotation previews several weeks
+- Then all weeks use one provisional anchor and list their actual banner sets
+- And no campaign, directories, counters, or runtime state are created.
+
+#### Scenario: Submit an expired banner
+
+- Given a client opened a banner before the Eastern weekly boundary
+- When it submits the encrypted purchase request after the boundary
+- Then the current catalogue contains the next historical release sets
+- And the old request returns no award without changing balances, roster, or save bytes.
+
+### Requirement: LimitHistoricalSummonPools
+
+The iOS engine SHALL apply pinned unit-release metadata before distributing tier
+weights and to explicit, step, secondary, mixed-reward, and guaranteed-slot pools.
+Holiday featured units and one-off ticket pools SHALL retain the pinned exceptions.
+Unavailable forced rewards SHALL decline before spending. Finite boxes and select
+summons SHALL enforce the same eligibility. Missing/corrupt metadata SHALL fail
+visibly rather than open future pools. A summon command SHALL require an already
+initialized campaign; a query SHALL not initialize it.
+
+#### Scenario: Guarantee cannot be fulfilled
+
+- Given an eligible banner whose guaranteed reward is outside its allowed historical pool
+- When a pull is attempted
+- Then no currency or ticket is spent and no counter, box, or roster is changed.
+
+#### Scenario: Filter a tier without changing its printed share
+
+- Given a tier contains both released and future units
+- When its pool is expanded
+- Then future units are excluded before dividing that tier's rate among eligible units.
+
+### Requirement: PreserveOneOffTicketExceptions
+
+The iOS SP ticket bundles 990000108 and 990000109 SHALL be limited to one purchase
+per campaign. Bundle 990000107 SHALL be unavailable. Already held plain SP tickets
+SHALL retain the replay cutoff. Legacy bundle definitions SHALL remain unchanged.
+
+#### Scenario: Retry a one-off ticket purchase after restart
+
+- Given a campaign has purchased one of the one-off SP ticket bundles
+- When the campaign reloads and the purchase is submitted again
+- Then it is rejected before charging or granting another ticket.
 
 ### Requirement: SeparateViewCachingFromPreparation
 
