@@ -563,6 +563,11 @@ class Handler(BaseHTTPRequestHandler):
                     search_root = safe_join(root, sub)
                     hits = sorted(glob.glob(os.path.join(search_root, f"Ver*_{m.group(1)}.dat"))) \
                         if search_root else []
+                    # A token match is another path rewrite: an exact lookup may have
+                    # rejected this very symlink, so recheck every candidate before opening it.
+                    hits = [safe for hit in hits
+                            if (safe := safe_join(root, os.path.relpath(hit, root)))
+                            and os.path.isfile(safe)]
                     if len(hits) == 1:
                         data = open(hits[0], "rb").read()
                         how = "token-match " + os.path.basename(hits[0])
@@ -582,8 +587,16 @@ class Handler(BaseHTTPRequestHandler):
                 hit = area_art_index().get(os.path.basename(rel))
                 how_art = "area-art basename"
             if hit:
-                data = open(hit, "rb").read()
-                how = how_art + " (" + os.path.relpath(hit, os.path.dirname(WORK)) + ")"
+                # Validate against top-level content roots, not their indexed subdirectories:
+                # a subdirectory itself may be a symlink out of the permitted tree.
+                art_roots = (data_paths.ART_ROOT, data_paths.COMMUNITY_ART_ROOT,
+                             data_paths.GAME_FILES, data_paths.CDN_ROOT,
+                             os.path.join(HERE, "assets", "banner_art"))
+                safe_hit = next((safe for base in art_roots if base
+                                 and (safe := safe_join(base, os.path.relpath(hit, base)))), None)
+                if safe_hit and os.path.isfile(safe_hit):
+                    data = open(safe_hit, "rb").read()
+                    how = how_art + " (" + os.path.relpath(safe_hit, os.path.dirname(WORK)) + ")"
         n = len(data) if data is not None else 0
         verdict = f"200 {n} B ({how})" if data is not None else f"404 ({how or 'not in the CDN root'})"
         print(f"CDN  {self.command} {self.path}  host={self.headers.get('Host')}  "
@@ -845,6 +858,12 @@ def main(argv=None, *, in_process=False) -> int:
         if args.state and args.state != mode_slot:
             ap.error(f"--{mode_slot} means `--state {mode_slot}`, so --state {args.state!r} contradicts it")
         args.state = mode_slot
+    # Profile isolation also applies to explicit state CLI flags, before any load or write.
+    if args.state_file:
+        data_paths.validate_state_path(args.state_file)
+    for slot in (args.state, args.state_save):
+        if slot:
+            data_paths.validate_state_path(os.path.join(data_paths.STATE_DIR, f"{slot}.json"))
     if args.print_paths:
         # The GUI's contract: resolve everything, side-effect free. `--state-file` wins, then the slot
         # (`--state`/a mode), then the default state file; `state_dir` is that file's directory.

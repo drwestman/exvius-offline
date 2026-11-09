@@ -16,6 +16,7 @@ from exvius_actions import serve_actions
 from exvius_actions_shops import serve_feature_state
 from exvius_field_treasures import serve as serve_field_treasures
 from exvius_repeat import observe_load, repeat_challenge_rewards
+from revival_campaign import initialize_for_reply
 
 
 from ffbe_config import *          # noqa: F401,F403 -- constants; the table has no behaviour
@@ -151,6 +152,10 @@ def _repeat_run_report(ctx: _Ctx):
     ctx.plaintext = repeat_run_report(ctx.plaintext)
     return ctx.spec
 PIPELINE: tuple = (
+    Step("initialize_revival_campaign", lambda c: initialize_for_reply(
+        c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
+         "state", "State.player.ios_revival",
+         "explicit first-gameplay command; commit replay anchor before projecting any views"),
     Step("repeat_run_report", _repeat_run_report, "io", "ctx.plaintext",
          "FIRST: an autoplay continuation's running totals become this run's exp/gil/drops"),
     Step("serve_lapis_shop", lambda c: serve_lapis_shop(c.spec, c.reply_id, c.plaintext),
@@ -398,6 +403,8 @@ PIPELINE: tuple = (
          "io", "State.player.exvius_repeat.echo", "LAST: records the result values actually served"),
 )
 PIPELINE_EDGES: tuple = (
+    Edge("initialize_revival_campaign", "apply_to_reply", "State.player.ios_revival",
+         "persist the first-gameplay anchor before projecting the initialized campaign"),
     Edge("roll_drops", "apply_result_drops", "LAST_DROPS",
          "the roll is written at mission LOAD and read at mission END -- two different requests, so it has "
          "to survive in between"),
