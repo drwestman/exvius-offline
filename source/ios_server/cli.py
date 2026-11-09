@@ -3,23 +3,46 @@ import argparse
 from contextlib import redirect_stdout
 import json
 from pathlib import Path
+import signal
 import sys
+import time
 
 from ios_server.config import Configuration, default_data, default_root
 from ios_server.queries import doctor, rotation, status
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description='Exvius iOS server foundation (native hosting pending).')
-    parser.add_argument('command', choices=('doctor', 'status', 'rotation', 'init-campaign'))
+    parser = argparse.ArgumentParser(description='Exvius native iPhone connection check. Gameplay hosting is pending.')
+    parser.add_argument('command', choices=('setup', 'serve', 'stop', 'doctor', 'status', 'rotation', 'init-campaign'))
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
     parser.add_argument('--weeks', type=int, default=1, help='rotation preview length, 1 to 52')
+    parser.add_argument('--lan-address', help='Mac IPv4 address on the selected home network')
+    parser.add_argument('--upstream-dns', help='upstream IPv4 DNS resolver; defaults to the Mac resolver')
+    parser.add_argument('--dns-port', type=int, default=53)
+    parser.add_argument('--http-port', type=int, default=80)
+    parser.add_argument('--https-port', type=int, default=443)
     args = parser.parse_args(argv)
     try:
         config = Configuration(args.root, args.data, args.slot)
-        if args.command == 'init-campaign':
+        if args.command == 'setup':
+            from ios_server.certificates import CertificateStore
+            from ios_server.runtime import InstanceLock
+            with InstanceLock(config.root):
+                result = {'root': str(config.root), 'mode': 'connectivity-check',
+                          'certificates': CertificateStore(config.root).prepare(), 'next_command': 'serve'}
+        elif args.command == 'serve':
+            return serve(config, args)
+        elif args.command == 'stop':
+            from ios_server.runtime import instance_busy, read_service
+            result = read_service(config.root, stop=True) or {'stopping': False, 'hosting': 'stopped'}
+            deadline = time.monotonic() + 5
+            while read_service(config.root) is not None or instance_busy(config.root):
+                if time.monotonic() >= deadline:
+                    raise RuntimeError('The iOS runtime is still busy. Check its foreground terminal before restarting.')
+                time.sleep(.05)
+        elif args.command == 'init-campaign':
             from ios_server.engine import Engine
             engine = Engine(config)
             try:
@@ -36,3 +59,42 @@ def main(argv=None) -> int:
         result = {'error': str(exc)}
     print(json.dumps(result, indent=2))
     return int('error' in result or result.get('ok') is False)
+
+
+def serve(config, args):
+    """Command orchestration; diagnostics never call discovery or start this lifecycle."""
+    from ios_server.network import discover
+    from ios_server.runtime import read_service
+    from ios_server.service import Service
+    if sys.version_info[:2] != (3, 12):
+        raise RuntimeError('Run macos_ios_server.py setup to prepare the Python 3.12 iOS environment.')
+    for port in (args.dns_port, args.http_port, args.https_port):
+        if not 1 <= port <= 65535:
+            raise ValueError('Choose listener ports between 1 and 65535.')
+    network = discover(address=args.lan_address, upstream=args.upstream_dns,
+                       dns_port=args.dns_port, http_port=args.http_port, https_port=args.https_port)
+    current = read_service(config.root)
+    if current:
+        if json.dumps(current['configuration'], sort_keys=True) != json.dumps(network.configuration(), sort_keys=True):
+            raise RuntimeError('Another iOS configuration is already running. Stop it before changing addresses or ports.')
+        print(json.dumps(current, indent=2), flush=True)
+        return 0
+    service = Service(config.root, network)
+    previous = {}
+    try:
+        for name in (signal.SIGINT, signal.SIGTERM):
+            previous[name] = signal.signal(name, lambda *_: service.stop_event.set())
+        print(json.dumps(service.start(), indent=2), flush=True)
+        check_at = time.monotonic() + 60
+        while not service.stop_event.wait(.25):
+            if not service.snapshot()['ready']:
+                raise RuntimeError('A required connectivity listener stopped unexpectedly.')
+            if time.monotonic() >= check_at:
+                discover(address=network.address, upstream=network.upstream)
+                service.maintain()
+                check_at = time.monotonic() + 60
+        return 0
+    finally:
+        service.close()
+        for name, handler in previous.items():
+            signal.signal(name, handler)

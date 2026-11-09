@@ -3,13 +3,12 @@
 Configuration/queries do not import this module. Initialization takes the private
 instance lock before importing modules that bind paths or loading any campaign.
 """
-import errno
-import fcntl
 import importlib
 import os
 import sys
 
 from engine_profile import select_profile
+from ios_server.runtime import InstanceLock
 
 
 class Engine:
@@ -31,19 +30,8 @@ class Engine:
             raise RuntimeError('The engine paths are already bound; initialize iOS in a fresh process.')
         select_profile('ios-revival')
         env = self.config.engine_environment()
-        self.config.root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        lock_path = self.config.root / 'instance.lock'
-        if not lock_path.resolve().is_relative_to(self.config.root):
-            raise ValueError('The iOS instance lock escapes the private runtime root.')
-        lock = lock_path.open('a+b')
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            lock.close()
-            if exc.errno in (errno.EAGAIN, errno.EACCES):
-                raise RuntimeError('Another iOS instance owns this runtime; stop it before changing the campaign.') from None
-            raise
-        self._lock = lock
+        self._lock = InstanceLock(self.config.root)
+        self._lock.__enter__()
         try:
             os.environ.update(env)
             # These catalogue defaults are already supported by the canonical engine.
@@ -74,6 +62,6 @@ class Engine:
     def close(self):
         """Release resources; the bound engine still requires a fresh process to reconfigure."""
         if self._lock is not None:
-            self._lock.close()
+            self._lock.__exit__()
             self._lock = None
         self.server = None

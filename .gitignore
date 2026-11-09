@@ -20,6 +20,7 @@ local.properties
 
 # Local browser Python runtime
 .venv-browser/
+.venv-ios/
 
 # Browser streaming build/dependencies; private certificates live outside the repo.
 /source/browser_bridge/node_modules/

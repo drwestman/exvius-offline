@@ -2,9 +2,10 @@
 
 ## Scope
 
-This specification covers the first profile/calendar checkpoint of
-[plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md). It does not claim native hosting or complete
-revival gameplay support. Reference commit:
+This specification covers the profile/calendar foundation and hello-only native
+connectivity checkpoint of
+[plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
+Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
 ## Requirements
@@ -100,3 +101,49 @@ validate resolved paths against permitted content roots before opening files.
 - When the client requests that resource, including through a version fallback
 - Then the file is not returned
 - And valid public resources and artwork remain available.
+
+### Requirement: HostConnectivityWithoutGameplay
+
+The connectivity service SHALL serve public setup/profile and hello routes on
+HTTP and HTTPS, without importing the engine, creating saves, or serving game
+assets. Unknown paths SHALL return 404; gameplay POSTs SHALL return 503.
+
+#### Scenario: Reach the Mac from Safari
+
+- Given the iPhone uses the Mac for home-Wi-Fi DNS and trusts the installed CA
+- When Safari opens the canonical HTTPS hello URL
+- Then the page loads without a certificate warning
+- And a distinct secure-connection confirmation replaces the HTTP setup steps
+- And the page identifies the connection-check scope.
+
+### Requirement: ForwardOrdinaryDns
+
+UDP and TCP DNS SHALL answer game-domain IPv4 queries with the selected Mac
+address, return empty IPv6 game answers, and forward ordinary domains to the
+Mac’s upstream IPv4 resolver. Domain suffix matching SHALL respect label
+boundaries. Local upstream loops SHALL be rejected. Failed/mismatched upstream
+responses SHALL return SERVFAIL. Malformed requests SHALL not stop listeners.
+
+### Requirement: RestrictHomeNetworkAccess
+
+Public HTTP/HTTPS and DNS SHALL accept only loopback and the selected home
+subnet. Certificates and private keys SHALL not be served through filesystem
+paths. A private, user-owned control socket SHALL provide status and stop.
+
+### Requirement: BindBeforeReady
+
+The service SHALL bind TCP/UDP DNS, HTTP, HTTPS and control before announcing
+readiness. Failure SHALL close acquired listeners and release the instance lock.
+Matching startup commands SHALL reuse the instance; conflicts SHALL fail.
+SIGINT, SIGTERM and explicit stop SHALL close listeners and the control socket.
+Explicit stop SHALL wait for the runtime lock to be released before reporting
+completion, including when the control socket closes before other listeners.
+
+### Requirement: PreserveCertificateIdentity
+
+Setup SHALL prepare a dedicated checksum-locked Python 3.12 environment and
+private CA. The root identity and each leaf key/certificate pair SHALL be
+atomic files. Repeated setup and leaf renewal SHALL retain the CA and profile
+UUIDs. Root corruption/loss SHALL fail without implicit replacement. Leaf
+renewal SHALL reload TLS without requiring listener restart. Diagnostic queries
+SHALL not generate or repair certificates. Logs SHALL have bounded retention.

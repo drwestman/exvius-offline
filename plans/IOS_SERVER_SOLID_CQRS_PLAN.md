@@ -76,8 +76,40 @@ First checkpoint implemented:
 - iOS battle views derive cache misses in memory; disk cache creation requires an explicit preparation call. Legacy caching retains its behavior.
 - CDN token/artwork fallback containment fixes.
 
-Validation: **24 new iOS behavior checks and 59 existing checks passed** on Python 3.12.13. Existing checks comprise 30 Mac emulator/browser-launcher tests, 10 raid-ledger tests, and 19 event/repeat/title-menu tests. Synthetic masters were used for the latter and for the new engine integration checks because this checkout has no prepared game-data corpus. The full summon-transaction/gameplay suites, packaged Android build, and real iPhone acceptance have not been validated.
+Validation: **24 new iOS behavior checks and 59 existing checks passed** on Python 3.12.13. Existing checks comprise 30 Mac emulator/browser-launcher tests, 10 raid-ledger tests, and 19 event/repeat/title-menu tests. Synthetic masters were used for the latter and for the new engine integration checks. Prepared host data was subsequently found at `source/out/browser-data`; a disposable-save initialization/restart smoke test also passed against it. The full summon-transaction/gameplay suites, packaged Android build, and real iPhone acceptance have not been validated.
 
 **Stage 1 remains in progress.** Next, port the actual replay-filtered summons/events/shops and the remaining revival feature families behind the iOS profile, with explicit starting-friend and reward commands. Calendar preview currently reports date windows only. The locked Python environment, setup/data installer, asset transformations/preparation, DNS/TLS/HTTP hosting, lifecycle control socket, double-click launcher, retention, and device acceptance remain outstanding. Status explicitly reports that hosting is not implemented.
 
 See [the implementation notes](../source/ios_server/README.md) and [foundation BDD specification](../openspec/specs/ios-server/spec.md).
+
+## Connectivity checkpoint brought forward — November 9, 2026
+
+The user prioritized a minimal physical iPhone-to-Mac connection check before
+the remaining revival gameplay ports. This checkpoint implements:
+
+- `setup` for a dedicated Python 3.12 environment with checksum-locked dependencies and a private, stable CA/profile.
+- Foreground `serve` with home-network discovery, UDP/TCP DNS forwarding, HTTP/HTTPS hello routes, an exclusive instance lock, and a private status/stop socket. All required listeners bind before readiness. Matching startup is idempotent; conflicts fail and close acquired resources.
+- Read-only status and certificate diagnostics, explicit `stop`, SIGINT/SIGTERM cleanup, bounded logs, and leaf certificate renewal/reload without changing the trusted root.
+- Public certificate/profile and setup routes only. No engine imports, game data, saves, game asset serving, or gameplay mutation. The mode is explicitly `connectivity-check`.
+- A double-click [connection launcher](../Check%20Exvius%20iPhone%20Connection.command) and [iPhone setup instructions](../source/ios_server/README.md#on-the-iphone).
+
+Verification so far: **26 connectivity tests, 24 foundation tests, and 40 existing Mac launcher/raid-ledger tests passed**. Native tests use disposable roots and loopback sockets. Physical iPhone trust, firewall/Wi-Fi reachability, and the phone's ordinary browsing remain device acceptance checks. The full game's DNS/TLS transport will reuse this lifecycle after the remaining engine and asset compatibility work.
+
+Live Mac verification also passed on `192.168.86.40`: DNS over UDP and TCP 53,
+empty game AAAA answers, forwarding ordinary queries to `192.168.86.1`, profile
+download over HTTP 80, and hostname-validated HTTPS on 443 using the private CA.
+The real setup command was tested twice with a disposable root; CA/profile
+identity stayed stable. The persistent hello service was then prepared and
+started for iPhone acceptance. No campaign was created.
+
+The user subsequently confirmed that the HTTPS hello page loaded on the physical
+iPhone **without a certificate warning**. Home-Wi-Fi reachability, game-hostname
+DNS resolution, HTTPS, and the installed certificate's trust therefore passed
+this device checkpoint. Ordinary browsing from the iPhone and actual gameplay
+remain separate acceptance checks. The HTTPS confirmation view now differs
+clearly from the HTTP setup instructions.
+
+The page refresh exposed a stop/restart race: the control socket could close
+before the final listener and instance lock were released. Stop now waits for
+the lock as well, with a regression exercising delayed listener cleanup and an
+immediate restart. All **27 connectivity tests** pass after this fix.
