@@ -1,8 +1,9 @@
-"""Offline Arena battles against the configured local support units.
+"""Canonical offline Arena battles, with a profile-isolated iOS revival ladder.
 
 Wire layouts are from the GL 9 client. Scoring, streaks and medals follow
 https://exvius.fandom.com/wiki/Arena. Local rivals have a neutral 1.00 ratio.
-Offline weekly participation pays the lowest original ranking reward tier.
+Legacy weekly participation pays the lowest original ranking reward tier. iOS
+uses replay-aware teams, ratios and placement rewards through revival_arena.
 At the turn limit equal surviving counts are settled by damage inflicted, then
 defeat on an exact tie. The original server's hidden tie-break is unavailable.
 """
@@ -16,6 +17,11 @@ from exvius_actions import _node, _mst, _refresh
 from ffbe_state import State, _note
 from ffbe_friends import load_friends, _reinforce_row
 from player_state import unit_stats, limit_burst
+
+
+def _ios():
+    from engine_profile import current_profile
+    return current_profile().replay is not None
 
 
 def _model():
@@ -41,6 +47,10 @@ def settle_weekly_reward(model):
     player = State.player
     if player.mode == 'frozen':
         return None
+    if _ios():
+        from revival_arena import Ladder
+        if Ladder(player.data).enabled:
+            return None  # The entry command settles placement instead of participation.
     now = datetime.now(timezone.utc) - timedelta(hours=4)
     current = (now.date() - timedelta(days=(now.weekday() - 3) % 7)).isoformat()
     played = model.get('last_week_played')
@@ -75,6 +85,13 @@ def _season(req, model):
 
 
 def _friend(target):
+    if _ios():
+        from revival_arena import Ladder
+        ladder = Ladder(State.player.data)
+        if ladder.enabled:
+            return ladder.directory.by_id(target)
+        from ffbe_friends import all_friends
+        return next((f for f in all_friends() if str(f['friend_id']) == target), None)
     return next((f for f in load_friends() if str(f['friend_id']) == target), None)
 
 
@@ -112,11 +129,14 @@ def _versus(model, state):
         return {'DW0rgk3C': [{'uC8E0opI': str(state), 'QX42tjRY': '1'}]}
     # Repair an already-started legacy snapshot in the reply without changing
     # its battle, opponent, AI pattern, initiative or orb charge.
-    rival = battle['rival'].split(':')
-    if len(rival) == 18 and rival[10] == '0' and limit_burst(rival[1]):
-        rival[10] = '1'
+    rivals = []
+    for entry in battle['rival'].split(';'):
+        rival = entry.split(':')
+        if len(rival) == 18 and rival[10] == '0' and limit_burst(rival[1]):
+            rival[10] = '1'
+        rivals.append(':'.join(rival))
     return {'N7Bd3IuL': [copy.deepcopy(battle['summary'])],
-            'DW0rgk3C': [{'uC8E0opI': str(state), 'Jc4udh7x': ':'.join(rival),
+            'DW0rgk3C': [{'uC8E0opI': str(state), 'Jc4udh7x': ';'.join(rivals),
                           'QX42tjRY': battle['initiative']}]}
 
 
@@ -135,7 +155,14 @@ def _reply(spec, model, state=0):
 def matching(spec, req):
     def run(model):
         _season(req, model)
+        if _ios():
+            from revival_arena_commands import require_current_week
+            require_current_week(model)
         target = str((_node(req, 'N7Bd3IuL') or {}).get('fP8Nv0KZ', ''))
+        if _ios() and (model.get('active') or model.get('matched')):
+            pending = model.get('active') or model['matched']
+            if pending['target'] == target:
+                return _reply(spec, model, 2 if model.get('active') else 1)
         friend = _friend(target)
         if friend is None:
             raise ValueError('Unknown local Arena rival')
@@ -143,11 +170,25 @@ def matching(spec, req):
             if model['active']['target'] != target:
                 raise ValueError('Finish the pending Arena battle first')
             return _reply(spec, model, 2)
-        model['matched'] = {'target': target, 'rival': _rival(friend),
+        if _ios():
+            from revival_arena import Ladder, rival_string, ratio
+            ladder = Ladder(State.player.data)
+            if ladder.enabled:
+                units = ladder.team(friend)
+                rival = rival_string(units, ladder.week.number)
+                rate = ratio(units, _party())
+            else:
+                rival, rate = _rival(friend), 100
+        else:
+            rival, rate = _rival(friend), 100
+        members = {entry.split(':')[0]: entry.split(':')[1] for entry in rival.split(';')}
+        model['matched'] = {'target': target, 'rival': rival,
             'summary': {'cw4ho9eY': str(friend['unit']['master_id']), 'P2w9myrI': '0',
                         'fP8Nv0KZ': target, 'IgS2Mi9Y': friend['display_name'],
                         'Bc43fupe': 'Local Arena opponent'},
             'initiative': ','.join(str(1 + secrets.randbelow(2)) for _ in range(10))}
+        if _ios():
+            model['matched'].update(rate=rate, members=members)
         _save(model)
         return _reply(spec, model, 1)
     return _transaction(spec, run)
@@ -156,6 +197,9 @@ def matching(spec, req):
 def start(spec, req):
     def run(model):
         _season(req, model)
+        if _ios():
+            from revival_arena_commands import require_current_week
+            require_current_week(model)
         target = str((_node(req, 'N7Bd3IuL') or {}).get('fP8Nv0KZ', ''))
         if model['active']:
             if model['active']['target'] != target:
@@ -258,13 +302,13 @@ def end(spec, req):
         retired = str(node.get('g9t7dBCH', '0')) == '1'
         if retired:
             own_text = ','.join(master + ':' + iid + ':0:1' for iid, master in active['own'].items())
-            rival_fields = active['rival'].split(':')
-            enemy_text = rival_fields[1] + ':' + rival_fields[0] + ':' + rival_fields[4].split('-')[0] + ':0'
+            enemy_text = ','.join(fields[1] + ':' + fields[0] + ':' + fields[4].split('-')[0] + ':0'
+                                  for fields in (entry.split(':') for entry in active['rival'].split(';')))
         else:
             own_text, enemy_text = node.get('GA1D6XIC'), node.get('Pch7J9Ty')
         own = _results(own_text, active['own'])
         rival_fields = active['rival'].split(':')
-        enemies = _results(enemy_text, {rival_fields[0]: rival_fields[1]})
+        enemies = _results(enemy_text, active.get('members') or {rival_fields[0]: rival_fields[1]})
         live = sum(row[3] == '0' for row in own)
         enemy_live = sum(row[3] == '0' for row in enemies)
         turns = int(node.get('z8uj9TAU', '0'))
@@ -276,7 +320,7 @@ def end(spec, req):
             (live == enemy_live and int(node.get('3S8pMym0', '0')) > int(node.get('bB69ZWQY', '0'))))
         user = model['user']
         streak = int(user['5svT7qLR']) + 1 if win else 0
-        base = 100 if win else 10
+        base = int(active.get('rate', 100)) if win and _ios() else 100 if win else 10
         streak_gain = _round(Decimal(base) * Decimal(min(18, streak + 8)) / 100) if streak > 1 else 0
         bonus = _round(Decimal(base + streak_gain) * Decimal(active['bonus']) / 100) if win else 0
         # Original 2021-11-30 notice, preserved at r/FFBEblog/r5izr1:
@@ -288,7 +332,11 @@ def end(spec, req):
         gain = base + streak_gain + bonus
         State.player.record_archive({'ARENA_BATTLE_CNT': consumed, 'ARENA_WIN_CNT': consumed * int(win),
             'ARENA_TOTAL_GET_RANKING_POINT': gain, 'ARENA_MAX_CONSECUTIVE_WIN': streak})
-        today = time.strftime('%Y-%m-%d', time.gmtime())
+        if _ios():
+            from revival_arena import clock
+            today = clock().astimezone(timezone.utc).strftime('%Y-%m-%d')
+        else:
+            today = time.strftime('%Y-%m-%d', time.gmtime())
         count = model['daily'].get(today, 0)
         season = _mst('F_RB_SS_MST.ndjson', '6Z9DxQFf')[model['season_id']]
         daily = season.get('dJ1g6p8h', '').split(',')
@@ -314,6 +362,15 @@ def end(spec, req):
                     'p6H4CNw8': str(int(user['p6H4CNw8']) + consumed),
                     'Ka0Pbz5N': str(int(user['Ka0Pbz5N']) + consumed * int(win))})
         model['last_week_played'] = settle_weekly_reward(model)
+        if _ios() and win:
+            from ffbe_player import _daily_quests_for_action
+            for key, qid, target in _daily_quests_for_action('arena_win', State.player):
+                State.player.bump_progress(key, 1, cap=target or None, what=f'arena_win -> {qid}')
+        if _ios():
+            from revival_arena import for_model
+            ladder = for_model(State.player.data, model)
+            if ladder.enabled:
+                result['7SPHKY1j'] = str(ladder.rank_of(before + gain))
         model['daily'] = {today: count + consumed}
         model['active'] = model['matched'] = None
         model['last_result'] = result
@@ -332,10 +389,13 @@ def restart(spec, req):
         out['KMwJ3s6W'] = [{'S3rek7hC': model['season_id'], 'o8RDmSI9': model['season_id'],
                            'uC8E0opI': str(state)}]
         return out
-    return _transaction(spec, run)
+    return _transaction(spec, run, readonly=True)
 
 
-def _transaction(spec, run):
+def _transaction(spec, run, *, readonly=False):
+    if _ios():
+        from revival_arena_commands import execute
+        return execute(spec, run, readonly=readonly)
     player = State.player
     if player is None or player.mode == 'frozen':
         return spec

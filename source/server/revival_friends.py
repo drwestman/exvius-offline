@@ -169,7 +169,7 @@ class Directory:
     def ids(self):
         return tuple(str(ID_BASE + i) for i in range(1, self.config['count'] + 1)) if self.config else ()
 
-    def _pool(self, rank):
+    def unit_pool(self, rank):
         from player_state import named_unit_ids, unit_roots_by_rarity, unit_mst, unit_stats
         rarities = ('5', '7') if rank >= 100 else ('4', '5') if rank < 40 else ('4', '5', '7')
         if rarities not in self._pools:
@@ -206,7 +206,7 @@ class Directory:
             return None
         rng = random.Random(f'exvius-player-{index}')
         rank = rng.choice([rng.randint(8, 40), rng.randint(40, 120), rng.randint(120, 250), rng.randint(60, 180)])
-        uid, level = random.Random(f'exvius-player-{index}-week-{self.week}').choice(self._pool(rank))
+        uid, level = random.Random(f'exvius-player-{index}-week-{self.week}').choice(self.unit_pool(rank))
         return _entry(index, {'display_name': names(self.config['count'])[index - 1],
                               'friend_id': ID_BASE + index, 'rank': rank, 'emblem_id': 0,
                               'unit': {'master_id': uid, 'level': level}})

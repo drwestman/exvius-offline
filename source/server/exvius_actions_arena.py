@@ -1,7 +1,9 @@
 """Offline arena, board and friend actions, from the v9 reverse-engineering report.
 
 AUTHORED / UNRESOLVED
-* Replay the most recent shipped short season indefinitely. The offline long season
+* Legacy replays the most recent shipped short season indefinitely. iOS selects
+  the historical season and settles weekly placements on its explicit entry command.
+  The offline long season
   mirrors it; state 1 and ranking display selector 0 are authored presentation policy.
 * Candidate ratio 1.00 is authored neutral matchmaking, encoded in hundredths.
 * Arena battles use exvius_arena, with native rival serialization, orb accounting,
@@ -63,10 +65,19 @@ def _arena():
     """A detached view: failed actions and frozen reads cannot dirty the player."""
     saved = State.player.data.get("exvius_arena")
     if saved is not None:
+        from engine_profile import current_profile
+        if current_profile().replay is not None and not isinstance(saved, dict):
+            raise ValueError('Invalid iOS arena state.')
         return copy.deepcopy(saved)
     seasons = _mst("F_RB_SS_MST.ndjson", "6Z9DxQFf")
     rows = [r for k, r in seasons.items() if _int(k, 0) > 0]
     latest = max(rows, key=lambda r: (r.get("VjJQ51uG", ""), _int(r["6Z9DxQFf"]))) if rows else {}
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_arena import Ladder
+        ladder = Ladder(State.player.data)
+        if ladder.enabled:
+            latest = {'6Z9DxQFf': ladder.season_id()}
     return {"season_id": str(latest.get("6Z9DxQFf", "0")),
             "user": {k: "0" for k in ("UbQ26oH4", "mRY52Tib", "5svT7qLR", "egayI1s4",
                                        "p6H4CNw8", "Ka0Pbz5N", "qH5h4GX2", "52ibRBqw")},
@@ -96,11 +107,25 @@ def _arena_rows(arena):
                "3HbFrqo5": str(term), "BGFw7qi4": OFFLINE_ARENA_WINDOW[0],
                "2oL4dNFy": OFFLINE_ARENA_WINDOW[1], "0dh7yRIN": "",
                "4yT7FUqj": "", "td06MKEX": "0"} for term in (1, 3)]
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_arena import for_model
+        from datetime import timedelta, timezone
+        ladder = for_model(State.player.data, arena)
+        if ladder.enabled:
+            user['52ibRBqw'] = str(ladder.rank_of(int(user['UbQ26oH4'])))
+            for row in states:
+                row['BGFw7qi4'] = ladder.week.starts.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                row['2oL4dNFy'] = (ladder.week.ends.astimezone(timezone.utc) - timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
     return {"yT12twnc": [{"S3rek7hC": sid, "o8RDmSI9": sid, "Q03VHyjm": "0"}],
             "h5zN9MvP": states, "g4Pu8oUt": [user]}
 
 
 def rb_entry(spec, req):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_arena_commands import entry
+        return entry(spec, req)
     from exvius_arena import _model, settle_weekly_reward
     arena = _model()
     rows = _arena_rows(arena)
@@ -116,9 +141,13 @@ def rb_entry(spec, req):
         candidates.append(":".join(map(str, (friend["friend_id"], name,
             friend["unit"]["master_id"], friend["unit"]["level"], 0, 0,
             friend["rank"], AUTHORED_RB_CANDIDATE_RATE, friend["emblem_id"], 0, 0))))
+    return _entry_reply(spec, arena, rows, ','.join(candidates))
+
+
+def _entry_reply(spec, arena, rows, candidates):
     out = _out(spec)
     out.update(rows)
-    out["Tr9m32i1"] = [{"TI6deE8P": ",".join(candidates)}]
+    out["Tr9m32i1"] = [{"TI6deE8P": candidates}]
     from exvius_arena import _versus
     out.update(_versus(arena, 2 if arena.get('active') else 0))
     out['H54XvPis'] = copy.deepcopy(arena['groups'])
@@ -156,6 +185,10 @@ def rb_restart(spec, req):
 
 
 def rb_ranking(spec, req):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_arena_commands import ranking
+        return ranking(spec, req)
     arena = _arena()
     term = _int((_node(req, "e7n2P5IJ") or {}).get("3HbFrqo5"))
     if not _valid_season(req, arena) or term not in (1, 3):
@@ -196,6 +229,14 @@ def _board_reply(spec, arena, pieces):
 
 
 def rb_board_open(spec, req):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_arena_commands import execute
+        return execute(spec, lambda _model: _rb_board_open(spec, req))
+    return _rb_board_open(spec, req)
+
+
+def _rb_board_open(spec, req):
     node = _node(req, "7GUQtmb3") or {}
     group, board = str(node.get("CIE1rky2", "")), str(node.get("6m4Rn5jd", ""))
     ids = _csv_ids(node.get("mvc31xSV"))

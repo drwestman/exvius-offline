@@ -2,7 +2,7 @@
 
 ## Scope
 
-This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges/friends,
+This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges/friends/arena,
 and hello-only native connectivity checkpoint of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
@@ -353,6 +353,65 @@ validation, quest/archive progress, and one-time collection SHALL be preserved.
 - When a gift is sent repeatedly and its reciprocal receipt collected after reload
 - Then one send and one reciprocal receipt are recorded for the UTC day
 - And collecting the same receipt again grants no additional reward.
+
+### Requirement: ProjectHistoricalArenaLadder
+
+With the simulated crowd enabled, iOS Arena SHALL use the shipped weekly season
+running at the start of the historical slice, or the last shipped season after
+history finishes. Rival teams SHALL contain up to five distinct, named,
+renderable, historically eligible units from the same pool as simulated helpers.
+The pinned strength, gear, weekly target, pace, tie ordering, and Global placement
+scale SHALL be preserved. Ratios SHALL range from 0.50 to 1.50 in steps of 0.05.
+Five opponents SHALL refresh every ten minutes by default; ranking SHALL show
+the top 100 accounts and the player's own row. Global gameplay RNG SHALL be untouched.
+Elapsed-time scoring and displayed week boundaries SHALL account for Eastern DST.
+
+#### Scenario: Inspect a moving leaderboard
+
+- Given an initialized Arena week
+- When ranking or restart is requested, including after the week ends
+- Then the recorded week and points are projected without rewards, rollover, or save writes
+- And pending battle snapshots retain their original season and opponents.
+
+### Requirement: SettleArenaWeeksExplicitly
+
+RbEntryRequest SHALL be the explicit Arena initialization and rollover command.
+It SHALL record ladder configuration once, with default top score 12000 and five
+rivals. A completed played week SHALL settle against its own season and final
+leaderboard, map local placement onto Global's 300000-rank scale, and credit the
+original master rewards once. The settled points SHALL move into lifetime totals
+before weekly points reset. Empty skipped weeks SHALL not grant rewards. Missing
+or unsupported rewards SHALL preserve the unpaid week for retry. An active battle
+SHALL delay rollover until it settles. Clock rollback or malformed recorded week
+data SHALL not reset or repair the campaign.
+
+#### Scenario: Return after several weeks away
+
+- Given a played week with positive points
+- When a later Arena entry occurs after several weeks away
+- Then only the recorded played week receives its placement reward
+- And repeated entry or reload neither grants it again nor changes the saved configuration.
+
+### Requirement: CommitArenaBattlesAtomically
+
+Matching SHALL persist rival members, ratio, AI, and initiative before starting.
+Repeated matching, starting, and settlement SHALL reuse the recorded battle.
+Full-team settlement and retirement SHALL validate every started member. The
+canonical streak, bonus, medal, daily reward, archive, and all-orb consumption
+rules SHALL be retained, with wins using the snapshotted ratio as base points.
+iOS initialization, rollover, matching, start, end, and medal-board mutations SHALL
+save a staged candidate before publishing changes. Save failures SHALL preserve
+the previous campaign, balances, orbs, rewards, and pending battle. Existing
+pre-ladder pending battles SHALL finish before their all-time points migrate.
+Legacy Arena behavior SHALL remain unchanged; disabled iOS crowds SHALL retain
+curated single-unit opponents and the existing participation reward policy.
+
+#### Scenario: Fail a battle settlement save
+
+- Given a started five-unit rival battle
+- When settlement cannot save
+- Then the original pending battle and campaign remain authoritative
+- And a successful retry grants its result once.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

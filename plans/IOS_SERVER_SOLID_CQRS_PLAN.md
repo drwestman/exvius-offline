@@ -281,3 +281,49 @@ found statless master placeholders, now excluded from helpers.
 rewards/economy and added authored content. Native gameplay routing, data/asset
 preparation, and full iPhone gameplay acceptance remain pending. The running
 native service continues to serve the accepted connection check.
+
+## Arena progression checkpoint — November 9, 2026
+
+Ported the pinned arena ladder into the iOS profile using the campaign calendar
+and simulated-friend unit pool. Arena selects the shipped historical season,
+generates teams of up to five distinct eligible units, and offers five opponents
+per ten-minute window. Strength, gear, 0.50–1.50 ratios, weekly target scores,
+score growth, standings, and Global placement brackets follow the pinned policy.
+Ranking includes the top 100 accounts and the player. Scoring uses actual elapsed
+UTC time across Eastern daylight-saving transitions.
+
+Arena entry is the explicit initialization/rollover command. It records ladder
+configuration once, settles the last played week using that week's final standings
+and original season rewards, moves points into lifetime totals, and resets weekly
+points. Empty skipped weeks grant nothing. Missing rewards preserve the unpaid
+week. Ranking and restart are read-only; they continue to show an unsettled old
+week until entry rolls it forward. Pending battles delay rollover and retain their
+season, opponents, ratio, AI, initiative, and orb reservation.
+
+Extended the canonical battle and medal-board handlers with staged iOS saves.
+Matching/start/end retries reuse recorded state; full-team results and retirement
+account for every enemy. Wins use the recorded ratio, while existing streak,
+bonus, medal, daily reward, archive, and all-orb rules remain intact. Save failures
+publish no partial battle, charge, reward, or board purchase. Pre-ladder pending
+battles can finish before their old totals migrate. Legacy behavior remains
+unchanged, including curated single-unit opponents when the iOS crowd is disabled.
+
+Validation: **18 new arena BDD scenarios, 90 existing iOS checks, and 23 legacy
+arena/social checks passed (131 distinct checks).** Coverage includes native
+encrypted requests, read-only rankings/restarts, ten-minute refreshes, DST,
+retries/reloads, full-team wins/losses/retirement, all-orb accounting, stale
+selections, settings persistence, save failures, old pending battles, medal boards,
+missed weeks, missing rewards, and malformed recorded state.
+
+A disposable real-data campaign completed an encrypted five-unit battle in
+historical season 6, credited ratio-based points, and settled a top-bracket weekly
+reward with four original reward units. A 201-week sweep validated **1,005 rival
+teams and 5,025 units**, including historical eligibility, level caps, ratios,
+season selection, and native serialization. All writes remained in the disposable
+root; no network was used.
+
+**Stage 1 remains in progress.** Next are the remaining rewards/economy ports
+(daily quests, weekly gifts, trust gains, replay mail/notices), followed by added
+authored content. Native gameplay routing, data/asset preparation, and full iPhone
+gameplay acceptance remain pending. The native service still serves the accepted
+connection check.
