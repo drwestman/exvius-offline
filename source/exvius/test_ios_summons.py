@@ -141,11 +141,12 @@ class ReplaySummonIntegration(unittest.TestCase):
         masters = static / 'mst_decoded'
         units = [('100000102', 2), ('100000202', 2), ('100000302', 3),
                  ('100000315', 5), ('100000337', 5), ('100001005', 5)]
+        units += list(getattr(self, 'extra_units', ()))
         (masters / 'F_UNIT_MST.ndjson').write_text('\n'.join(json.dumps({
             '3HriTp6B': uid, 'woghJa61': uid, 'aU3o2D4t': 100, '9fW0TePj': rarity,
         }) for uid, rarity in units))
         (masters / 'F_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({'tL6G9egd': iid})
-            for iid in ('106213050', '106213030')))
+            for iid in ('106213050', '106213030', *getattr(self, 'extra_items', ()))))
         (masters / 'F_GACHA_SELECT_UNIT_MST.ndjson').write_text('\n'.join(json.dumps({
             '3HriTp6B': uid, 'VjJQ51uG': '2016-01-01 00:00:00',
             'm8ivD4NX': '2099-12-31 23:59:59', 'e4mG8jTc': '1',

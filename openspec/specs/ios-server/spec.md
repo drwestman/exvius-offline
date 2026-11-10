@@ -214,6 +214,81 @@ campaign. Projections SHALL derive a fresh empty mission container without writi
 - Then only the missing initialization facts are persisted and the anchor is unchanged
 - And repeated initialization does not save again.
 
+### Requirement: LoadPinnedIosSummonDeals
+
+The iOS catalogue SHALL merge pinned deal definitions and printed banner bonuses
+before replay selection. Existing authored bonuses and stronger guarantees SHALL
+be retained. Metadata loading and rotation previews SHALL not import engine state,
+download artwork, or create files. The legacy catalogue SHALL remain unchanged.
+
+#### Scenario: Add a printed multi-summon bonus
+
+- Given an eligible banner whose secondary offer lacks a printed bonus
+- When the iOS catalogue is projected and the secondary offer is purchased
+- Then the printed bonus is listed and granted by that offer
+- And its cost is charged once without changing the source banner definition.
+
+### Requirement: ShareDealOfferAndPoolRules
+
+iOS purchases and drop-rate pages SHALL resolve the same effective step/offer,
+including pool overrides, weighted choices, counted guarantees, and extra slots.
+Printed date ranges and limited/collaboration exclusions SHALL filter ordinary
+pools before distributing rates. Explicitly named guarantees SHALL retain their
+printed units while respecting the replay cutoff. Invalid or zero-weight mandatory
+pools SHALL decline before spending. Daily limits and served bounds SHALL follow
+the recorded timezone, including daylight-saving transitions.
+
+#### Scenario: Keep an explicitly printed step guarantee
+
+- Given a step-up's ordinary pool ends the day before its featured units arrived
+- And a later step explicitly guarantees one of those units
+- When the campaign has reached that release and the step is purchased
+- Then the named guarantee is fulfilled while ordinary draws keep their printed cutoff.
+
+### Requirement: StageIosSummonAwardsAtomically
+
+The iOS command boundary SHALL stage payment, main rewards, bonuses, and counters
+on a candidate player. Only a successful complete transaction SHALL publish the
+candidate. A refused or failed grant SHALL preserve the original data and dirty
+flag. Persistence SHALL retain the canonical save path and locking contract.
+
+#### Scenario: Fail after granting a candidate unit
+
+- Given an affordable iOS summon
+- When granting a candidate unit or bonus fails after partial candidate changes
+- Then the original balances, roster, stock counters, and save remain unchanged.
+
+### Requirement: BoundResummonReplacement
+
+iOS re-summon deals SHALL persist their remaining redos and the main result's
+identity/snapshots. A free redo SHALL replace only unchanged, unused main units,
+retain the paid-pull bonus, and leave the paid-purchase count and payment unchanged.
+Missing, changed, or deployed main units SHALL prevent replacement. Native detail
+and user rows SHALL project remaining redos without writes and refresh after a
+purchase. Each accepted redo request consumes one attempt; no request nonce is
+available for distinguishing a retransmission from another choice.
+
+#### Scenario: Redo after a campaign reload
+
+- Given a paid re-summon result and remaining free redos
+- When the campaign reloads and an eligible redo is purchased
+- Then the previous main units are replaced without accumulating results or bonuses
+- And exhaustion prevents further redos or another paid purchase.
+
+### Requirement: RedeemDealSelectTickets
+
+NV select-ticket bonuses SHALL expose their native-master exchanges while tickets
+are held. Exchange IDs, prices, purchase limits, and historical reward checks SHALL
+remain stable across reloads. Spending the last ticket SHALL hide its exchange.
+Ticket ownership SHALL not bypass the historical unit cutoff.
+
+#### Scenario: Earn and redeem a select ticket
+
+- Given an affordable deal whose printed bonus includes a select ticket
+- When its encrypted purchase succeeds and that ticket is redeemed
+- Then the ticket is granted once, spent at the master price, and the selected unit is credited
+- And a paid-purchase retry or exhausted-stock redemption does not grant again.
+
 ### Requirement: SeparateViewCachingFromPreparation
 
 iOS battle views SHALL read existing caches or derive in memory without writing

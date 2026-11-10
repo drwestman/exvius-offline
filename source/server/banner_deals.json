@@ -1,0 +1,2161 @@
+{
+ "_meta": {
+  "what": "Bonuses printed on Global summon banner art that the banner data did not carry. banner_deals.py adds them at load time; data a banner already has always wins.",
+  "source": "Read by hand from the banner art (FFBE wiki Gacha-*.png), 2026-11-05.",
+  "guesses": "Choice weights for \"free 3★/4★/5★ Trust Moogles\" are not printed on the art: 3★ 70%, 4★ 25%, 5★ 5% (1★ 60%, 3★ 30%, 4★ 10% for the 2017 summer banner). A 3★ \"random trust mastery\" moogle is a 5% moogle for one of the banner's featured units. Percentages not printed use 1★ 1%, 4★ 5%, 5★ 10%, as printed on the 2018 banners."
+ },
+ "banners": {
+  "800440": {
+   "name": "Seabreeze Dark Fina, Beach Time Fina, Summer Lid Featured Summon",
+   "art_text": "Draw 11 with free 1★, 3★, 4★ Trust Moogles",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 60,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000101,
+        "count": 1,
+        "affinity_points": [
+         "10",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 10.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:405002000:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 10.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:405002100:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 10.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:405002200:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 10,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "800720": {
+   "name": "Christine, Kryla, Tinkerer Carrie, Gilbert Featured Summon",
+   "art_text": "Free 4★ Trust Moogles with every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "800730": {
+   "name": "White Knight Noel, Santa Roselia, Gilbert Featured Summon",
+   "art_text": "Free 4★ Trust Moogles with every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "800890": {
+   "name": "Tidus, Rikku, Wakka Featured Summon",
+   "art_text": "With free 3★, 4★, 5★ Trust Moogles",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 23.333333333333332,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:302002300:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 23.333333333333332,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:409009900:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 23.333333333333332,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:315021200:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 25,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000105,
+        "count": 1,
+        "affinity_points": [
+         "100",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "801040": {
+   "name": "Maritime Strategist Nichol, Lexa, Elbis, Merald, Charie Featured Summon",
+   "art_text": "With free 3★, 4★, 5★ Trust Moogles",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 14.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:408003200:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 14.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "22:504224930:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 14.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:303003900:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 14.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:305002300:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 14.0,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:409014400:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 25,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000105,
+        "count": 1,
+        "affinity_points": [
+         "100",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "801180": {
+   "name": "Nalu, Pecciotta, Shinju, Ryuka Featured Summon",
+   "art_text": "With free 3★ (with random trust mastery), 4★ (all 5%) or 5★ (all 10%) Trust Moogles",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "22:504226900:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:315022200:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "22:504226901:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:302005500:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 25,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000105,
+        "count": 1,
+        "affinity_points": [
+         "100",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "801270": {
+   "name": "Aloha Lasswell, Seaside Nichol, Summertime Luka, Tide Rider Skaha Featured Summon",
+   "art_text": "With free 3★ (with random trust mastery), 4★ (all 5%) or 5★ (all 10%) Trust Moogles",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:1100000184:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:1100000182:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:1100000186:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 17.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "21:1100000173:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 25,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000105,
+        "count": 1,
+        "affinity_points": [
+         "100",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "801140": {
+   "name": "Awakened Rain, Mediena, Shylt, Shantotto Featured Summon",
+   "art_text": "Draw 11 with free Trust Moogles: 3★ (Awakened Rain/Mediena) or 4★ (all 5%)",
+   "ten_plus_one": {
+    "bonus_choice": [
+     {
+      "rate": 37.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "22:504226422:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 37.5,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000103,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ],
+        "affinity_info": [
+         "22:504224490:1:1000:10:30:50",
+         ""
+        ]
+       }
+      ]
+     },
+     {
+      "rate": 25,
+      "rewards": [
+       {
+        "kind": 10,
+        "id": 904000104,
+        "count": 1,
+        "affinity_points": [
+         "50",
+         ""
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "801870": {
+   "name": "Rivera Featured Summon",
+   "art_text": "Draw 11 and also obtain a Rivera Trust Moogle (5%)",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "50",
+       ""
+      ],
+      "affinity_info": [
+       "21:1100000300:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "801910": {
+   "name": "Kimono Fina Featured Summon",
+   "art_text": "Draw 11 and obtain five Trust Moogles (Kimono Fina 5%)",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 5,
+      "affinity_points": [
+       "50",
+       ""
+      ],
+      "affinity_info": [
+       "21:312002600:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "802120": {
+   "name": "Physalis, Juraga of the Nu Star, Gudon of the Xi Star Featured Summon",
+   "art_text": "Get 1 Trust Moogle (Physalis 5%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "50",
+       ""
+      ],
+      "affinity_info": [
+       "22:504230770:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "802170": {
+   "name": "White Lily Dark Fina Featured Summon",
+   "art_text": "Get 1 Trust Moogle (White Lily Dark Fina 20%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "200",
+       ""
+      ],
+      "affinity_info": [
+       "22:504231201:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "802180": {
+   "name": "Awakened Warrior of Light Featured Summon",
+   "art_text": "Get 1 Trust Moogle (Awakened Warrior of Light 20%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "200",
+       ""
+      ],
+      "affinity_info": [
+       "21:302009000:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "810040": {
+   "name": "Hess King Lasswell, Scartio, Sister Featured Summon",
+   "art_text": "Get 1 Trust Moogle (Hess King Lasswell 20%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "200",
+       ""
+      ],
+      "affinity_info": [
+       "22:504231651:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "810150": {
+   "name": "Sieghard & Ignacio, Sakura & Ayaka Featured Summon",
+   "art_text": "Get 1 Trust Moogle (Sieghard & Ignacio 20%) and 1 (Sakura & Ayaka 20%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "200",
+       ""
+      ],
+      "affinity_info": [
+       "22:1500000125:1:1000:10:30:50",
+       ""
+      ]
+     },
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "200",
+       ""
+      ],
+      "affinity_info": [
+       "22:1500000124:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "810580": {
+   "name": "Daughter of Destiny Vanille, Graceful Champion Fang Featured Summon",
+   "art_text": "Get 1 Trust Moogle (Daughter of Destiny Vanille 10%) and 1 (Graceful Champion Fang 10%) for every 10+1",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "100",
+       ""
+      ],
+      "affinity_info": [
+       "21:314002400:1:1000:10:30:50",
+       ""
+      ]
+     },
+     {
+      "kind": 10,
+      "id": 904000104,
+      "count": 1,
+      "affinity_points": [
+       "100",
+       ""
+      ],
+      "affinity_info": [
+       "21:308006500:1:1000:10:30:50",
+       ""
+      ]
+     }
+    ]
+   }
+  },
+  "801390": {
+   "name": "Elephim, Magna, Leopold, Forelsket Featured Summon",
+   "art_text": "Free Star Quartz with every summon",
+   "every_pull": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 106200100,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "801980": {
+   "name": "Mordegon, Great Dragon Featured Summon",
+   "art_text": "Get 1 DQXI S summoning key for every 10+1 summon (the coins also shown are not identified)",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001068,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "802050": {
+   "name": "Lilith, Lucius, Dracu Lasswell, Demon Rain, Grim Lord Sakura, White Witch Fina, Pirate Jake, Illusionist Nichol, Black Cat Lid Featured Summon",
+   "art_text": "Get 20 Summon Coins for every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001060,
+      "count": 20
+     }
+    ]
+   }
+  },
+  "802140": {
+   "name": "Crown Prince Noctis, Lunafreya, Kenny Crow Featured Summon",
+   "art_text": "Get 1 5★ ticket for every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001083,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "802150": {
+   "name": "Levinson, Lucas Featured Summon",
+   "art_text": "Get 1 5★ ticket for every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001121,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810500": {
+   "name": "Gilgamesh (WOTV FFBE) Featured Summon",
+   "art_text": "Get Summon Coin x10 for every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001200,
+      "count": 10
+     }
+    ]
+   }
+  },
+  "810540": {
+   "name": "Lezard Valeth, Mystina, Arngrim, Freya (VP), Lenneth, Aelia, Lucian, Jelanda Featured Summon",
+   "art_text": "Get Summon Coin x10 for every 10+1 summon",
+   "ten_plus_one": {
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001203,
+      "count": 10
+     }
+    ]
+   }
+  },
+  "810750": {
+   "name": "Balthier, Gabranth -Neo Vision-, Ray of Hope Larsa Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001288,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810760": {
+   "name": "Firion -Neo Vision-, Thoughtful Sister Maria, Emperor, Dark Knight Leon, Aileen Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001289,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810770": {
+   "name": "Madam Edel -Neo Vision-, Nalu, Blossomed Mage Lexa, Relentless Might Elbis Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001290,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810790": {
+   "name": "Grim Lord Sakura, Lucius, Lilith, Demon Rain, Dracu Lasswell, Karten, Godrea, White Witch Fina, Pirate Jake, Illusionist Nichol, Black Cat Lid Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001293,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810800": {
+   "name": "Sol -Neo Vision-, Dark Fina, Blossom Sage Sakura Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001295,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810810": {
+   "name": "Shoreline Fina & Daisy, Summer Fina & Lid, Summer Folka & Citra, Mineur Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001296,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810820": {
+   "name": "Onion Knight -Neo Vision-, Dark Knight Luneth, Onion Knight Refia, Black Mage Arc Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001297,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "810850": {
+   "name": "Terra -Neo Vision-, Archmage Kefka, Assassin Shadow, Relm Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001303,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "811420": {
+   "name": "Locke -Neo Vision-, King Edgar of Figaro, Monk Sabin of Kolts, Dashing Gambler Setzer Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001304,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "820600": {
+   "name": "Starlight Elena, Madam Edel -Neo Vision- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001290,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "820710": {
+   "name": "Lasswell -Neo Vision-, Yuraisha, Kunshira, Hess Sage Rowen Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001316,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "820780": {
+   "name": "Rain & Fina, Fina & Dark Fina Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001317,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "820810": {
+   "name": "Lasswell & Raegen, Infernal Fire Rain Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001318,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "820820": {
+   "name": "Dark Fina & Sol Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001330,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100288": {
+   "name": "Akstar & Cleome, Draconian Princess Fina Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001332,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100289": {
+   "name": "Savior of Souls Lightning, Radiant Lightning, Lightning Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001333,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100294": {
+   "name": "Mazurka, Raegen, Trot Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001340,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100291": {
+   "name": "Solitary Patron Snow, Serah Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001341,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100292": {
+   "name": "Faris -Neo Vision-, Warrior of Light Bartz, Gilgamesh, Xezat Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001342,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100299": {
+   "name": "Melo, Freesia, Ignacio Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001353,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100297": {
+   "name": "King Behemy, Poppy Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001358,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100298": {
+   "name": "Oracle Maiden Lunafreya, Gladiolus, Ignis, Prompto Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001360,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100303": {
+   "name": "Vermilion Blade Ardyn, Aranea Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001381,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100301": {
+   "name": "Lightning-Fast Zidane, Beatrix Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001385,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100302": {
+   "name": "Kaktiria, Kalmia Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001387,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100304": {
+   "name": "Chorale, Diverti, Conche Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001400,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100311": {
+   "name": "Guardian Blade Charlotte, Emperor Vlad Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001418,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100308": {
+   "name": "Lord of the Seas Nichol, Nerine Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001420,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100309": {
+   "name": "Cetra Descendant Aerith, Avalanche's Jessie Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001422,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100310": {
+   "name": "Avalanche's Tifa, Rufus Shinra (FFVII REMAKE) Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001424,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100315": {
+   "name": "Legendary Hero Sephiroth, Barret (FFVII REMAKE), Avalanche's Biggs & Wedge Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001445,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100314": {
+   "name": "Ygni, Cleome Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001451,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100274": {
+   "name": "Ibara, Grim Lord Sakura, Lucius, Lilith, Demon Rain, Dracu Lasswell, Karten, Godrea, White Witch Fina, Pirate Jake, Illusionist Nichol, Black Cat Lid Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon (the free extra 11 summon after three is not modelled)",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001293,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100282": {
+   "name": "Ninja Master Hawkeye, Angela Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001494,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100278": {
+   "name": "Riesz, Duran Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001496,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100280": {
+   "name": "Summoner Yuna, Star Player Tidus, Wakka Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001502,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100284": {
+   "name": "Legendary Guardian Auron, Jecht, High Summoner Braska Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001512,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100286": {
+   "name": "Summer Sniper Physalis, Beach Buoy Shinju, Magic Mermaid Freesia Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001514,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100283": {
+   "name": "King of Destruction Zoma, Alena & Marquis de Léon, Dragonlord, Estark, Überkilling Machine, Slime Knight, Orochi, Liquid Metal Slime, Killing Machine, Golem (Unit), Robbin' 'Ood Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001516,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100285": {
+   "name": "Whimsical Winter Tiana, Eldryn, Kryla, Christine, Levinson, Lucas, Felix, Tiana, White Knight Noel, Tinkerer Carrie, Santa Roselia Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001305,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100324": {
+   "name": "Taivas Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100321": {
+   "name": "Tulien Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100322": {
+   "name": "Summoner Lenna, Warrior of Dawn Dorgann, Warrior of Dawn Galuf Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001532,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100323": {
+   "name": "Divine Beast Chow, Shui Yu, Xuan Wu & Qing Long, Emperor Foo, Qin, Bai Hu & Zhu Que, Chow, Yun, Ang, Ling, Yan Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001331,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100337": {
+   "name": "Id, Grahf, Fei, Elly, Bart, Citan, Maria (Xenogears), Billy, Emeralda, Rico Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100338": {
+   "name": "Dragoon Kain, Summoner Rydia Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100344": {
+   "name": "Ninja Edge Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100340": {
+   "name": "Lehftia, Haveh Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001560,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100341": {
+   "name": "Dark Rain Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100342": {
+   "name": "Raegen -The Return- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100343": {
+   "name": "Reberta & Ignitos Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100345": {
+   "name": "Akstar -The Return- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100350": {
+   "name": "Fina -The Return- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100346": {
+   "name": "Sakura -The Return-, Nichol -The Return-, Mediena Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001584,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100347": {
+   "name": "Frostblade Fryevia Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001586,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100348": {
+   "name": "Knights of Grandshelt Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100349": {
+   "name": "Rinoa & Angelo, Lone Lion Squall Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001588,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100354": {
+   "name": "Laguna, Kiros & Ward, Zell Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001595,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100351": {
+   "name": "King of Leonis Mont, Vinera Fennes, Sterne Leonis Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001597,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100352": {
+   "name": "Fledgling Warrior, Marilith Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001599,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100353": {
+   "name": "Tide Bringer Kaito Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001601,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100356": {
+   "name": "Hero Dai, Martial Artist Maam, Mage Popp Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001608,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100355": {
+   "name": "Emperor of Palamecia, Ricard & Wyvern, Guy Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001612,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100357": {
+   "name": "Yshe, Kall, Ilmatalle, Cid Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001615,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100358": {
+   "name": "Wylk Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100359": {
+   "name": "Paladin Sylvie, Storm Seeker Esther Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001617,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100365": {
+   "name": "Dark Fina -Warrior's Prayer-, Rain -Warrior's Prayer- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001630,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100361": {
+   "name": "Lehftia -Warrior's Prayer-, Poppy -Warrior's Prayer- Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001633,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100363": {
+   "name": "Samurai Chizuru Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001635,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100364": {
+   "name": "Rhus, Neilikka, Nerine Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001638,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100368": {
+   "name": "Beach Blaster Olive, Rubicante, Barbariccia, Aloha Lasswell Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001645,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100370": {
+   "name": "New Guardian Tidus, Wakka Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    }
+   }
+  },
+  "9100375": {
+   "name": "Ronso Warrior Kimahri, Yunalesca, Poppy Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001659,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100372": {
+   "name": "Shrine Maiden Tsukiko Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001661,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100373": {
+   "name": "Songstress Yuna, Berserker Rikku, Dark Knight Paine Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001666,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100374": {
+   "name": "Determined Dagger, Planet Destroyer Kuja, Amarant Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001668,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100329": {
+   "name": "Elazul, Pearl Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001672,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100325": {
+   "name": "Vanharma, Ihana Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001676,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100326": {
+   "name": "Ultimate Regina Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001674,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100328": {
+   "name": "Elegant Temptress Lilith, Lucius, Grim Lord Sakura, Lilith, Karten, Godrea, Demon Rain, Dracu Lasswell Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001293,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100330": {
+   "name": "Red Mage Ingus, Awakened Onion Knight Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001698,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100331": {
+   "name": "Embracer of Duty Edgar, Embracer of Freedom Sabin, Gau Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001700,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9300014": {
+   "name": "Embracer of Duty Edgar Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001700,
+      "count": 1
+     }
+    ]
+   }
+  },
+  "9100332": {
+   "name": "2B -Neo Vision-, A2 -Neo Vision-, 9S, Eve, 21O Featured Summon",
+   "art_text": "A guaranteed 5★/NV unit and a Summon Coin with every 11 summon",
+   "ten_plus_one": {
+    "guarantee": {
+     "rarity": 5
+    },
+    "bonus_rewards": [
+     {
+      "kind": 20,
+      "id": 1209001702,
+      "count": 1
+     }
+    ]
+   }
+  }
+ }
+}

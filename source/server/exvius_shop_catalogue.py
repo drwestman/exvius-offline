@@ -93,6 +93,24 @@ def _catalogue():
             product(940001000 + index * 1000 + position, did, row['reward'], row['price'],
                     row['limit'], (kind, currency), shop['reset_months'])
     if current_profile().name == 'ios-revival':
+        from revival_deals import ticket_ids
+        tickets = set(ticket_ids())
+        stock = defaultdict(list)
+        for row in _rows('F_MEDAL_EXCHANGE_MST'):
+            if str(row.get('ak2dhKm3')) in tickets and str(row.get('7iJpH5zZ', '')).startswith('10:'):
+                stock[str(row['ak2dhKm3'])].append(row)
+        # IDs use the entire pinned ticket list, so unavailable masters or
+        # historical filtering never shift another exchange's identity.
+        for index, currency in enumerate(ticket_ids()):
+            did = 850003000 + index
+            if not stock[currency]:
+                continue
+            detail(did, names.get(currency, 'NV Unit Select').strip(), 20, currency, 5)
+            for row in stock[currency]:
+                pid = 900000000 + int(row['S21FT3L8'])
+                limit = int(row['x0NDnEC9']) if row['kR4n5DxP'] == '1' else 2147483647
+                product(pid, did, row['7iJpH5zZ'], row['Qy5EvcK1'], limit, (20, currency))
+                offers[str(pid)]['requires_currency'] = True
         from revival_exchanges import event_shops
         for index, shop in enumerate(event_shops()):
             did = 850002000 + index

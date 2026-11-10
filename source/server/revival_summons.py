@@ -3,7 +3,7 @@
 Selection, holidays, ticket exceptions and the post-history shuffle follow revival
 47a13c084f42cf1b83b53173d0c21065c78fc2de (replay.py/gacha_rotation.py).
 Unlike that implementation this module never imports the engine or writes anchors.
-The existing catalogue remains authoritative; deals are a subsequent port.
+The canonical catalogue and pinned iOS deals share one selection policy.
 """
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -38,10 +38,13 @@ def catalogue():
     for name in ('catalogue', 'community', 'named', 'authored'):
         for banner in json.loads((HERE / f'gacha_{name}.json').read_text(encoding='utf-8'))['banners']:
             by_id[str(banner['id'])] = banner
+    from revival_deals import banners, apply_printed
+    for banner in banners():
+        by_id[str(banner['id'])] = banner
     for banner in _standard():
         if banner.get('serve', True):
             by_id.setdefault(str(banner['id']), banner)
-    return tuple(by_id.values())
+    return tuple(apply_printed(banner) for banner in by_id.values())
 
 
 @lru_cache(maxsize=1)
@@ -242,6 +245,7 @@ class SummonPlan:
         cutoff = None if self.finished or full_pool(original) else \
             (date.fromisoformat(self.window['to']) - timedelta(days=1)).isoformat()
         configured['_replay_pool'] = {'cutoff': cutoff, 'featured': featured}
+        configured['_replay_timezone'] = self.window.get('timezone', 'America/New_York')
         configured['_replay_window'] = {
             'from': datetime.fromisoformat(self.window['starts']).astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'),
             'to': (datetime.fromisoformat(self.window['ends']).astimezone(timezone.utc) -
@@ -267,6 +271,7 @@ def plan(data, now=None, *, banners=None, families=None):
     calendar = preview(data, now)
     anchor, settings = read_anchor(data) or (calendar['anchor_week'], IOS_REVIVAL.replay)
     window = calendar['windows'][0]
+    window['timezone'] = settings.timezone
     week = rotation_week(now, settings)
     last = max(max(unit_dates().values()), '2024-08-22')
     finished = window['from'] > last

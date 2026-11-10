@@ -196,3 +196,48 @@ their exchange sources, followed by friends, arena, rewards, economy, and added
 authored content. Native gameplay routing, asset preparation/installation, and full
 iPhone gameplay acceptance remain pending; the native service is still the accepted
 connection check.
+
+## Summon deals, guarantees, and ticket exchanges checkpoint — November 9, 2026
+
+The iOS profile now includes the pinned **311 deal banners**, **107 printed bonus
+definitions**, and the corresponding seven select-ticket exchange currencies:
+
+- Deal definitions override the same catalogue IDs as the fork; printed bonuses
+  fill missing terms while retaining authored bonuses and stronger guarantees.
+  The generated definitions, bonus metadata, and `content/deal_specs.json` authoring
+  source are copied unchanged from the reference commit.
+- Ordinary pools enforce printed date ranges and limited/collaboration exclusions.
+  Step/secondary pool overrides, weighted bonus choices, counted guarantees, and
+  extra NV slots share effective definitions with the rate page. Explicitly named
+  step guarantees keep their printed units under the campaign's historical cutoff.
+- The iOS command boundary stages canonical payments, units, bonuses, and counters
+  before publishing the result. Refused, partial, or exceptional grants preserve
+  the original player. The legacy transaction path and wire contract remain intact.
+- Six re-summon deals persist bounded free replacements, keep the paid bonus, and
+  do not charge or increment the paid-purchase counter again. Changed, missing, or
+  deployed main units prevent replacement. Secondary limits refresh in the native
+  reply. Each accepted redo consumes an attempt; the protocol has no operation nonce.
+- NV select-ticket exchanges use the shipped master prices and limits, appear while
+  tickets are held, and preserve stock receipts across reloads. Historical unit
+  filtering applies independently of summon-ticket pool exemptions.
+- Daily deal counters and native date bounds use the recorded campaign timezone,
+  including 23-hour and 25-hour days at Eastern daylight-saving transitions.
+
+Validation: **16 new deal checks, 60 existing iOS foundation/summon/event checks,
+48 legacy summon/event/repeat/raid checks, 65 shop-action checks, and 18 mode checks
+passed** (207 distinct checks). A real-data sweep at each deal's historical release
+age, with selection held open to isolate transactions, completed **533 primary/step
+pulls across all 311 definitions** and rendered **311 rate pages without state
+writes**. A separate comparison agreed with the fork on **201 weekly summon and
+event selections** using the expanded catalogue.
+
+Real encrypted flows also passed for a printed 10+1 bonus (800440), the NV
+select-ticket award/redemption (9503462, ticket 1209001554), and a free result
+replacement without a second charge (9503300). These checks used disposable private
+saves, denied network access, and confined writes to those disposable roots.
+
+**Stage 1 remains in progress.** Next are explicit simulated-friend initialization
+and friend behavior, followed by arena progression, remaining rewards/economy, and
+added authored content. Native gameplay routing, data/asset preparation (including
+generated deal artwork), and full iPhone gameplay acceptance remain pending. The
+native service continues to serve the accepted connection check.

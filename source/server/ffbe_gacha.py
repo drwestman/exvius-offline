@@ -483,6 +483,9 @@ def _gacha_detail_row(b, art, detail_id, cost, draws, exe_type=None, img_btn=Non
         det["1ovyP04j"] = f"{int(b.get('weekly_limit') or b['daily_limit'])}:1"
     elif b.get('lap_limit') and b.get('steps'):
         det['1ovyP04j'] = f"{int(b['lap_limit'])}:0"
+    elif (current_profile().name == 'ios-revival' and b.get('resummon')
+          and str(exe_type or b.get('exe_type', 'primary')) == 'secondary'):
+        det['1ovyP04j'] = f"{int(b['resummon'])}:0"
     elif b.get('purchase_limit'):
         det['1ovyP04j'] = f"{int(b['purchase_limit'])}:0"
     if b.get('boxes'):
@@ -877,7 +880,7 @@ def serve_gacha(spec, plaintext: str | None = None, reply_id=None):
             _gacha_player_refresh(out)
             # The detail scene returns straight from the result screen. Refresh
             # its step state in this reply, without requiring a new GachaEntry.
-            if banner.get('steps') or banner.get('boxes'):
+            if banner.get('steps') or banner.get('boxes') or (current_profile().name == 'ios-revival' and banner.get('resummon')):
                 banners = all_banners()
                 if os.environ.get('EXVIUS_SUMMON_ARCHIVE') == '1':
                     from gacha_archive import visible_banners

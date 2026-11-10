@@ -37,6 +37,8 @@ class ExchangePolicy:
         return all(int(row['kind']) != 10 or dates.get(str(row['id']), '') < cutoff for row in rewards)
 
     def detail_open(self, offer):
+        if offer.get('requires_currency') and not self.held(*offer['cost']):
+            return False
         areas = offer.get('event_areas')
         if areas is None:
             return True

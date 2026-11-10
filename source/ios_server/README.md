@@ -110,6 +110,34 @@ Unavailable guaranteed rewards also decline without spending. The two SP ticket
 bundles are one-off purchases on iOS; the plain SP ticket bundle is removed, while
 already held plain SP tickets retain the historical pool limit.
 
+The iOS catalogue also includes the pinned **311 deal banners** and **107 printed
+bonus definitions**. Step costs, counted guarantees, separate NV slots, paid-pull
+bonuses, weighted bonus choices, and daily/weekly/lifetime/lap limits use the
+canonical transaction code. Printed pool dates and limited/collaboration exclusions
+apply to ordinary draws and extra slots; an explicitly named guarantee keeps its
+printed units while still respecting the campaign's historical cutoff. Rate pages
+use the same effective step/offer definitions as purchases.
+
+The seven NV select-ticket currencies earned by these deals expose their exchanges
+while tickets are held. Redemption keeps the existing master prices and stock
+limits, checks historical eligibility, and removes the exchange after the last
+ticket is spent. Paid-pull bonuses belong to that purchase and are not repeated by
+free re-summons.
+
+The six re-summon deals let a paid result be replaced a bounded number of times.
+The current result remains owned if you stop. A free redo replaces only unchanged,
+unused main units; it keeps the paid bonus and does not charge again or advance the
+paid-purchase count. Training, removing, or assigning those units prevents a redo.
+Remaining attempts persist across reloads and are projected on the secondary offer.
+As with the existing protocol, each accepted redo request consumes an attempt;
+the client supplies no distinct operation nonce for distinguishing a retry from a
+new choice. iOS daily limits reset at midnight in the saved campaign timezone.
+
+iOS draws stage their payments, units, bonuses, and counters before publishing to
+the live player. A refused or failed grant preserves the original state. The native
+gameplay host and deal-art preparation remain later checkpoints; importing these
+definitions does not download their generated artwork.
+
 Vortex events follow that calendar too: the first week includes the preceding
 14 days, reruns retain their own run dates, ranked events use their original
 periods, and recurring dungeons rotate deterministically. Closed captured gates
@@ -212,6 +240,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_server.py
 .venv-ios/bin/python -B source/exvius/test_ios_summons.py
 .venv-ios/bin/python -B source/exvius/test_ios_events.py
+.venv-ios/bin/python -B source/exvius/test_ios_deals.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -228,6 +257,11 @@ The event/exchange suite also covers event run windows, pending-battle resumes,
 expired entry rejection, atomic native medal batches, persistent exchange stock,
 monthly reset boundaries, and atomic Vortex-unlock backfills. The legacy event,
 repeat, raid, mode, and shop checks retain their existing contracts.
+The deal suite covers printed pool rules, offer-specific bonus choices, staged
+grant failure, counted/NV guarantees, mixed-pool overrides, encrypted ticket award
+and exchange, bounded re-summons, changed-unit rejection, native limit refreshes,
+and daily reset timing. The pinned JSON files are copied unchanged; their authoring
+source is retained in `source/server/content/deal_specs.json`.
 Legacy summon and shop checks can also use the prepared data without loading a save:
 
 ```sh

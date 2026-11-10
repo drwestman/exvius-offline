@@ -6,6 +6,7 @@ from pathlib import Path
 
 from data_paths import TEXT_DIR
 from revival_summons import reward_allowed, unit_allowed
+from engine_profile import current_profile
 
 
 @lru_cache(maxsize=1)
@@ -53,13 +54,19 @@ def _table(pool, mixed=False):
 
 def page(banner_id):
     from ffbe_gacha import all_banners
-    from player_state import expand_pool, summon_subpool
+    from player_state import expand_pool, summon_subpool, summon_pool, summon_guarantee_pool
     banner = next((b for b in all_banners() if str(b['id']) == str(banner_id)), None)
     if banner is None:
         return None
     notice = ('Choose a unit or prism from the selection list.' if banner.get('selection') else
               'The rates below apply to this summon. Guaranteed slots and additional rewards are listed separately.')
     body = '<h1>' + escape(banner['name']) + '</h1><p class="notice">' + escape(notice).replace('\n', '<br>') + '</p>'
+    if current_profile().name == 'ios-revival' and banner.get('resummon'):
+        from revival_deal_commands import remaining
+        from ffbe_state import State
+        left = remaining(State.player, banner) if State.player else 0
+        body += '<p>Free re-summons remaining: ' + str(left) + '. Each replaces the previous main result. '
+        body += 'The paid-pull bonus is kept. Using or changing a result prevents replacement.</p>'
     if banner.get('boxes'):
         body += '<p>The first five boxes draw without replacement. Remaining quantities and featured rewards appear in the original Box Details screen.</p>'
         body += '<h2>Standard pool after the five boxes</h2><p>Materials 80%, enhancers 19%, ultra-rare rewards 1%, divided equally within each group.</p>'
@@ -98,20 +105,31 @@ def page(banner_id):
             else:
                 cost_text = 'Free'
             body += '<p>' + str(offer.get('draws', banner.get('draws', 1))) + ' draws. Cost: ' + cost_text + '.</p>'
-        definition = dict(banner)
-        if 'pool' in offer:
-            definition['pool'] = offer['pool']
-        pool = banner.get('reward_pool') or expand_pool(definition)
-        if banner.get('reward_pool'):
-            pool = [row for row in pool if reward_allowed(banner, row)]
-        body += _table(pool, bool(banner.get('reward_pool')))
+        ios = current_profile().name == 'ios-revival'
+        if ios:
+            from revival_deals import effective_banner
+            definition = effective_banner(banner, offer)
+            pool = summon_pool(definition)
+        else:
+            definition = dict(banner)
+            if 'pool' in offer:
+                definition['pool'] = offer['pool']
+            pool = banner.get('reward_pool') or expand_pool(definition)
+            if banner.get('reward_pool'):
+                pool = [row for row in pool if reward_allowed(banner, row)]
+        body += _table(pool, bool(definition.get('reward_pool')))
         guarantee = offer.get('guarantee', banner.get('guarantee', {}))
+        if ios:
+            guarantee = definition.get('guarantee') or {}
         if guarantee:
             count = int(guarantee.get('count', 1))
             if guarantee.get('rarity'):
                 body += '<p>' + str(count) + ' guaranteed reward(s) of rarity ' + str(guarantee['rarity']) + ' or higher.</p>'
-                restricted = summon_subpool(definition, guarantee['pool']) if guarantee.get('pool') else pool
-                restricted = [r for r in restricted if int(r.get('rarity', 0)) >= int(guarantee['rarity'])]
+                if ios:
+                    restricted = summon_guarantee_pool(definition, pool, guarantee)
+                else:
+                    restricted = summon_subpool(definition, guarantee['pool']) if guarantee.get('pool') else pool
+                    restricted = [r for r in restricted if int(r.get('rarity', 0)) >= int(guarantee['rarity'])]
                 body += '<h3>Guaranteed slot rates</h3>' + _table(restricted)
             if guarantee.get('unit_id') and unit_allowed(definition, guarantee['unit_id']):
                 from ffbe_gacha import unit_name
