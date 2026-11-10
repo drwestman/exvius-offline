@@ -66,7 +66,8 @@ def unit_dates():
 
 @lru_cache(maxsize=1)
 def _unlimited_tickets():
-    rows = ticket_bundles(json.loads((HERE / 'global_bundles.json').read_text(encoding='utf-8'))['bundles'])
+    from revival_economy import bundles
+    rows = ticket_bundles(bundles())
     return {':'.join(str(item).split(':')[:2]) for row in rows if not row.get('limit')
             for item in row.get('contents', [])}
 

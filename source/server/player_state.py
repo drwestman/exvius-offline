@@ -3596,12 +3596,16 @@ class PlayerState:
                                                 for r in items if isinstance(r, dict))})
         return []
 
-    def _grant_items(self, items) -> list:
+    def _grant_items(self, items, *, earned=True) -> list:
         """Credit reward entries (`kind:id:count`) into the right place and return ONLY what was projected.
 
         The SAME split `receive_mail` uses: a currency kind (30 gil / 50 lapis / 51 friend point) is credited
         to the currency field, everything else goes to the bag via `grant_item`. One place, so a ladder tier
         and a mail attachment can never disagree about what a `30:10000` row means.
+
+        Returned rows retain their source denomination for canonical completeness checks and receipts.
+        The iOS economy converts earned Lapis at credit and at projection; `earned=False` is required for
+        purchases and already-normalized daily snapshots. Direct balance edits are never converted.
 
         **A returned row means the CLIENT CAN SEE IT** (audit 2026-09-27). That is the whole contract, and
         it was not true before: `_grant_items` banked *any* kind into `inventory.items` and returned it, so a
@@ -3622,7 +3626,14 @@ class PlayerState:
                 continue
             cur = STORAGE_CURRENCY.get(kind)
             if cur:
-                self.add_currency(cur, count)
+                credit = count
+                if earned and kind == 50 and current_profile().replay is not None:
+                    from revival_economy import earned as earned_amount
+                    credit = earned_amount(self.data, count)
+                self.add_currency(cur, credit)
+                if earned and kind == 30 and current_profile().replay is not None:
+                    from revival_daily import score
+                    score(self, 'gil_earn', count)
             elif str(kind) == "21":
                 # EQUIP goes to `inventory.equipment`, NOT the generic bag: `equip_item_rows` (the
                 # `MBPCGT84` / `UserEquipItemInfoResponse` group the client's Equipment screen reads) is
@@ -3883,13 +3894,18 @@ class PlayerState:
         """The `UserMailInfoResponse` (`qja26wHb`) rows for `MailListRequest`. Token map: `docs/notes/mailbox.md` §1."""
         rows = []
         for m in self.mailbox:
+            items = m.get('items') or []
+            if current_profile().replay is not None:
+                from revival_economy import earned as earned_amount
+                items = [dict(it, count=earned_amount(self.data, int(it['count'])))
+                         if int(it['item_type']) == 50 else it for it in items]
             rows.append({
                 "ynP26rjD": str(m.get("mail_id", "")),         # MailId (u64)
                 "9m5yIkCK": str(m.get("icon_type", 0)),         # IconType (NOT "MailType")
                 "fbcj5Aq9": str(m.get("title", "")),           # Title
                 "Wk1v6upb": str(m.get("message", "")),         # Message
                 "u7Z1DYz4": str(m.get("attach_type", 0)),       # AttachType (no reader)
-                "7iJpH5zZ": _mail_item_string(m.get("items") or []),  # TargetInfo = the reward list
+                "7iJpH5zZ": _mail_item_string(items),  # TargetInfo = the reward list
                 "14Y7jihw": str(m.get("receive_type", 0)),      # ReceiveType (0/1/2)
                 "f5LHNT4v": str(m.get("send_date", "")),        # SendDate
                 "k0qX5yQd": str(m.get("open_date", "")),        # OpenDate

@@ -236,7 +236,7 @@ with patch.object(arena, 'clock', return_value=NOW + timedelta(weeks=4)):
     request('RbReStartRequest', ranking_req)
     assert player.data == before and config.state_file.read_bytes() == saved
     enter()
-    assert player.currencies['lapis_free'] == baseline + 100
+    assert player.currencies['lapis_free'] == baseline + 500
     rolled = player.data['exvius_arena']
     assert rolled['ladder_last_paid'] == old['week']
     assert rolled['last_week_result']['rank'] == 1
@@ -249,7 +249,7 @@ with patch.object(arena, 'clock', return_value=NOW + timedelta(weeks=4)):
     assert player.data == before and config.state_file.read_bytes() == saved
 with patch.object(arena, 'clock', return_value=NOW + timedelta(weeks=20)):
     enter()
-    assert player.currencies['lapis_free'] == baseline + 100
+    assert player.currencies['lapis_free'] == baseline + 500
 ''')
 
     def test_given_save_failure_when_entering_starting_or_finishing_then_publish_no_partial_campaign(self):

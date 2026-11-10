@@ -373,3 +373,54 @@ stayed within the disposable runtime; no network was used.
 then trust gains, replay notices, and added authored content. Native gameplay
 routing, data/asset preparation, and full iPhone gameplay acceptance remain pending.
 The native service continues to serve the accepted connection check.
+
+## Daily quests and earned-Lapis checkpoint — November 9, 2026
+
+Ported the pinned earned-Lapis economy, 22 custom daily quests, and dated revival
+bundles into the iOS profile. Campaign initialization records economy settings once:
+five times earned Lapis, 150 base Lapis for original dailies, a 200-base-Lapis
+completion bonus, and five varied quests by default. Existing campaigns backfill
+missing settings without changing their replay anchor. Purchases, refunds, direct
+balance edits, and already-normalized daily rewards bypass the multiplier.
+
+Daily update, login/home, and relevant gameplay commands explicitly freeze the
+day's set, quest definitions, actual rewards, trust-moogle metadata, and bonus.
+Selection follows the pinned deterministic pool shuffle without consuming gameplay
+RNG. Successful battle, summon, fusion, expedition, Arena, and gift activity uses
+canonical completion/receipt guards. Views and diagnostics do not select or grant;
+an expired set is empty until an explicit update. Midnight and countdowns use the
+saved campaign timezone, including 23/25-hour DST days. Same-day pre-port selections
+and claims are preserved. Claims never implicitly reset the day.
+
+Daily claims and completion bonuses stage and save before publication. Duplicate,
+incomplete, stale, frozen, and ephemeral claims pay nothing. Failed grants or saves
+preserve inventory and receipts. Earned mail/login/quest/Arena/result projections
+show converted amounts; canonical grant return values and receipts keep their
+source denomination. Native result reward wrappers and unit metadata are retained.
+Purchased Lapis remains the bundle's listed quantity. Legacy paths are unchanged.
+
+The pinned bundle catalogue adds Bonus Present Ticket and twelve Hill of Fortune
+runs, using the replay window for both listing and purchase. Stale captured rows
+are removed; expired and sold-out requests cannot spend. Purchases save original
+contents, payment, and stock together, with daily limits in the saved timezone.
+
+Validation: **22 new daily/economy BDD scenarios, 129 existing iOS checks, 65 legacy
+shop/gift checks, and 85 legacy trust/completion/summon/Arena checks passed (301
+distinct checks).** Coverage includes read-only views, fixed settings, selection,
+DST/midnight, claim and purchase retries/reloads, reward metadata, successful versus
+refused action scoring, partial grants, failed saves, and malformed saved facts.
+
+A disposable real-data campaign claimed 750 daily Lapis plus its 1,000-Lapis
+completion bonus once, received a displayed 500-Lapis earned mail once, and bought
+Early Bird with exactly 5,000 purchased Lapis. Its 35 cactuars followed canonical
+conversion into 3.5 million enhancement EXP. Encrypted story clears/retries retained
+single-attempt accounting and projected boosted repeat Lapis. A 365-day sweep
+matched every daily selection to the pinned fork and checked all selected rewards
+against real masters. Pinned custom/bundle JSON is byte-identical. All writes stayed
+in the disposable runtime; no network was used.
+
+**Stage 1 remains in progress.** Next are trust gains, replay notices, and added
+authored content. Pure helpers now supply native master-reward conversions and
+custom daily text, but installing these into served assets, bundle artwork, native
+gameplay routing, and full iPhone gameplay acceptance remain pending. The running
+native service continues to serve the accepted connection check.

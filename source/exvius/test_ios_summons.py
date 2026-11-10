@@ -191,14 +191,15 @@ def request(name, payload=None, *, allow_empty=False):
     if raw and 1 <= raw[-1] <= 16 and raw[-raw[-1]:] == bytes([raw[-1]]) * raw[-1]:
         raw = raw[:-raw[-1]]
     return json.loads(raw)
-with patch('revival_campaign.datetime') as dt, patch('revival_mail_rewards.clock', return_value=NOW):
+with patch('revival_campaign.datetime') as dt, patch('revival_mail_rewards.clock', return_value=NOW), patch('revival_daily.clock', return_value=NOW):
     dt.now.return_value = NOW
     request('InitializeRequest')
 player = server.State.player
 player.add_currency('lapis_free', 20000)
 player.save(str(config.state_file))
 try:
-''' + '\n'.join('    ' + line for line in body.splitlines()) + '''
+    with patch('revival_daily.clock', return_value=NOW):
+''' + '\n'.join('        ' + line for line in body.splitlines()) + '''
 finally:
     engine.close()
 '''

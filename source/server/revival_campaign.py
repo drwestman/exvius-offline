@@ -26,13 +26,15 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
     needs_friends = friend_settings(player.data) is None
     from revival_mail_rewards import read_state as mail_settings, initialize as initialize_mail
     needs_mail = mail_settings(player.data) is None
+    from revival_economy import settings as economy_settings, initialize as initialize_economy
+    needs_economy = economy_settings(player.data) is None
     from player_state import _load_ndjson, switch_position
     from ffbe_config import SWITCH_TYPE_MISSION, SWITCH_BASE_INDICES
     vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
     unlock = switch_position(vortex.get('juA0Z4m7'))
     needs_container = SWITCH_TYPE_MISSION not in player.switches
     needs_unlock = unlock is not None and unlock[1] not in player.switches.get(unlock[0], set())
-    if anchored and not needs_container and not needs_unlock and not needs_friends and not needs_mail:
+    if anchored and not needs_container and not needs_unlock and not needs_friends and not needs_mail and not needs_economy:
         return False
     if player.mode != 'live':
         raise ValueError('iOS campaign initialization requires live persistence.')
@@ -46,6 +48,7 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
         candidate.grant_switch(*unlock)
     initialize_friends(candidate.data)
     initialize_mail(candidate.data)
+    initialize_economy(candidate.data)
     candidate.data.setdefault('meta', {})['engine_profile'] = profile.name
     candidate.dirty = True
     if not candidate.save(str(state_file)):

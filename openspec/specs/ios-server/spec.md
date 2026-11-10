@@ -470,6 +470,89 @@ Legacy mail behavior SHALL remain unchanged.
 - Then neither its attachments nor its received marker are published
 - And a successful retry grants the attachments once.
 
+### Requirement: RecordIosEconomyAndDailyFacts
+
+The iOS profile SHALL record the earned-Lapis multiplier, original daily reward,
+completion bonus, custom-quest switch, and selection count in the campaign.
+Defaults SHALL be 5, 150, 200, true, and 5 respectively. Recorded settings SHALL
+survive environment changes. Invalid saved settings or daily snapshots SHALL fail
+visibly without reset. Initialization MAY backfill missing settings while preserving
+the replay anchor and existing daily receipts.
+
+Daily selection SHALL match the pinned day-seeded pool shuffle, with distinct
+actions and five quests by default. An explicit daily update, login/home, or relevant
+gameplay command SHALL freeze the selected definitions, native reward metadata,
+actual reward amounts, and completion bonus. Selection SHALL not consume gameplay
+RNG. A same-day pre-port set and its claims SHALL be retained.
+
+#### Scenario: Restart after changing defaults
+
+- Given a recorded daily set and economy
+- When the process restarts with different environment defaults
+- Then the day's displayed rewards and claim amounts remain the recorded amounts
+- And selection and diagnostics do not mutate the campaign.
+
+### Requirement: SeparateDailyQueriesAndClaims
+
+Daily screens SHALL project recorded progress and rewards without rolling a day
+or granting inventory. Days and countdowns SHALL use the saved campaign timezone
+and actual seconds across DST. Queries after midnight SHALL report an expired set
+without rewriting it. Clock rollback SHALL not recreate an earlier day. Gameplay
+SHALL score successful canonical actions using their existing completion/receipt
+guards, rather than merely receiving a request.
+
+Claims SHALL require current-day completed, unclaimed quests and live persistence.
+They SHALL stage all grants and receipts, including the once-per-day completion
+bonus, and save before publishing. Unsupported rewards, incomplete grants, or save
+failures SHALL preserve the prior campaign. Rewards SHALL retain trust-moogle
+metadata. Duplicate, unknown, incomplete, stale, frozen, or ephemeral claims SHALL
+grant nothing. Claims SHALL not implicitly roll to a new day.
+
+#### Scenario: Fail the completion bonus
+
+- Given all selected quests are complete
+- When claim-all cannot grant or save the completion bonus
+- Then no daily reward or claim marker is published
+- And retry can grant the entire set and bonus once.
+
+### Requirement: ConvertEarnedLapisAtCreditAndProjection
+
+Earned Lapis SHALL use the recorded multiplier. Purchases, refunds, direct balance
+edits, and already-normalized daily grants SHALL bypass conversion. Canonical
+reward return values and receipt rows SHALL retain their source denomination.
+Native earned-reward projections SHALL display the converted amounts without
+changing source payloads or multiplying retries again. Mission reward wrappers
+and unit metadata SHALL survive projection. Item-drop channels SHALL retain their
+existing interpretation. Legacy grants and projections SHALL remain unchanged.
+
+Native master conversion and custom daily text SHALL be pure preparation inputs;
+queries SHALL not write shared tables. Installation into the served native assets
+and visual device acceptance remain part of the later preparation stage.
+
+#### Scenario: Buy Lapis while earned Lapis is boosted
+
+- Given a saved multiplier of five
+- When an earned 100-Lapis mail and a purchased 5,000-Lapis bundle are claimed
+- Then the mail displays and credits 500 Lapis once
+- And the bundle credits exactly 5,000 Lapis with its original charge and stock limit.
+
+### Requirement: RevalidateIosDatedBundles
+
+The iOS catalogue SHALL use the pinned bundles, including Bonus Present Ticket
+and twelve Hill of Fortune runs. Historical sale periods SHALL overlap the saved
+replay window using its exclusive end. Expired dated runs SHALL not return after
+history ends. Lists and purchases SHALL apply the same availability and stock
+rules, removing stale captured rows. Daily stock dates SHALL use the saved timezone.
+Purchase commands SHALL stage the original contents, charge, and stock receipt and
+save before publishing. Failures and stale/sold-out selections SHALL not spend.
+Legacy bundle definitions SHALL remain unchanged.
+
+#### Scenario: Submit a stale bundle purchase
+
+- Given a previously visible dated bundle
+- When replay rollover closes its sale period before purchase
+- Then purchase is refused without changing the balance, inventory, limit, or save.
+
 ### Requirement: SeparateViewCachingFromPreparation
 
 iOS battle views SHALL read existing caches or derive in memory without writing

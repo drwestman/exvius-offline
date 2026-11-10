@@ -44,6 +44,8 @@ def execute(player, banner, repeats=1, ticket_id=None, offer=None):
                           if str(row['instance_id']) in ids},
             'cards': {str(row['user_vc_id']): copy.deepcopy(row) for row in candidate.data.get('vision_cards', [])
                       if str(row.get('user_vc_id')) in ids}}
+    from revival_daily import score
+    score(candidate, 'summon')
     player.data, player.dirty = candidate.data, candidate.dirty
     return result
 

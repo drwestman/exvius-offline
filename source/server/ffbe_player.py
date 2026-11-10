@@ -37,6 +37,15 @@ _GLOBAL_BUNDLES = []
 
 
 def _global_bundles():
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_economy import bundles
+        from revival_summons import ticket_bundles
+        return ticket_bundles(bundles())
+    return _legacy_global_bundles()
+
+
+def _legacy_global_bundles():
     """The Global Premium Bundles from global_bundles.json (loaded once)."""
     if not _GLOBAL_BUNDLES:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'global_bundles.json')
@@ -50,23 +59,39 @@ def _global_bundles():
     return _GLOBAL_BUNDLES
 
 
+def _bundle_day():
+    from engine_profile import current_profile
+    if current_profile().replay is not None and State.player is not None:
+        from revival_daily import day
+        return day(State.player.data)[0]
+    return time.strftime('%Y-%m-%d')
+
+
 def _bundle_bought(bundle_id, limit):
     """Whether a 'once' bundle was ever bought, or a 'daily' one was bought today."""
     record = (State.player.data.get('bundle_purchases') or {}).get(str(bundle_id)) if State.player else None
     if not record or not limit:
         return False
-    return limit == 'once' or record.get('last_day') == time.strftime('%Y-%m-%d')
+    return limit == 'once' or record.get('last_day') == _bundle_day()
 
 
 def _record_bundle_purchase(bundle_id):
     purchases = State.player.data.setdefault('bundle_purchases', {})
     record = purchases.setdefault(str(bundle_id), {'count': 0})
     record['count'] = int(record.get('count', 0)) + 1
-    record['last_day'] = time.strftime('%Y-%m-%d')
+    record['last_day'] = _bundle_day()
     State.player.dirty = True
 
 
 def serve_lapis_shop(spec, reply_id, plaintext=None):
+    from engine_profile import current_profile
+    if reply_id == 'w6Z9a6tD' and current_profile().replay is not None:
+        from revival_bundle_commands import purchase
+        return purchase(spec, reply_id, plaintext)
+    return _serve_lapis_shop(spec, reply_id, plaintext)
+
+
+def _serve_lapis_shop(spec, reply_id, plaintext=None):
     """Use the existing bundle price fields and purchase route for local Lapis."""
     bundle_tag, item_tag = 'fMohhKK8', 'pcjqhOI8'
     status_id, purchase_id = 'uLXAMvCT', 'w6Z9a6tD'
@@ -142,11 +167,20 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
     # The Global Premium Bundles (global_bundles.json, from the FFBE wiki). Cash prices use the same
     # rate as above; a bundle past its once/daily limit is left out, so the client stops listing it.
     limits = {}
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        known = {str(b['id']) for b in _global_bundles()} | {'990000107'}
+        definitions = {bid: row for bid, row in definitions.items() if bid not in known}
+        items = {key: row for key, row in items.items() if key[0] not in known}
     for bundle in _global_bundles():
         bid = str(bundle['id'])
         limits[bid] = bundle.get('limit')
         if _bundle_bought(bid, bundle.get('limit')):
             continue
+        if current_profile().replay is not None:
+            from revival_economy import bundle_active
+            if not bundle_active(State.player.data, bundle):
+                continue
         if 'usd' in bundle:
             cost_type = '50'
             price = int((Decimal(str(bundle['usd'])) * rate).to_integral_value(rounding=ROUND_CEILING))
@@ -194,7 +228,7 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
                     raise ValueError('Not enough gil')
             elif not player.spend_lapis(price):
                 raise ValueError('Not enough Lapis')
-            if player._grant_items(rewards) != rewards:
+            if player._grant_items(rewards, earned=False) != rewards:
                 raise ValueError('Bundle could not be granted')
             _record_bundle_purchase(selected)
             if _bundle_bought(selected, limits.get(selected)):
@@ -728,6 +762,7 @@ def serve_unit_mix(spec, plaintext: str | None):
     if any(int(after or 0) > int(before or 0) for before, after in
            zip(affinity_before, base.get('affinity_points') or ())):
         score_quest_action('31')
+    score_daily("unit_fuse")
     lb_level = int(base.get("lb_level", 0) or 0)
     lb_exp = int(base.get("lb_exp", 0) or 0)
     (b_lv, b_ex), (a_lv, a_ex) = res["before"], res["after"]
@@ -1361,6 +1396,14 @@ def _quest_matches(action: str, meta: dict, cleared_mission) -> bool:
 
 
 def _daily_quests_for_action(action, player) -> list:
+    from engine_profile import current_profile
+    if current_profile().replay is not None and player is not None:
+        from revival_daily import action_rows
+        return action_rows(player, action)
+    return _legacy_daily_quests_for_action(action, player)
+
+
+def _legacy_daily_quests_for_action(action, player) -> list:
     """Today's daily quests the `action` scores: `[(counter key, quest id, target)]`.
 
     The join is by the `action` field `harness/gen_daily_quests.py` parsed out of each row's SHIPPED detail
@@ -1429,6 +1472,21 @@ def _exploration_missions():
         return set()
 
 
+def score_daily(action, amount=1, player=None):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_daily import score
+        score(player if player is not None else State.player, action, amount)
+
+
+def mission_daily_actions(mid):
+    from player_state import _load_ndjson, mission_row
+    actions = ['exploration_clear'] if str(mid) in _exploration_missions() else []
+    world = _load_ndjson('F_WORLD_MST.ndjson', '9Pb24aSy').get(str((mission_row(mid) or {}).get('9Pb24aSy')), {})
+    kind = str(world.get('dw2nvP3r') or '')
+    return actions + (['story_clear'] if kind == '1' else ['vortex_clear'] if kind in ('2', '3') else [])
+
+
 def score_completed_quest_mission(plaintext):
     from exvius_challenges import _counts, _party
     from exvius_repeat import claim_quest_progress
@@ -1440,6 +1498,9 @@ def score_completed_quest_mission(plaintext):
     if ctx['cleared'] is not True or not claim_quest_progress(State.player, mid):
         return False
     score_quest_action('15', param=mid)
+    score_daily('mission_clear')
+    for action in mission_daily_actions(mid):
+        score_daily(action)
     score_quest_action('42', param=mid)
     if mid in _exploration_missions():
         score_quest_action('48')
@@ -1464,7 +1525,11 @@ def score_completed_quest_mission(plaintext):
     damage = metric('MAX_DAMAGE_TURN', 'DMG_RANK_MAX_DAMAGE_TURN')
     for code, channel, key in (('23', 'lb', 'LB'), ('26', 'magic', 'MAGIC'), ('27', 'beasts', 'BEAST')):
         counts = _counts(ctx, channel) or {}
-        score_quest_action(code, max(sum(counts.values()), metric(f'TOTAL_{key}_USE', f'DMG_RANK_TOTAL_{key}_USE')))
+        used = max(sum(counts.values()), metric(f'TOTAL_{key}_USE', f'DMG_RANK_TOTAL_{key}_USE'))
+        score_quest_action(code, used)
+        score_daily({'lb': 'lb_use', 'magic': 'magic_use', 'beasts': 'esper_use'}[channel], used)
+    if ctx.get('dead_count') == 0:
+        score_daily('no_ko_clear')
     for element, amount in (_counts(ctx, 'elements') or {}).items():
         score_quest_action('20', amount, element)
     for code, amount in (('39', damage), ('50', damage), ('40', metric('TOTAL_DAMAGE', 'DMG_RANK_TOTAL_DAMAGE'))):
@@ -1547,7 +1612,8 @@ def apply_progress(spec, reply_id, plaintext=None):
     # no `Pzn5h0Ga` column at all, and what the player must do is written in the row's shipped TEXT
     # ("Send gifts to 5 friends"). One action therefore scores both families from one store -- the reason
     # `quest_progress` is a single table and not one per feature.
-    dq_hit = _daily_quests_for_action(action, player)
+    from engine_profile import current_profile
+    dq_hit = [] if current_profile().replay is not None else _daily_quests_for_action(action, player)
     for key, qid, target in dq_hit:
         player.bump_progress(key, 1, cap=target or None, what=f"{action} -> daily quest {qid}")
     if dq_hit:
@@ -1717,6 +1783,14 @@ def _quest_reward(quest_id: str) -> list:
 # store. The full derivation and every address are in `docs/notes/daily_quests.md`.
 
 def daily_quest_catalogue() -> dict:
+    from engine_profile import current_profile
+    if current_profile().replay is not None and State.player is not None:
+        from revival_daily import catalogue
+        return catalogue(State.player.data)
+    return _legacy_daily_quest_catalogue()
+
+
+def _legacy_daily_quest_catalogue() -> dict:
     """`server/daily_quests.json`, loaded once. `{}` if it is missing -- and SAYS so.
 
     A missing catalogue must be loud rather than quietly serving an empty list, because an empty daily quest
@@ -2025,6 +2099,14 @@ def _daily_team_lv_string(player) -> str:
 
 
 def serve_daily_quest(spec, reply_id):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_daily import serve
+        return serve(spec, reply_id, State.player)
+    return _legacy_serve_daily_quest(spec, reply_id)
+
+
+def _legacy_serve_daily_quest(spec, reply_id):
     """The DAILY QUEST projection, and the two groups go on DIFFERENT carriers on purpose.
 
     `Hqdgx83H` (the rows) rides `DAILY_QUEST_CARRIERS` -- the quest screen's five requests -- because it is
@@ -2137,6 +2219,16 @@ def serve_daily_quest(spec, reply_id):
 
 
 def claim_daily_quest(spec, reply_id, plaintext=None):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        if reply_id in (DAILY_QUEST_CLAIM, DAILY_QUEST_CLAIM_ALL):
+            from revival_daily_commands import claim
+            return claim(spec, reply_id, plaintext)
+        return spec
+    return _legacy_claim_daily_quest(spec, reply_id, plaintext)
+
+
+def _legacy_claim_daily_quest(spec, reply_id, plaintext=None):
     """The CLAIM: `DailyQuestClaimRewardRequest` `Zy8fYJ5e` (one) and `DCmya9WD` (all).
 
     The body is measured, not assumed -- `createBody` 0x1999ef4 emits `{"vj87UqEd": [{"nYD7LvSG": "<id>"}]}`

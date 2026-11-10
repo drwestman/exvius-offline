@@ -22,6 +22,10 @@ def _saved(config):
     read_anchor(data)
     from revival_mail_rewards import read_state as mail_rewards
     mail_rewards(data)
+    from revival_economy import settings as economy_settings
+    from revival_daily import read as daily_state
+    economy_settings(data)
+    daily_state(data)
     return data
 
 

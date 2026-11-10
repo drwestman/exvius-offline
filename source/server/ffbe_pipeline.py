@@ -18,6 +18,7 @@ from exvius_field_treasures import serve as serve_field_treasures
 from exvius_repeat import observe_load, repeat_challenge_rewards
 from revival_campaign import initialize_for_reply
 from revival_mail_commands import synchronize_for_reply
+from revival_daily_commands import synchronize_for_reply as synchronize_daily
 
 
 from ffbe_config import *          # noqa: F401,F403 -- constants; the table has no behaviour
@@ -157,6 +158,9 @@ PIPELINE: tuple = (
         c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
          "state", "State.player.ios_revival / exvius_friends / ios_mail_rewards",
          "explicit first-gameplay command; commit replay anchor before projecting any views"),
+    Step("synchronize_revival_daily", lambda c: synchronize_daily(
+        c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
+         "state", "State.player.daily_quest", "explicit daily period update before gameplay scoring"),
     Step("synchronize_revival_mail", lambda c: synchronize_for_reply(
         c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
          "state", "State.player.mailbox / ios_mail_rewards",
@@ -405,9 +409,17 @@ PIPELINE: tuple = (
     # After every rewrite of the result row: the client stores exactly this echo, and an autoplay
     # continuation adds its next run on top of it.
     Step("record_result_echo", lambda c: (record_result_echo(c.spec, c.plaintext), save_state(), c.spec)[2],
-         "io", "State.player.exvius_repeat.echo", "LAST: records the result values actually served"),
+         "io", "State.player.exvius_repeat.echo", "records result facts before iOS denomination projection"),
+    Step("project_revival_economy", lambda c: __import__('revival_economy').project(c.spec, State.player),
+         "spec", "earned reward amounts", "normalize only the wire copy after recording raw reward facts"),
 )
 PIPELINE_EDGES: tuple = (
+    Edge("initialize_revival_campaign", "synchronize_revival_daily", "State.player.ios_economy",
+         "record policy before freezing the day's selection and rewards"),
+    Edge("synchronize_revival_daily", "apply_progress", "State.player.daily_quest",
+         "score gameplay into the committed current-day set"),
+    Edge("record_result_echo", "project_revival_economy", "State.player.exvius_repeat.echo",
+         "keep stored source-denomination facts separate from normalized wire amounts"),
     Edge("initialize_revival_campaign", "synchronize_revival_mail", "State.player.ios_mail_rewards",
          "record calendar and delivery settings before issuing reward mail"),
     Edge("synchronize_revival_mail", "serve_mail", "State.player.mailbox",

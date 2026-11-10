@@ -162,6 +162,40 @@ by previews or gameplay projections.
 This is engine integration; the running native service still serves the connection
 check. Full iPhone gameplay hosting and the remaining revival ports are pending.
 
+The iOS economy now records its settings with the campaign. Earned Lapis defaults
+to **5×**; purchases, refunds, and direct balance edits retain their original
+amounts. Native mail, login calendars, quest replies, Arena results, and mission
+repeat rewards project converted amounts. The canonical reward receipts retain
+source amounts, so completeness checks and repeat guards keep their contracts.
+
+Daily updates, login/home commands, and relevant gameplay commands explicitly
+freeze the day's selection and actual rewards before scoring activity. The default
+mix contains five different actions from the original quests and 22 pinned custom
+quests. Rewards vary by day; trust-moogle metadata is retained. Original quests
+default to 750 Lapis each, with a 1,000-Lapis bonus for claiming the entire set.
+Claims stage all rewards and save before publishing; retries pay nothing extra.
+Screens and diagnostics never roll the day forward. An expired screen reports no
+current rows until an explicit update, and an expired claim grants nothing.
+Midnight and its countdown follow the saved campaign timezone, including DST.
+
+The initialization defaults are `EXVIUS_LAPIS_MULTIPLIER=5`,
+`EXVIUS_DAILY_QUEST_LAPIS=150`, `EXVIUS_DAILY_ALL_BONUS=200`,
+`EXVIUS_DAILY_CUSTOM=1`, and `EXVIUS_DAILY_QUEST_COUNT=5`. Existing recorded settings
+survive changes to those environment variables. Missing settings can be backfilled
+by initialization without moving the replay anchor; malformed saved facts are
+reported without repair.
+
+The iOS bundle catalogue now includes the pinned Bonus Present Ticket and twelve
+dated Hill of Fortune runs. Lists and purchases share historical availability;
+expired or sold-out offers cannot be bought from a stale screen. Purchases save
+the charge, original contents, and stock receipt atomically. Bundle daily limits
+use the campaign timezone. Legacy bundles and economy retain their existing paths.
+
+Native asset preparation is still pending. Pure preparation helpers provide
+converted master rewards and custom daily text; these are not yet installed into
+the phone's served tables. Daily names/details, master-based challenge displays,
+and additional bundle artwork still need that preparation and device acceptance.
+
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
 first; this command shares the same exclusive runtime lock:
@@ -241,6 +275,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_summons.py
 .venv-ios/bin/python -B source/exvius/test_ios_events.py
 .venv-ios/bin/python -B source/exvius/test_ios_deals.py
+.venv-ios/bin/python -B source/exvius/test_ios_daily_economy.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -262,6 +297,12 @@ grant failure, counted/NV guarantees, mixed-pool overrides, encrypted ticket awa
 and exchange, bounded re-summons, changed-unit rejection, native limit refreshes,
 and daily reset timing. The pinned JSON files are copied unchanged; their authoring
 source is retained in `source/server/content/deal_specs.json`.
+The daily/economy suite covers frozen settings and daily rewards, deterministic
+selection, read-only screens, DST/midnight, metadata, claims and completion bonuses,
+save failures, successful-action scoring, earned/purchased Lapis, and atomic bundle
+purchases. It uses disposable roots and synthetic masters. Real-data smoke checks
+also exercised encrypted daily claims, mail receipts, bundles, mission repeats,
+and 365 days of selection parity against the pinned fork without shared-data writes.
 Legacy summon and shop checks can also use the prepared data without loading a save:
 
 ```sh

@@ -671,6 +671,8 @@ def _credit_mission_rewards(plaintext: str | None, spec=None, mid=None):
     if gil is not None and str(gil).isdigit() and int(gil) > 0:
         before = int(State.player.currencies.get("gil", 0))
         if State.player.add_currency("gil", int(gil)) != before:
+            from ffbe_player import score_daily
+            score_daily('gil_earn', int(gil))
             paid.append(f"{int(gil)}gil")
     if mid in ENLIGHTENMENT_DROPS:
         drops = ENLIGHTENMENT_DROPS[mid] if cleared else ''
@@ -738,7 +740,11 @@ def _credit_mission_rewards(plaintext: str | None, spec=None, mid=None):
                   + (f" (remainder {remainder}, floored)" if remainder else ""), flush=True)
         lv_info = mission_lv_info(State.player, gain, trust_gains) if gain > 0 or trust_gains else ""
         for iid in State.player.party_instance_ids():
+            old_level = int((State.player.roster_row(iid) or {}).get('level', 1))
             u = State.player.add_unit_exp(iid, gain) if gain > 0 else None
+            if u is not None:
+                from ffbe_player import score_daily
+                score_daily('level_up', max(0, int(u.get('level', 1)) - old_level))
             if u is not None and int(u.get("level", 1)) > 1:
                 paid.append(f"unit{u['master_id']}->Lv{u['level']}")
         for iid, points in trust_gains.items():
@@ -746,6 +752,8 @@ def _credit_mission_rewards(plaintext: str | None, spec=None, mid=None):
             before = _trust_points(u)
             mastered = State.player.advance_unit_trust(u, 0, points)
             if _trust_points(u) != before:
+                from ffbe_player import score_daily
+                score_daily('trust_up')
                 paid.append(f"unit{u['master_id']}->trust{_trust_points(u)}")
             paid.extend(f"tmr{r['kind']}:{r['id']}" for r in mastered)
         if any(r.startswith("tmr") for r in paid):
@@ -771,6 +779,10 @@ def _credit_mission_rewards(plaintext: str | None, spec=None, mid=None):
         # reward happened to populate the display ledger.
         gained = int(rank.get("level", 1)) - lvl_before
         bonus = RANKUP_BONUS_LAPIS * gained
+        from engine_profile import current_profile
+        if current_profile().replay is not None:
+            from revival_economy import earned
+            bonus = earned(State.player.data, bonus)
         if bonus > 0:
             if isinstance(spec, dict):
                 for r in spec.get("09HRWXDf", []):
@@ -1156,6 +1168,10 @@ def credit_mission_lapis(spec, mid: str | None, plaintext: str | None = None):
     for cid in fresh:
         State.player.credit_challenge(str(mid), cid)
     amount = sum(fresh.values())
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_economy import earned
+        amount = earned(State.player.data, amount)
     State.player.add_currency("lapis_free", amount)
     State.state_dirty = True
     # Say what actually HAPPENED. `frozen` refuses the op and the balance does not move, so the old

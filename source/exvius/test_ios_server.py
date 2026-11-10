@@ -148,7 +148,7 @@ class IosServerBehavior(unittest.TestCase):
         (masters / 'F_EQUIP_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({'J1YX9kmM': mid})
             for mid in ('302000100', '404000200', '406000100', '409000100', '403046900')))
         (masters / 'F_IMPORTANT_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({'2dfixko3': mid})
-            for mid in ('50', '70')))
+            for mid in ('50', '70', '100')))
         (masters / 'F_DEFINE_MST.ndjson').write_text(json.dumps(
             {'AK8Nn7ta': 'CRAFT_RELEASE_SWITCH_ID', 'YjIUDJ97': 'fixture-locked-crafting'}))
 
