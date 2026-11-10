@@ -472,3 +472,54 @@ new physical iPhone gameplay acceptance is claimed.
 content. Native data/asset preparation, gameplay routing, and full iPhone gameplay
 acceptance remain pending. The running native service continues to serve the
 accepted connection check.
+
+## Replay notices checkpoint — November 10, 2026
+
+Ported the pinned weekly News board into the iOS profile. Initialization records
+notice enablement and eight retained weeks once. Existing campaigns can backfill
+missing settings atomically without changing their anchor or native read receipts.
+Malformed settings and receipt indexes fail visibly; diagnostics do not repair.
+
+Weekly summaries share the canonical iOS summon and event policies, including
+holiday catch-up and post-history rotation. They include deals, newly opened
+dated permanent offers, dated bundles, and enabled historical replay gifts.
+Historical date filters retain exclusive window ends, and appreciation quantities
+use the saved campaign start. Unported authored events remain closed.
+
+News and native user-state projections derive indexes without saving them. Read
+requests explicitly stage and save accepted IDs and their native year/index
+coordinates before publication. Unknown, future, and disabled replay IDs are
+ignored. Receipt save/projection failures preserve the prior campaign; retries
+and reloads do not repeat writes. Existing static notice receipts retain their
+recorded identities, and response copies clear unrelated captured read flags.
+Legacy catalogue indexing and read masks retain their existing behavior.
+
+The canonical content adapter serves elapsed-week detail pages at
+`/exvius/notices/<week>.html`, including weeks outside the retained list. Native
+dates use UTC representations of the saved local rollover, including DST.
+Future and disabled pages return 404; HEAD returns the same content length
+without a body. Pages escape text, show offer terms and original rewards, and
+reference local prepared artwork only. Missing images retain readable text.
+The fork's query-time sprite download/cache and remote fallbacks were excluded.
+No notice query initializes, grants, delivers mail, writes shared content, or
+consumes global gameplay RNG.
+
+Validation: **21 new notice BDD scenarios, 195 existing iOS checks (including
+27 connectivity checks), and 172 legacy gameplay checks passed.** Coverage
+includes encrypted News/read requests, native GET/HEAD pages, retention,
+exclusive historical bounds, DST, year rollover, saved settings, atomic
+backfills, corrupt receipts, failed saves/projections, HTML escaping, local
+art paths, unknown IDs, frozen/disabled persistence, and legacy compatibility.
+
+A disposable real-data campaign read the Noctis-era News page, retained read
+masks across the 2026/2027 boundary, and preserved save bytes on retry/reload.
+A read-only 201-week sweep rendered **557 summon entries, 360 deals, 1,498 event
+entries, 13 dated bundles, and all four historical mails**, matching the canonical
+summon selection. An audit guard rejected network access and writes outside the
+disposable runtime; campaign state, save bytes, and gameplay RNG remained unchanged.
+
+**Stage 1 remains in progress.** Next is added authored content. Missing-art and
+replay home-banner preparation, native gameplay routing, and full iPhone gameplay
+acceptance remain pending. The running native service still serves the accepted
+connection check. The previously recorded Android fixture/tooling limitations
+still prevent claiming a complete repository or packaged-build validation.

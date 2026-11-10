@@ -479,9 +479,13 @@ class Handler(BaseHTTPRequestHandler):
         parade_page = path == '/exvius/parade-rewards.html'
         equip_page = path == '/exvius/equipment-enhancement.html'
         clash_page = path in ('/exvius/clash-rewards.html', '/exvius/clash-ranking.html')
-        if raid_page or rates_page or parade_page or clash_page or equip_page:
+        notice_page = re.fullmatch(r'/exvius/notices/(\d+)\.html', path)
+        if raid_page or rates_page or parade_page or clash_page or equip_page or notice_page:
             with STATE_LOCK:
-                if raid_page:
+                if notice_page:
+                    from revival_notice_pages import page
+                    html = page(State.player.data if State.player else {}, notice_page.group(1))
+                elif raid_page:
                     from exvius_raid_progress import personal_rewards_page
                     html = personal_rewards_page(State.player, raid_page.group(1))
                 elif equip_page:

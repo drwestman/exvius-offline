@@ -28,6 +28,9 @@ def _saved(config):
     economy_settings(data)
     daily_state(data)
     trust_settings(data)
+    from revival_notices import settings as notice_settings, ledger as notice_receipts
+    notice_settings(data)
+    notice_receipts(data)
     return data
 
 

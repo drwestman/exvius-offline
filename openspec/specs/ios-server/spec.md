@@ -3,7 +3,8 @@
 ## Scope
 
 This specification covers the profile/calendar foundation, replay-aware summons,
-events, exchanges, friends, arena, reward mail, daily economy, quest trust, and hello-only native connectivity of
+events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
+and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -611,6 +612,86 @@ SHALL remain the wire contract.
 - When a reward, later result projection, or final save fails
 - Then the previous trust, inventory, daily counters, attempt, and echo remain authoritative
 - And a successful retry may settle that attempt once.
+
+### Requirement: RecordReplayNoticeSettings
+
+Explicit campaign initialization SHALL record notice enablement and retained-list
+length once, defaulting to enabled and eight weeks. Retention SHALL be bounded
+to 1–52 weeks. Existing campaigns MAY backfill missing settings atomically without
+changing their replay anchor or read receipts. Saved settings SHALL take precedence
+over process defaults; malformed settings or receipts SHALL fail visibly without
+reset. Diagnostics SHALL validate without repair or engine imports.
+
+#### Scenario: Backfill notice configuration
+
+- Given an anchored campaign with existing native read receipts and no notice settings
+- When initialization saves successfully
+- Then it adds only the missing settings without changing the anchor or receipts
+- And a failed save preserves the previous campaign.
+
+### Requirement: ProjectReplayNewsWithoutWrites
+
+NoticeUpdateRequest SHALL list the current and previous retained replay weeks,
+using pinned notice IDs starting at 880000 and native read indexes starting at
+500. The display date's UTC year SHALL namespace read masks. Wire dates SHALL
+represent saved-timezone rollover and actual DST duration. Captured replay rows
+SHALL be replaced, including when notices are disabled. Missing initialization
+or a clock before the anchor SHALL not create notices or state.
+
+Each week's summary SHALL use the same canonical iOS summon and event policies
+as gameplay, including holiday and post-history rotation. Deals, newly opened
+dated permanent offers, dated bundles, and enabled historical mails SHALL use the
+historical window's exclusive end. Gift quantities SHALL use the saved replay
+start. Queries SHALL not consume gameplay RNG, grant inventory, initialize saves,
+record catalogue indexes, or deliver mail. Unported authored events SHALL stay
+excluded with the canonical catalogue.
+
+#### Scenario: Inspect News after rollover
+
+- Given a saved campaign with a read notice older than the retained list
+- When encrypted News and native user-state queries run after rollover
+- Then the board lists the current retained weeks and preserves the old read mask
+- And the campaign and save bytes remain unchanged.
+
+### Requirement: PersistIosNoticeReadsExplicitly
+
+NoticeReadUpdateRequest SHALL stage accepted read IDs and their native year/index
+coordinates, validate the response projection, and save before publication.
+Known static notice identities and existing read receipts SHALL be preserved.
+Unknown, malformed, future, and disabled replay IDs SHALL not accumulate receipts.
+Frozen/ephemeral players SHALL not record reads; disabled persistence SHALL be
+refused. Duplicate reads and reloads SHALL not create additional writes. Saved
+coordinates SHALL take precedence over later captured catalogue changes. Wire
+read masks SHALL reflect the campaign, clearing unrelated captured flags.
+Save or projection failures SHALL preserve the previous player, receipts, and
+save. Legacy catalogue indexing and read-mask behavior SHALL remain unchanged.
+
+#### Scenario: Retry a read after a failed save
+
+- Given an unread replay notice
+- When its read-receipt save fails
+- Then its read marker is not published
+- And retrying successfully records it once, surviving reload and year rollover.
+
+### Requirement: RenderReplayNoticePagesLocally
+
+The canonical content adapter SHALL serve `/exvius/notices/<week>.html` for elapsed
+iOS replay weeks, including weeks outside the retained list. Future, negative,
+malformed, uninitialized, disabled, and legacy requests SHALL not reveal a replay
+page. GET and HEAD SHALL share content length, with HEAD returning no body.
+Pages SHALL escape catalogue text, summarize native offer facts and original
+rewards, and use local artwork URLs only. Unsafe artwork names SHALL be omitted;
+missing images SHALL retain readable text. Page requests SHALL not fetch or cache
+art, write saves, mark notices read, or grant gifts. Existing CDN containment
+checks SHALL remain authoritative for the referenced artwork. Preparing missing
+art and replay home banners remains a later asset/hosting task.
+
+#### Scenario: Open an archived notice
+
+- Given an elapsed notice outside the eight-week News list
+- When its page is opened or requested with HEAD
+- Then it shows that week's canonical content with local artwork references
+- And neither the campaign nor shared content changes.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

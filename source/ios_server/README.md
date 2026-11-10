@@ -231,6 +231,35 @@ the existing canonical engine without listeners, and persists the calendar once.
 Engine diagnostics go to stderr; stdout remains one JSON document. A failed
 initialization releases the lock. Use a fresh process to reconfigure engine paths.
 
+## Replay notices
+
+The iOS News board now lists the current and seven previous replay weeks by
+default. Each notice summarizes the canonical historical summons, deals, Vortex
+events, dated bundles, and enabled replay gifts. Holiday and post-history
+rotations follow the same policies as gameplay. Dated bundle/mail announcements
+use the historical window's exclusive end; appreciation quantities use the
+campaign's saved start. Viewing gifts in News never delivers or grants them.
+
+Initialization records `EXVIUS_REPLAY_NOTICES=1` and
+`EXVIUS_REPLAY_NOTICE_WEEKS=8` once. Retention accepts 1–52 weeks. Missing settings
+can be backfilled without moving the replay anchor or changing read receipts.
+News, native user-state projections, diagnostics, and detail pages do not write
+catalogue indexes or saves. Invalid saved settings/receipts fail without reset.
+
+Notice read requests explicitly save their native year/index coordinates before
+publishing a read mask. Retries after reload make no extra writes. Old read masks
+remain valid after year rollover or leaving the retained list, and unrelated
+captured read flags are cleared from the response copy. Legacy behavior keeps its
+existing path.
+
+The canonical engine content adapter serves `/exvius/notices/<week>.html` for
+elapsed weeks, including those outside the News list. Future/disabled pages
+return 404. Pages escape text and reference local prepared artwork; missing art
+leaves readable text. No remote sprite fallback, download, or cache creation runs
+on a page read. Missing-art preparation and replay home banners remain part of
+the later asset/hosting stage. The running native service still serves only the
+accepted connection check.
+
 ## Profiles and storage
 
 `LocalGame` explicitly selects the immutable `legacy` profile. The iOS adapter
@@ -298,6 +327,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_deals.py
 .venv-ios/bin/python -B source/exvius/test_ios_daily_economy.py
 .venv-ios/bin/python -B source/exvius/test_ios_trust.py
+.venv-ios/bin/python -B source/exvius/test_ios_notices.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -330,6 +360,13 @@ large-hit boundaries, read-only planning, disabled/ineligible units, zero-EXP
 clears, native result fields, mastery items, daily scoring, retry/reload behavior,
 and grant, projection, and save failures. A disposable real-data smoke check also
 completed Ignis's mastery via an encrypted clear and preserved the save on retry.
+
+The notice suite covers historical selection, DST/year boundaries, retention,
+local-only escaped HTML, native GET/HEAD pages, durable read masks, reloads,
+failed saves/projections, disabled settings, unknown IDs, and legacy behavior.
+A real-data sweep rendered 201 weeks, covering 557 summon entries, 360 deals,
+1,498 event entries, 13 dated bundles, and all four historical mails without
+network use, campaign changes, gameplay RNG changes, or shared-content writes.
 
 Legacy summon and shop checks can also use the prepared data without loading a save:
 

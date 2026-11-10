@@ -30,6 +30,8 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
     needs_economy = economy_settings(player.data) is None
     from revival_trust import settings as trust_settings, initialize as initialize_trust
     needs_trust = trust_settings(player.data) is None
+    from revival_notices import settings as notice_settings, initialize as initialize_notices
+    needs_notices = notice_settings(player.data) is None
     from player_state import _load_ndjson, switch_position
     from ffbe_config import SWITCH_TYPE_MISSION, SWITCH_BASE_INDICES
     vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
@@ -37,7 +39,7 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
     needs_container = SWITCH_TYPE_MISSION not in player.switches
     needs_unlock = unlock is not None and unlock[1] not in player.switches.get(unlock[0], set())
     if (anchored and not needs_container and not needs_unlock and not needs_friends
-            and not needs_mail and not needs_economy and not needs_trust):
+            and not needs_mail and not needs_economy and not needs_trust and not needs_notices):
         return False
     if player.mode != 'live':
         raise ValueError('iOS campaign initialization requires live persistence.')
@@ -53,6 +55,7 @@ def initialize_campaign(state, state_file, *, now=None, profile=None) -> bool:
     initialize_mail(candidate.data)
     initialize_economy(candidate.data)
     initialize_trust(candidate.data)
+    initialize_notices(candidate.data)
     candidate.data.setdefault('meta', {})['engine_profile'] = profile.name
     candidate.dirty = True
     if not candidate.save(str(state_file)):
