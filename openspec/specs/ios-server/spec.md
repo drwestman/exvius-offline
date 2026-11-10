@@ -5,7 +5,7 @@
 This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
 pinned exploration encounters and rare quest loot,
-and hello-only native connectivity of
+offline core native-table preparation, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -41,7 +41,7 @@ Initialization failure SHALL release the lock.
 
 ### Requirement: KeepDiagnosticsReadOnly
 
-Doctor, status, and rotation SHALL neither import the engine state loader nor
+Doctor, status, rotation, and verify-data SHALL neither import the engine state loader nor
 create files, initialize campaigns, download assets, or start services. Malformed
 saved data SHALL be reported without repair, quarantine, or replacement.
 
@@ -638,8 +638,9 @@ and unit metadata SHALL survive projection. Item-drop channels SHALL retain thei
 existing interpretation. Legacy grants and projections SHALL remain unchanged.
 
 Native master conversion and custom daily text SHALL be pure preparation inputs;
-queries SHALL not write shared tables. Installation into the served native assets
-and visual device acceptance remain part of the later preparation stage.
+queries SHALL not write shared tables. Explicit core preparation SHALL install
+custom daily text into a private snapshot. Remaining native master conversion,
+gameplay asset routing, and visual device acceptance remain later checkpoints.
 
 #### Scenario: Buy Lapis while earned Lapis is boosted
 
@@ -809,6 +810,66 @@ art and replay home banners remains a later asset/hosting task.
 iOS battle views SHALL read existing caches or derive in memory without writing
 disk caches. Explicit preparation MAY persist under the private cache root.
 Legacy callers SHALL retain their existing cache behavior.
+
+### Requirement: PrepareCoreNativeTablesExplicitly
+
+The prepare-data command SHALL reuse prepared or managed static/native inputs
+read-only, without loading an engine/campaign or starting services/downloads.
+It SHALL acquire the private runtime's exclusive instance lock and publish an
+initial seven-table snapshot: resource definitions and versions, quest rewards,
+WebView URLs, the localized-text index, and daily quest names/details.
+
+Preparation SHALL use the pinned CBC master and ECB localized-text formats,
+preserve source padding layers and text columns, and emit LF between encrypted
+lines. Invalid encryption, unsupported row shapes, missing required tables, or
+English source checksum/size mismatches SHALL fail before publication. Existing
+shipped text records, including duplicate keys, SHALL remain unless explicitly
+replaced by a custom daily definition.
+
+Both tutorial resource packs SHALL download up front; resource rows with no base
+or English file version SHALL be excluded. Quest reward visibility SHALL be shown
+without changing amounts or extra metadata. The Drop Rates URL SHALL point to
+the pinned v910 WebView route while preserving unrelated URLs and empty values.
+All 22 custom daily quest names/details SHALL be added to their English tables.
+The localized index SHALL advertise their final versions, MD5s, and byte sizes
+while preserving other languages and unrelated rows.
+
+The command SHALL validate staged outputs, persist checksums/provenance, and
+atomically replace one active-generation pointer. Files SHALL remain inside the
+private runtime. Identical inputs SHALL reuse the current generation; changed
+inputs or transformation revisions SHALL advance versions monotonically.
+Interrupted writes SHALL leave the previous generation available; retries MAY
+reuse a matching complete unpublished generation. Corrupt published facts SHALL
+fail visibly without repair. No source data, real save, or active service SHALL
+be changed by preparation.
+
+#### Scenario: Interrupt snapshot publication
+
+- Given a valid prepared generation and changed preparation inputs
+- When a table write or active-pointer replacement fails
+- Then the old generation remains available with its original versions and bytes
+- And a retry can publish the new generation without rewriting the old one.
+
+### Requirement: VerifyNativeTableBytesReadOnly
+
+The verify-data query SHALL validate the active pointer/manifest, exact table
+paths, versions, byte sizes, SHA-256/MD5 checksums, native decoding, and localized
+index references. It SHALL detect changed source inputs or preparation rules
+without rewriting files, creating directories/caches, or initializing campaigns.
+Missing and corrupt preparation SHALL be reported distinctly.
+
+Verified snapshots SHALL provide exact published-path lookup and a private
+version-response projection; unrelated version rows SHALL remain unchanged.
+Preparation and verification SHALL report scope core-native-tables and
+gameplay_ready false. Native gameplay/asset routing, full-table and remaining
+text/economy preparation, art/audio/story packs and device acceptance are pending.
+
+#### Scenario: Inspect prepared native files
+
+- Given a valid snapshot whose source inputs are unchanged
+- When verify-data runs and its versions are projected for an asset consumer
+- Then every advertised snapshot version resolves to its validated bytes
+- And text MD5s/sizes agree with the localized index without filesystem writes.
 
 ### Requirement: ContainCdnFallbackPaths
 

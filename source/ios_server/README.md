@@ -3,8 +3,8 @@
 The iPhone-to-Mac connection checkpoint of
 [the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md) is available. It serves a
 setup page, a certificate profile, and an HTTPS hello page over the home network.
-It does not load the game engine or a campaign. Gameplay, data installation, and
-the remaining revival ports are still pending.
+It does not load the game engine or a campaign. Offline core table preparation is
+also available. Gameplay hosting and full native asset installation remain pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
@@ -54,6 +54,7 @@ Read-only diagnostics and the explicit stop command:
 python3 source/exvius/macos_ios_server.py doctor
 python3 source/exvius/macos_ios_server.py status
 python3 source/exvius/macos_ios_server.py rotation --weeks 8
+python3 source/exvius/macos_ios_server.py verify-data --data source/out/browser-data
 python3 source/exvius/macos_ios_server.py stop
 ```
 
@@ -246,10 +247,10 @@ and retries preserve inventory and saved result echoes. Older pending attempts
 without a receipt gain no retroactive bonus. Diagnostics validate saved facts
 without repair. Legacy loot and field behavior are unchanged.
 
-Native asset preparation is still pending. Pure preparation helpers provide
-converted master rewards and custom daily text; these are not yet installed into
-the phone's served tables. Daily names/details, master-based challenge displays,
-and additional bundle artwork still need that preparation and device acceptance.
+The first native table-preparation slice is available below. Custom daily text
+can now be prepared into private native files. Remaining English text, converted
+master reward displays, full table coverage, art/audio/story packs, and native
+gameplay asset routing still need preparation and device acceptance.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -264,6 +265,45 @@ Use `--root /path/to/private-ios-runtime` to select an alternate private root an
 the existing canonical engine without listeners, and persists the calendar once.
 Engine diagnostics go to stderr; stdout remains one JSON document. A failed
 initialization releases the lock. Use a fresh process to reconfigure engine paths.
+
+## Offline core table preparation
+
+From the repository root, using existing prepared content:
+
+```sh
+python3 source/exvius/macos_ios_server.py prepare-data --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-data --data source/out/browser-data
+```
+
+Preparation uses the same exclusive runtime lock as hosting and campaign commands.
+Stop the connection service before preparing its runtime, or select a separate
+private root with `--root /path/to/private-ios-runtime`. Verification is read-only
+and may run while the service is active. Both commands use the dedicated Python
+environment and emit one JSON document. Neither starts services, downloads packs,
+loads a campaign, or changes the shared content tree. Managed `static/native`
+data layouts are also supported.
+
+The initial snapshot contains seven native files: resource definitions/versions,
+quest rewards, WebView URLs, the localized-text index, and daily names/details.
+It moves `resources_common.cpk` and `resources.cpk` into the tutorial download,
+removes resource rows without a base or English file version, reveals quest
+rewards with their original quantities, and sets the Drop Rates URL to the v910
+route. It adds all 22 custom daily quest names/details and updates English text
+versions, MD5s and sizes together. Native padding/column shapes and unrelated
+records remain intact; encrypted lines use LF endings.
+
+Files are staged under the private `assets/tables/` directory. An atomic
+`current.json` pointer selects one validated generation. Identical inputs reuse
+it; changed source files or preparation revisions publish higher versions and
+retain the previous files. Failed publication leaves the active pointer intact.
+Malformed sources or corrupt published snapshots fail visibly without repair.
+`verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
+
+Results explicitly report `scope: core-native-tables` and `gameplay_ready: false`.
+These files are prepared for the future gameplay host; the current hello service
+does not serve them. Full table coverage, remaining English labels and earned-Lapis
+master displays, managed-pack downloading/installing, banners/art, sound/story
+compatibility, gameplay routes, and physical iPhone acceptance remain pending.
 
 ## Replay notices
 

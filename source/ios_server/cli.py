@@ -12,8 +12,9 @@ from ios_server.queries import doctor, rotation, status
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description='Exvius native iPhone connection check. Gameplay hosting is pending.')
-    parser.add_argument('command', choices=('setup', 'serve', 'stop', 'doctor', 'status', 'rotation', 'init-campaign'))
+    parser = argparse.ArgumentParser(description='Exvius iPhone connection check and offline table preparation. Gameplay hosting is pending.')
+    parser.add_argument('command', choices=('setup', 'serve', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
+                                           'prepare-data', 'verify-data'))
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
@@ -51,6 +52,9 @@ def main(argv=None) -> int:
                 result = {**status(config), 'initialized_now': initialized}
             finally:
                 engine.close()
+        elif args.command in ('prepare-data', 'verify-data'):
+            from ios_server.preparation import prepare_data, verify_data
+            result = {'prepare-data': prepare_data, 'verify-data': verify_data}[args.command](config)
         elif args.command == 'rotation':
             result = rotation(config, weeks=args.weeks)
         else:

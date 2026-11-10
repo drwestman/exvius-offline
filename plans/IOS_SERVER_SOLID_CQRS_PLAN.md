@@ -633,3 +633,63 @@ and served-byte verification. Gameplay routing/hosting and full physical-iPhone
 acceptance remain pending. The running native service still serves the accepted
 connection check. Earlier Android fixture/tooling limitations still prevent a
 complete repository or packaged-build validation claim.
+
+## Core native-table preparation checkpoint — November 10, 2026
+
+Started the asset-preparation stage with explicit `prepare-data` and read-only
+`verify-data` commands. Both reuse the prepared or managed static/native layout;
+neither loads the engine/campaign, downloads packs, starts listeners, or changes
+shared content. Preparation takes the existing private instance lock. The running
+connection service remains unchanged.
+
+The first snapshot contains seven encrypted native files: `F_RESOURCE_MST`,
+`F_RESOURCE_VERSION_MST_LOCALIZE`, `F_QUEST_MST`, `F_URL_MST`,
+`F_LOCALIZED_TEXT_MST`, and daily quest names/details. It ports the pinned core
+compatibility transforms: move `resources_common.cpk` and `resources.cpk` into
+the upfront tutorial download, omit resources with no base/English version,
+reveal quest rewards without changing quantities/extra metadata, and use the
+v910 Drop Rates WebView URL. All 22 custom daily quest names/details enter the
+English native tables, with matching localized versions, MD5s and sizes.
+
+Separate pure CBC/ECB codecs and table policies from filesystem publication.
+Preserve source padding layers, text column counts, existing duplicate text keys,
+other languages and unrelated records. Encrypted lines use LF endings. Bad
+base64, malformed records, missing required tables and inconsistent source text
+checksums fail before publication.
+
+Prepare validated generations under the private `assets/tables/` tree and select
+one with an atomic `current.json` pointer. Identical inputs reuse the snapshot;
+changed source bytes or preparation revisions advance all snapshot versions.
+Previous generations remain intact. Failed table writes or pointer replacement
+preserve the active snapshot; retries can reuse a matching complete unpublished
+generation. Verification checks provenance/input freshness, exact paths, versions,
+native decoding, SHA-256/MD5/size, and localized index agreement without writes.
+Corrupt published facts fail visibly without repair.
+
+Validation: **19 new preparation BDD scenarios; 248 iOS engine/preparation checks,
+27 native connectivity checks, and 186 legacy gameplay/event checks passed.**
+Coverage includes both layouts, padding/columns, original duplicate text keys,
+malformed sources, source/output checksum failures, stale inputs, exact-version
+lookup/projection, private copies, idempotence, monotonic revisions, interrupted
+writes, pointer failure/retry, busy locks, symlinks, path tampering, and real CLI
+JSON output. Python syntax and whitespace checks passed.
+
+A disposable real-data run prepared **949,830 bytes across seven files**. All
+seven outputs matched the pinned fork's corresponding pure transformations
+byte-for-byte (with banner/art preparation disabled for this slice). It moved
+both tutorial packs, omitted seven unversioned resource rows, updated 239 quest
+rows, one URL row and two localized-index rows, and added 22 names plus 22 details.
+The read-only verifier and exact-version projection agreed with the prepared
+bytes. Repeated preparation preserved the pointer and file inventory. An audit
+guard rejected networking, writes outside the disposable runtime, and all writes
+during verification. Shared source hashes stayed unchanged; no engine state
+loader was imported and no campaign was created.
+
+**This is the first preparation slice, not complete native asset installation.**
+Next are the remaining English labels and earned-Lapis master display conversion,
+followed by full table coverage, native banner/art packs, sound/story compatibility,
+managed-pack download/installation, and gameplay asset/API routing. Prepared
+snapshots expose a version projection and exact-path lookup for that later host;
+the current hello service does not consume them. Commands report
+`scope: core-native-tables` and `gameplay_ready: false`. Full physical-iPhone
+gameplay acceptance and earlier Android tooling/fixture limitations remain.
