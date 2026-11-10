@@ -581,6 +581,11 @@ def field_mission_bundle(carrier: dict, mission: dict) -> dict:
         with open(path, encoding='utf8') as stream:
             _FIELD_GROUP_BINDINGS = json.load(stream)['missions']
     group_ids.update(_FIELD_GROUP_BINDINGS.get(mid, []))
+    if data_paths.PROFILE.name == 'ios-revival':
+        from revival_exploration import field_bundle
+        planned = field_bundle(carrier, mission, source, group_ids)
+        if planned is not None:
+            return planned
     out = story_mission_bundle(carrier, mission)
     if group_ids:
         bundle = derive_mission(int(mid), source, field_groups=group_ids)
@@ -666,6 +671,11 @@ def resource_kind(mission: str) -> str | None:
 
 
 def event_encounter(mission: str) -> dict | None:
+    if data_paths.PROFILE.name == 'ios-revival':
+        from revival_content import encounter
+        added = encounter(mission)
+        if added is not None:
+            return added
     global _EVENT_ENCOUNTERS
     if _EVENT_ENCOUNTERS is None:
         path = os.path.join(HERE, 'event_encounters.json')

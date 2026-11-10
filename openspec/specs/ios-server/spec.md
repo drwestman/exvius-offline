@@ -151,8 +151,9 @@ event run/window metadata. Selection SHALL include the first-week 14-day lookbac
 historical reruns, holiday event years, ranked periods, and deterministic recurring
 and permanent dungeon rotations. Known closed captured gates SHALL be removed;
 selected gates SHALL use the actual weekly bounds. Queries SHALL not create state
-or download artwork. Additional authored campaigns SHALL remain closed until their
-battle/art content is prepared. Legacy archive behavior SHALL remain unchanged.
+or download artwork. Additional authored areas SHALL require validated encounter
+content and prepared native art or the shipped safe fallback. Legacy archive
+behavior SHALL remain unchanged.
 
 #### Scenario: Project a new historical week
 
@@ -161,6 +162,72 @@ battle/art content is prepared. Legacy archive behavior SHALL remain unchanged.
 - Then only eligible archive gates remain alongside unrelated gate rows
 - And the selected gates carry the current Eastern week's UTC bounds
 - And player data and save bytes remain unchanged.
+
+### Requirement: LoadPinnedAuthoredEventAreas
+
+The iOS catalogue and archive facade SHALL include the nine pinned history
+additions, containing 118 unique missions, without altering the legacy catalogue.
+Area/mission identities, first entries, and complete content inventories SHALL
+be validated before gates are advertised. Their ordinary releases, reruns, and
+Halloween windows SHALL use the same replay policy as existing events. News SHALL
+deduplicate the two Halloween areas into one campaign announcement while Vortex
+retains both distinct gates. Missing new art SHALL use the existing native fallback;
+queries SHALL not fetch or install artwork.
+
+#### Scenario: Open the Halloween Vortex
+
+- Given an initialized iOS campaign whose saved history has reached the Halloween events
+- When the real holiday window is active
+- Then both Halloween gates appear with valid native art references
+- And their News campaign is announced once without campaign or save writes.
+
+### Requirement: IsolateAuthoredBattleReconstructions
+
+Only the iOS profile SHALL load the pinned six-mission Halloween reconstruction
+packet. Version, exact mission inventory, original wave count, phase identities,
+battle groups, monster definitions, and positive HP SHALL be validated. Bad or
+missing packets SHALL fail visibly without partially publishing content. Returned
+bundles SHALL be private copies. Unrelated mission lookups and legacy paths SHALL
+not require the new reconstruction packet. Existing canonical reconstructions,
+original reward masters, and cache rules SHALL remain unchanged.
+
+All 118 added missions SHALL retain the canonical exploration, non-combat story,
+or battle-load path. Halloween results SHALL use canonical completion, challenge,
+reward, switch, trust, and atomic iOS settlement handlers. Closed new entries SHALL
+be refused before opening an attempt or spending; a pending attempt MAY resume and
+settle after rollover. Retries/reloads SHALL not duplicate grants, and failed saves
+SHALL preserve the original attempt and rewards.
+
+#### Scenario: Finish a Halloween battle after rollover
+
+- Given an authorized pending Halloween battle persisted before its week closed
+- When the campaign reloads, resumes, and settles it
+- Then original supported rewards are granted once
+- And a repeated result grants nothing and a new closed entry remains unavailable.
+
+### Requirement: ServeAddedExplorationEncounters
+
+The ten added explorations SHALL use an exact subset of the pinned finite encounter
+plans, including the two authored enemy formations. Map-script boss groups and
+explicit group bindings SHALL remain present. Native encounter rows SHALL carry
+per-field/per-group occurrence indexes and the referenced monster/skill data
+without creating an opening combat phase. Other explorations and the legacy
+profile SHALL retain their existing behavior.
+
+Future field battles SHALL roll their own drop candidates with the canonical
+keep-one rule. Served drops SHALL retain at least four fields; empty drops SHALL
+be omitted. Invalid candidates SHALL fail before an attempt is opened. Hypothetical
+field fights SHALL not populate the normal drop ledger or grant inventory. Only
+the client's reported completed fights/loot SHALL be credited by canonical
+settlement, with existing completion/retry guards. Loading and deriving encounter
+data SHALL not create disk caches or modify pinned source metadata.
+
+#### Scenario: Load an exploration before fighting
+
+- Given a valid finite field encounter plan
+- When its mission resource command runs
+- Then map/script groups remain alongside the finite encounter rows, without an opening battle
+- And no hypothetical enemy drops enter inventory or the normal result ledger.
 
 ### Requirement: AuthorizeReplayEventEntry
 
@@ -643,8 +710,8 @@ as gameplay, including holiday and post-history rotation. Deals, newly opened
 dated permanent offers, dated bundles, and enabled historical mails SHALL use the
 historical window's exclusive end. Gift quantities SHALL use the saved replay
 start. Queries SHALL not consume gameplay RNG, grant inventory, initialize saves,
-record catalogue indexes, or deliver mail. Unported authored events SHALL stay
-excluded with the canonical catalogue.
+record catalogue indexes, or deliver mail. Only validated authored additions
+SHALL be included in the canonical catalogue.
 
 #### Scenario: Inspect News after rollover
 

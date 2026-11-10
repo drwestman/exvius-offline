@@ -523,3 +523,54 @@ replay home-banner preparation, native gameplay routing, and full iPhone gamepla
 acceptance remain pending. The running native service still serves the accepted
 connection check. The previously recorded Android fixture/tooling limitations
 still prevent claiming a complete repository or packaged-build validation.
+
+## Added event content checkpoint — November 10, 2026
+
+Enabled the nine pinned history additions for the iOS profile: Memories from the
+Aquapolis, The Auracite Chosen, Guardian of the Order, The Web-Weaving Princess,
+King of Darkness, Dracotaur Lancer, Orbonne Monastery Vaults, and both Return to the
+Halloween Castle areas. The catalogue validates all 118 unique missions before
+advertising their gates. Existing historical/holiday policies, weekly bounds,
+archive selection, and News deduplication remain authoritative. Legacy catalogue
+and gameplay paths retain their behavior.
+
+The initial source inventory assembled 112 missions using the existing canonical
+paths. Ported the six missing Halloween reconstructions byte-for-byte from the
+pinned fork, with validation for mission/wave identity, group/enemy completeness,
+and native packet shape. The iOS adapter returns private copies. It preserves the
+original monster/skill and reward masters, including the 48,750,000-HP Skeleton
+King. An unrelated changed encounter and the fork's shared cache path were not
+imported. Missing new artwork uses the existing shipped native fallback; queries
+do not fetch or prepare images.
+
+The review also identified the ten added explorations' finite encounter plans.
+Ported an exact subset of the pinned source, retaining its two authored enemy
+formations and source hash. Native per-field occurrence rows coexist with
+map-script boss groups without an opening combat phase. Each future encounter
+rolls native-safe drop candidates; hypothetical fights do not populate the normal
+drop ledger or grant inventory. Canonical settlement credits reported loot and
+completed quest rewards once. Other explorations retain their existing behavior.
+
+Validation: **18 new authored-content BDD scenarios; 207 iOS engine checks in total;
+and 186 legacy gameplay/event checks passed.** Coverage includes malformed packet
+and metadata rejection, private copies, historical/holiday selection, all six
+encrypted Halloween loads, closed-entry refusal, resume after rollover, reward
+retry/reload, failed result saves, read-only gates/News, finite field indexes,
+empty/four-field drop safety, and legacy isolation.
+
+A disposable real-data campaign loaded all **118 missions: 34 story scenes, ten
+explorations, and 74 battles**. It validated **5,057 finite encounter rows**, native
+monster/skill references, and preservation of script-bound groups. All six
+Halloween battles settled with no unsupported rewards; retries after reload
+preserved save bytes. One exploration's reported loot was also credited exactly
+once. An audit guard rejected network operations and writes outside the disposable
+runtime. No disk battle caches were created. The reconstruction packet's SHA-256
+is `0d1d58af0b9f9740c37062d9469e313a5addb886d2d6205aedbf4de8344cbe0e`;
+the field subset's missions/formations matched the pinned source exactly.
+
+**Stage 1 remains in progress.** The source comparison identified the broader
+exploration plans (238 missions beyond this checkpoint) and the fork's rare
+Calamity Writ loot rule as remaining engine work. Native asset preparation,
+missing artwork and replay home banners, gameplay hosting, and physical iPhone
+acceptance remain pending. The running service still serves the accepted
+connection check. Earlier Android fixture/tooling validation limitations remain.

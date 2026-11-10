@@ -20,6 +20,10 @@ def document():
 
 
 def events():
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_events import catalogue
+        return list(catalogue())
     return document()['events']
 
 

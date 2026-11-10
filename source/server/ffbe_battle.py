@@ -119,6 +119,11 @@ def roll_drops(spec, mid: str | None = None, is_battle_bundle: bool = False):
         return spec
     if not ROLL_DROPS:
         return spec            # reference state: serve the payload's own candidate list verbatim
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_exploration import MISSIONS, roll_drops as roll_field_drops
+        if str(mid) in MISSIONS:
+            spec = roll_field_drops(spec, DROP_TABLE, random.randint)
     rows = spec.get(DROP_TAG_ROWS)
     if not isinstance(rows, list):
         # This mission's bundle carries no drop rows at all, so it OWNS its slot and claims it empty --

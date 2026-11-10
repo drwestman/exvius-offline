@@ -155,9 +155,10 @@ Summon-ticket full-pool exemptions do not apply to exchange rewards.
 The Vortex unlock and initial mission-switch container are now persisted by the
 explicit campaign-initialization command. Initializing an older iOS campaign
 backfills missing switches atomically while preserving its replay anchor. Views
-do not create them. The nine additional campaigns declared by the pinned history
-metadata remain closed until their battle/art content port; no art is downloaded
-by previews or gameplay projections.
+do not create them. The nine additional event areas declared by the pinned history
+metadata are now included for iOS, with 118 original missions. They retain the
+same historical and holiday entry guards. No art is downloaded by previews or
+gameplay projections; new images use the shipped native fallback until prepared.
 
 This is engine integration; the running native service still serves the connection
 check. Full iPhone gameplay hosting and the remaining revival ports are pending.
@@ -211,6 +212,21 @@ dated Hill of Fortune runs. Lists and purchases share historical availability;
 expired or sold-out offers cannot be bought from a stale screen. Purchases save
 the charge, original contents, and stock receipt atomically. Bundle daily limits
 use the campaign timezone. Legacy bundles and economy retain their existing paths.
+
+The added content comprises Memories from the Aquapolis, The Auracite Chosen,
+Guardian of the Order, The Web-Weaving Princess, King of Darkness, Dracotaur
+Lancer, Orbonne Monastery Vaults, and the two Return to the Halloween Castle
+areas. Six Halloween battles use the pinned original-Global reconstruction;
+the other missions retain canonical battle/story paths. Bad content packets fail
+visibly rather than exposing incomplete battles. Legacy content is unchanged.
+
+The ten added explorations include their pinned finite encounter plans and two
+authored enemy formations. Map-script bosses remain, and no opening battle is
+invented for an exploration. Field drops retain native four-field formatting;
+planned fights never grant loot. Canonical settlement pays only reported loot
+and completed quest rewards, preserving reload/retry and failed-save protections.
+All derivation stays in memory. The pinned pack's broader exploration plans and
+rare Calamity Writ rule remain a follow-up engine slice.
 
 Native asset preparation is still pending. Pure preparation helpers provide
 converted master rewards and custom daily text; these are not yet installed into
@@ -328,6 +344,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_daily_economy.py
 .venv-ios/bin/python -B source/exvius/test_ios_trust.py
 .venv-ios/bin/python -B source/exvius/test_ios_notices.py
+.venv-ios/bin/python -B source/exvius/test_ios_authored_content.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -367,6 +384,15 @@ failed saves/projections, disabled settings, unknown IDs, and legacy behavior.
 A real-data sweep rendered 201 weeks, covering 557 summon entries, 360 deals,
 1,498 event entries, 13 dated bundles, and all four historical mails without
 network use, campaign changes, gameplay RNG changes, or shared-content writes.
+
+The authored-content suite covers pinned packet validation, source-copy isolation,
+replay/holiday selection, six encrypted battle loads, closed-entry refusal,
+rollover resumes, reward retries, save failures, archive/News projections, finite
+field rows, native-safe drops, and legacy compatibility. A disposable real-data
+sweep loaded all 118 missions (34 story, ten field, 74 battle), checked 5,057 field
+encounter rows and native skill references, settled all six Halloween battles
+without blocked rewards, and retried a field-loot receipt after reload. No network,
+shared-content writes, or disk battle caches were used.
 
 Legacy summon and shop checks can also use the prepared data without loading a save:
 

@@ -47,9 +47,11 @@ def catalogue():
     doc = json.loads((HERE / 'event_archive.json').read_text(encoding='utf-8'))
     extra = history()
     rows = []
-    # The additional authored campaigns in history['added'] require their own
-    # battle/art preparation port. Keep this milestone on the playable archive.
-    for original in doc['events']:
+    from revival_content import added_events
+    additions = added_events(extra['added'])
+    if {row['area'] for row in doc['events']} & {row['area'] for row in additions}:
+        raise ValueError('Invalid iOS authored events: an added area collides with the canonical archive.')
+    for original in doc['events'] + additions:
         row = copy.deepcopy(original)
         area = str(row['area'])
         row['runs'] = sorted(set(extra['runs'].get(area, []) + ([row['release']] if row.get('release') else [])))
