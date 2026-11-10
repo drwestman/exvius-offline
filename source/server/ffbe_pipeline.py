@@ -81,7 +81,7 @@ class _Ctx:
     `save_state`) can return it unchanged, and every step has the same shape: take a ctx, return a spec.
     """
 
-    __slots__ = ("spec", "reply_id", "plaintext", "mid", "spec_key", "is_battle_bundle", "prior")
+    __slots__ = ("spec", "reply_id", "plaintext", "mid", "spec_key", "is_battle_bundle", "prior", "persist")
 
     def __init__(self, spec, reply_id, plaintext, mid, spec_key):
         self.spec = spec
@@ -94,6 +94,7 @@ class _Ctx:
         # mission is what stops a mission-end from mirroring a different battle's drops.
         self.is_battle_bundle = mid is not None and spec_key == f"{reply_id}@{mid}"
         self.prior: set = set()
+        self.persist = True
 def _snapshot_cleared(ctx: _Ctx):
     """D3, as a named step: the PRE-battle cleared set, snapshotted before anything spends it.
 
@@ -395,7 +396,7 @@ PIPELINE: tuple = (
          "spec", "12 player groups", "the PROJECTION: rebuilt from the one player state"),
     # Persist what this request changed. One small file under out/; see the STATE_FILE block for why it
     # stays a single, wipeable file. The player's OWN dirty flag counts too.
-    Step("save_state", lambda c: (save_state(), c.spec)[1], "io", st.STATE_FILE,
+    Step("save_state", lambda c: (save_state() if c.persist else None, c.spec)[1], "io", st.STATE_FILE,
          "position is load-bearing: the strips below rewrite the reply AFTER this, so persisting earlier "
          "would write a different spec than the one served"),
     # The result-item A/B strips LAST, after every transform: mission_end_echo and credit_mission_rewards
@@ -408,7 +409,8 @@ PIPELINE: tuple = (
          "spec", "an6TB4WS", "A/B strip; last, beside the other one, so the rule is in one place"),
     # After every rewrite of the result row: the client stores exactly this echo, and an autoplay
     # continuation adds its next run on top of it.
-    Step("record_result_echo", lambda c: (record_result_echo(c.spec, c.plaintext), save_state(), c.spec)[2],
+    Step("record_result_echo", lambda c: (record_result_echo(c.spec, c.plaintext),
+         save_state() if c.persist else None, c.spec)[2],
          "io", "State.player.exvius_repeat.echo", "records result facts before iOS denomination projection"),
     Step("project_revival_economy", lambda c: __import__('revival_economy').project(c.spec, State.player),
          "spec", "earned reward amounts", "normalize only the wire copy after recording raw reward facts"),
@@ -565,7 +567,22 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
             st._note(f'Replay event closed: mission {mid}; no load or mutation')
             return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
-    for step in PIPELINE:
+    if (current_profile().replay is not None and str(reply_id) == 'x5Unqg2d'
+            and mid and isinstance(spec, dict) and RESULT_TAG in spec):
+        if not st.STATE_PERSIST or State.player is None or State.player.mode != 'live':
+            raise ValueError('iOS battle settlement requires live persistence.')
+        # Explicit period synchronization is its own transaction. Everything
+        # after it, including result echoes, belongs to the battle candidate.
+        split = next(i for i, step in enumerate(PIPELINE) if step.key == 'synchronize_revival_daily') + 1
+        _run_steps(ctx, PIPELINE[:split])
+        ctx.persist = False
+        from revival_battle_commands import settle
+        return settle(State, st.STATE_FILE, lambda: _run_steps(ctx, PIPELINE[split:]))
+    return _run_steps(ctx, PIPELINE)
+
+
+def _run_steps(ctx, steps):
+    for step in steps:
         ctx.spec = step.call(ctx)
     return ctx.spec
 _PIPELINE_PROBLEMS = validate_pipeline()

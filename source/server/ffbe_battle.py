@@ -393,6 +393,10 @@ def roll_battle_trust(player) -> dict:
     each unit in the party, matching the community record that only party membership counts. A mastered
     unit, or one whose descriptor gives no quest gain, rolls nothing.
     """
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_trust import roll
+        return roll(player)
     gains = {}
     for iid in player.party_instance_ids():
         u = player.roster_row(iid)

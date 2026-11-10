@@ -3,7 +3,7 @@
 ## Scope
 
 This specification covers the profile/calendar foundation, replay-aware summons,
-events, exchanges, friends, arena, reward mail, and hello-only native connectivity of
+events, exchanges, friends, arena, reward mail, daily economy, quest trust, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -552,6 +552,65 @@ Legacy bundle definitions SHALL remain unchanged.
 - Given a previously visible dated bundle
 - When replay rollover closes its sale period before purchase
 - Then purchase is refused without changing the balance, inventory, limit, or save.
+
+### Requirement: RecordIosQuestTrust
+
+Campaign initialization SHALL record the pinned quest-trust settings once:
+enabled, 30 percent hit chance, 10 points per hit, 5 percent chance of upgrading
+a hit, and 50 points for an upgraded hit. Percentages SHALL support hundredths;
+1000 trust points SHALL represent 100 percent. Saved settings SHALL survive
+environment changes. Missing settings MAY be backfilled atomically without
+moving the replay anchor. Invalid defaults or saved settings SHALL fail visibly
+without reset. Diagnostics and planning SHALL neither initialize nor save.
+
+#### Scenario: Backfill an existing campaign
+
+- Given an anchored campaign without recorded trust settings
+- When explicit initialization succeeds
+- Then trust settings are saved without changing the replay anchor or previous rewards
+- And later initialization retains those settings despite changed process defaults.
+
+### Requirement: RollTrustOncePerClearedAttempt
+
+An eligible own-party unit SHALL roll independently once per successfully cleared
+loaded attempt, including a clear granting zero EXP. A large hit SHALL replace
+the normal gain and cap at the unit's own trust requirement. Mastered units,
+Trust Moogles, missing units/descriptors, and nonpositive requirements SHALL not
+roll. Defeats, exploration exits, zero-wave story scenes, and duplicate result
+requests SHALL not roll. Friend helpers SHALL not gain. Planning SHALL not mutate
+the campaign or consume global gameplay RNG. Disabled trust, zero ordinary gain,
+or zero hit chance SHALL grant nothing. Legacy master-defined rates and expedition
+and fusion trust rules SHALL remain unchanged.
+
+The canonical trust operation SHALL credit original mastery rewards once using
+the existing shared fusion/quest receipt. Native result field nine SHALL show
+the actual capped before/after trust, including when EXP is zero. Daily trust
+progress SHALL count units that actually gained trust once per attempt.
+
+#### Scenario: Cap a large hit at mastery
+
+- Given an own-party unit with 995 of 1000 trust points
+- When a cleared attempt rolls a 50-point hit
+- Then the unit reaches 1000, the native result shows 995 to 1000, and its original mastery item is granted
+- And retrying after reload neither rolls again nor grants another item.
+
+### Requirement: CommitIosNormalBattleResultsAtomically
+
+After explicit daily synchronization, MissionEndRequest SHALL stage the canonical
+result pipeline on a candidate player. Trust, mastery rewards, quest progress,
+other completion effects, the attempt receipt, and the source-denomination result
+echo SHALL save together once before publication. Grant, later projection, or
+save failures SHALL preserve the previous player, dirty flags, and campaign save.
+Frozen/ephemeral players and disabled persistence SHALL be refused without
+mutations. The existing mission-load attempt identity and delayed-retry limits
+SHALL remain the wire contract.
+
+#### Scenario: Fail after planning a mastery award
+
+- Given a pending battle that will reach mastery
+- When a reward, later result projection, or final save fails
+- Then the previous trust, inventory, daily counters, attempt, and echo remain authoritative
+- And a successful retry may settle that attempt once.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

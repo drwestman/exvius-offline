@@ -185,6 +185,27 @@ survive changes to those environment variables. Missing settings can be backfill
 by initialization without moving the replay anchor; malformed saved facts are
 reported without repair.
 
+Quest trust uses the pinned revival rule: each eligible own-party unit has a 30%
+chance per cleared quest to gain 1% trust; 5% of those hits give 5% instead. Gains
+cap at the unit's requirement and use the canonical one-time mastery reward.
+The native result shows actual before/after trust even when no EXP was earned.
+Failed battles, exploration exits, zero-wave story scenes, mastered units, and
+friend helpers earn none. Fusion and expedition trust retain their existing rules.
+
+Initialization records `EXVIUS_QUEST_TRUST=1`, `EXVIUS_QUEST_TRUST_CHANCE=30`,
+`EXVIUS_QUEST_TRUST_POINTS=10`, `EXVIUS_QUEST_TRUST_BIG_CHANCE=5`, and
+`EXVIUS_QUEST_TRUST_BIG_POINTS=50` once. Points are tenths of one percent; chance
+settings accept decimals. Invalid settings fail visibly. Existing campaigns can
+backfill settings through initialization; diagnostics never backfill or repair.
+
+iOS normal-battle results now stage the full canonical settlement after the
+explicit daily update. Trust, original rewards, quest progress, completion
+receipts, and result echoes save together before publication. Failed grants,
+projections, or saves retain the previous campaign for retry. Repeated results
+after reload grant no additional trust or mastery items. The existing limitation
+remains: the client supplies no nonce to distinguish a delayed result after a new
+mission load from another legitimate clear.
+
 The iOS bundle catalogue now includes the pinned Bonus Present Ticket and twelve
 dated Hill of Fortune runs. Lists and purchases share historical availability;
 expired or sold-out offers cannot be bought from a stale screen. Purchases save
@@ -276,6 +297,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_events.py
 .venv-ios/bin/python -B source/exvius/test_ios_deals.py
 .venv-ios/bin/python -B source/exvius/test_ios_daily_economy.py
+.venv-ios/bin/python -B source/exvius/test_ios_trust.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration
@@ -303,6 +325,12 @@ save failures, successful-action scoring, earned/purchased Lapis, and atomic bun
 purchases. It uses disposable roots and synthetic masters. Real-data smoke checks
 also exercised encrypted daily claims, mail receipts, bundles, mission repeats,
 and 365 days of selection parity against the pinned fork without shared-data writes.
+The trust suite covers recorded settings and atomic backfills, fractional and
+large-hit boundaries, read-only planning, disabled/ineligible units, zero-EXP
+clears, native result fields, mastery items, daily scoring, retry/reload behavior,
+and grant, projection, and save failures. A disposable real-data smoke check also
+completed Ignis's mastery via an encrypted clear and preserved the save on retry.
+
 Legacy summon and shop checks can also use the prepared data without loading a save:
 
 ```sh

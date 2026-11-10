@@ -24,8 +24,10 @@ def _saved(config):
     mail_rewards(data)
     from revival_economy import settings as economy_settings
     from revival_daily import read as daily_state
+    from revival_trust import settings as trust_settings
     economy_settings(data)
     daily_state(data)
+    trust_settings(data)
     return data
 
 

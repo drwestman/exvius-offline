@@ -424,3 +424,51 @@ authored content. Pure helpers now supply native master-reward conversions and
 custom daily text, but installing these into served assets, bundle artwork, native
 gameplay routing, and full iPhone gameplay acceptance remain pending. The running
 native service continues to serve the accepted connection check.
+
+## Quest trust checkpoint — November 10, 2026
+
+Ported the pinned quest-trust policy into the iOS profile. Campaign initialization
+records the enabled switch, 30% hit chance, 10-point normal gain, 5% large-hit
+chance, and 50-point large gain once. Existing campaigns can backfill missing
+settings atomically without changing their replay anchor. Invalid saved settings
+and defaults fail visibly; diagnostics never initialize or repair them.
+
+Each eligible own-party unit rolls independently for a cleared loaded attempt.
+Large hits replace ordinary gains and cap at the unit's own requirement. The pure
+planner accepts an injected random source and leaves the campaign and global
+gameplay RNG untouched. Failed battles, exploration exits, zero-wave story scenes,
+mastered units, Trust Moogles, and friend helpers earn no quest trust. Canonical
+mastery receipts remain shared with fusion. Native results show capped before/
+after trust even with zero EXP; daily progress counts actual unit gains.
+
+The source review exposed a persistence gap: ordinary pipeline saves tolerate
+failure and precede the result echo. iOS normal-battle results now stage the
+canonical pipeline after explicit daily synchronization, deferring those saves.
+Trust, original mastery rewards, quest progress, all completion effects, the
+attempt receipt, and the raw result echo save together once before publication.
+Grant, later projection, and final-save failures preserve the prior player and
+save for retry. Legacy settlement, fusion, and expedition trust retain their
+existing paths. The client's lack of an attempt nonce still limits delayed
+retries after a new mission load.
+
+Validation: **17 new trust BDD scenarios, 151 existing iOS engine checks,
+27 connectivity checks, and 172 legacy gameplay checks passed**. Another
+30 Mac launcher, 18 mode, 14 event, 10 raid-progress, 7 endpoint, and 6 decode
+checks passed. Coverage includes encrypted results, zero-EXP gains, fractional
+odds, large-hit boundaries, mastery and daily receipts, reloads/retries,
+backfills, corrupt settings, and partial-grant/projection/save failures.
+
+A disposable real-data campaign completed Ignis's trust from 995 to 1000 through
+an encrypted clear, displayed the capped gain, and awarded original item
+`21:409020400:1` once. Retrying after reload preserved save bytes. An audit guard
+rejected network use and writes outside the disposable runtime.
+
+The broader repository suite could not fully run: Android fixture paths,
+`libgame.so`, a pinned pipeline bundle, Windows Java tools, and optional
+`cricodecs` are unavailable in this environment. No packaged Android build or
+new physical iPhone gameplay acceptance is claimed.
+
+**Stage 1 remains in progress.** Next are replay notices and added authored
+content. Native data/asset preparation, gameplay routing, and full iPhone gameplay
+acceptance remain pending. The running native service continues to serve the
+accepted connection check.
