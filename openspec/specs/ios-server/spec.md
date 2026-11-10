@@ -2,8 +2,8 @@
 
 ## Scope
 
-This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges/friends/arena,
-and hello-only native connectivity checkpoint of
+This specification covers the profile/calendar foundation, replay-aware summons,
+events, exchanges, friends, arena, reward mail, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -54,7 +54,8 @@ saved data SHALL be reported without repair, quarantine, or replacement.
 
 The first InitializeRequest, or the explicit init-campaign command, SHALL persist
 the replay anchor, immutable settings, and starting simulated friendships in one
-canonical player-save operation.
+canonical player-save operation. Reward-mail settings SHALL be recorded in that
+candidate; mail delivery SHALL use a separate explicit synchronization command.
 It SHALL publish candidate state only after a successful save. Projections SHALL
 read recorded facts without creating an anchor. Frozen or disabled persistence
 SHALL not initialize a campaign.
@@ -412,6 +413,62 @@ curated single-unit opponents and the existing participation reward policy.
 - When settlement cannot save
 - Then the original pending battle and campaign remain authoritative
 - And a successful retry grants its result once.
+
+### Requirement: DeliverIosRewardMailExplicitly
+
+The iOS profile SHALL mail the pinned weekly summon gift (ten Rare Summon Tickets
+and one Guaranteed Ticket) once per saved-calendar rotation week. Returning after
+several weeks SHALL deliver the current week's gift only. The four pinned Global
+replay mails SHALL become due when their dates fall before the historical window's
+exclusive end. Appreciation quantities SHALL use the pinned inclusive days-played
+brackets measured from the saved replay start. Configuration SHALL be recorded
+once and retained across process-default changes.
+
+InitializeRequest and RoutineHomeUpdateRequest SHALL explicitly synchronize due
+mail with a staged save before publishing it. MailListRequest, diagnostics, and
+reward previews SHALL never initialize settings, issue mail, or grant attachments.
+Delivery SHALL add inbox entries only; inventory SHALL change on receipt.
+The native inbox counters SHALL reflect committed mail on login/home replies.
+Frozen, ephemeral, or disabled-persistence commands SHALL not grant rewards.
+
+#### Scenario: Return after several weeks
+
+- Given a previously synchronized campaign
+- When a later login or home synchronization reaches additional history
+- Then one current weekly gift and all unissued due historical mails are delivered
+- And repeated synchronization leaves the inbox, issue ledger, and save bytes unchanged.
+
+### Requirement: PreserveRewardMailIdentity
+
+Reward issue keys SHALL be durable independently of inbox entries. Claiming,
+deleting, reloading, or rolling the clock back SHALL not reissue delivered gifts.
+The original replay mail IDs SHALL remain logical content keys. Numeric inbox
+IDs SHALL avoid both canonical catch-up mail IDs and future automatic allocations.
+Malformed settings, conflicting/missing delivery facts, and unsupported or
+invisible native attachments SHALL be refused without resetting the ledger.
+Diagnostics SHALL report malformed saved delivery data without repair.
+
+#### Scenario: Mix reward and existing mail
+
+- Given catch-up mail and automatically numbered Arena mail
+- When weekly and replay gifts are delivered, received, and deleted
+- Then every native mail ID remains distinct
+- And issue records prevent duplicate delivery even when the inbox is empty.
+
+### Requirement: CommitIosMailReceiptsAtomically
+
+iOS mail receipt and deletion SHALL reuse the canonical parsing, inventory,
+metadata, and ownership rules, but stage changes and save before publishing them.
+Duplicate receipts SHALL grant nothing. Delivery or receipt save failures SHALL
+preserve the previous inbox, issue ledger, and inventory so retry can succeed.
+Legacy mail behavior SHALL remain unchanged.
+
+#### Scenario: Fail a receipt save
+
+- Given an unreceived gift
+- When receipt cannot save
+- Then neither its attachments nor its received marker are published
+- And a successful retry grants the attachments once.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

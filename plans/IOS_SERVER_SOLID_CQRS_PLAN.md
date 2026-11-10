@@ -327,3 +327,49 @@ root; no network was used.
 authored content. Native gameplay routing, data/asset preparation, and full iPhone
 gameplay acceptance remain pending. The native service still serves the accepted
 connection check.
+
+## Weekly gifts and replay mail checkpoint — November 9, 2026
+
+Ported the pinned weekly gift and four historical Global mail campaigns into the
+iOS profile. The default weekly gift contains ten Rare Summon Tickets and one
+Guaranteed Ticket (4★/5★/NV). Historical mail follows the saved replay window's
+exclusive end, including the original appreciation-ticket quantities based on
+inclusive days played from the campaign's saved historical start.
+
+Campaign initialization records delivery settings once. Login and routine home
+updates explicitly synchronize due mail using a staged atomic save; inbox reads,
+diagnostics, and previews do not deliver or grant anything. Returning after time
+away delivers the current weekly gift, plus all unissued historical mail. Delivery
+adds inbox entries; attachments enter inventory only through the native receipt
+command. Login/home inbox counters project the committed mailbox.
+
+The pinned fixed mail IDs overlap the canonical catch-up ranges. Original replay
+IDs are retained as logical issue keys, while numeric inbox IDs are allocated
+downwards in a private range, avoiding both catch-up IDs and future automatic
+Arena mail IDs. The issue ledger survives deletion and reload. Missing/conflicting
+delivery facts and malformed settings fail visibly without resetting receipts.
+Attachments must be creditable and displayable by the native mail class.
+
+iOS receipt and deletion now stage the canonical handler's changes and save before
+publishing them. Save or partial-delivery failures preserve the previous inbox,
+ledger, and inventory. Duplicate receipts, deleted gifts, and clock rollback cannot
+repeat a reward. Legacy mail behavior remains unchanged. Frozen/ephemeral players
+and disabled persistence do not receive new grants.
+
+Validation: **21 new policy, native-mail, and legacy compatibility scenarios;
+108 existing iOS checks; 65 shop/gift checks; and 32 feature-completion checks
+passed (226 distinct checks).** Coverage includes read-only inboxes, initialization
+and backfill, DST, missed weeks, appreciation tiers, ID collisions, retries,
+deletion, save/delivery failures, unusable attachments, and malformed ledgers.
+
+A disposable real-data campaign claimed the weekly tickets and spent one rare
+ticket on banner 9. It delivered all four historical mails, claimed their original
+1/15/15/15 ticket quantities, and spent the Guaranteed NV ticket on banner 9200026.
+Automatic mail remained distinct, retries preserved save bytes, and 201 weekly
+previews were read-only. Pinned mail metadata was copied byte-for-byte. All writes
+stayed within the disposable runtime; no network was used.
+
+**Stage 1 remains in progress.** Next are the earned-Lapis economy and daily quests,
+then trust gains, replay notices, and added authored content. Native gameplay
+routing, data/asset preparation, and full iPhone gameplay acceptance remain pending.
+The native service continues to serve the accepted connection check.

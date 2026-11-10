@@ -191,7 +191,7 @@ def request(name, payload=None, *, allow_empty=False):
     if raw and 1 <= raw[-1] <= 16 and raw[-raw[-1]:] == bytes([raw[-1]]) * raw[-1]:
         raw = raw[:-raw[-1]]
     return json.loads(raw)
-with patch('revival_campaign.datetime') as dt:
+with patch('revival_campaign.datetime') as dt, patch('revival_mail_rewards.clock', return_value=NOW):
     dt.now.return_value = NOW
     request('InitializeRequest')
 player = server.State.player

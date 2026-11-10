@@ -20,6 +20,8 @@ def _saved(config):
     if not isinstance(data, dict):
         raise ValueError('The iOS campaign save must be a JSON object.')
     read_anchor(data)
+    from revival_mail_rewards import read_state as mail_rewards
+    mail_rewards(data)
     return data
 
 

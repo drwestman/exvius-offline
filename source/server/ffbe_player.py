@@ -986,6 +986,19 @@ def serve_login_bonus(spec, reply_id):
           + ("" if len(rows) == 28 else f" -- {28 - len(rows)} day(s) have no resolvable reward"))
     return spec
 def serve_mail(spec, reply_id, plaintext):
+    from engine_profile import current_profile
+    if State.player is not None and current_profile().replay is not None:
+        from revival_mail_commands import receipt, SYNC_REPLIES
+        if reply_id == 'XK7efER9':
+            return receipt(spec, plaintext)
+        if reply_id in SYNC_REPLIES:
+            out = dict(spec) if isinstance(spec, dict) else {}
+            out['t8TPs6o2'] = State.player.mail_counters()
+            return out
+    return _serve_mail(spec, reply_id, plaintext)
+
+
+def _serve_mail(spec, reply_id, plaintext):
     """The mailbox is server-authoritative.
 
     * `MailListRequest` (`KQHpi0D7`) -> `qja26wHb` rows **and** `t8TPs6o2` counters. Both are required: the page
