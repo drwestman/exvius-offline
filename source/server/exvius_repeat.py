@@ -160,6 +160,13 @@ def observe_load(spec, mid, is_battle_bundle):
                 if kind == '10':
                     captures.append({'kind': 10, 'id': int(unit), 'count': int(count)})
         if begin_attempt(State.player, mid, captures=captures):
+            from engine_profile import current_profile
+            if current_profile().replay is not None:
+                from ffbe_battle import ENLIGHTENMENT_DROPS
+                import ffbe_state as runtime
+                if State.player.mode == 'live' and runtime.STATE_PERSIST and (mid in CAPTURE_MISSIONS or mid in ENLIGHTENMENT_DROPS):
+                    from revival_loot import record_fixed
+                    record_fixed(State.player, spec)
             from exvius_raid_progress import observe_personal_raid
             observe_personal_raid(State.player, mid, spec)
             State.state_dirty = True

@@ -31,6 +31,9 @@ def _saved(config):
     from revival_notices import settings as notice_settings, ledger as notice_receipts
     notice_settings(data)
     notice_receipts(data)
+    from revival_loot import settings as loot_settings, fixed_receipt
+    loot_settings(data)
+    fixed_receipt(data)
     return data
 
 
@@ -59,6 +62,11 @@ def doctor(config) -> dict:
                                       (('yaml', 'PyYAML'), ('cryptography', 'cryptography'), ('dnslib', 'dnslib'))
                                       if find_spec(module) is None]
     result['game_data_ok'] = not result['missing_data']
+    from revival_exploration import coverage
+    try:
+        result['exploration_content'] = coverage()
+    except ValueError as exc:
+        result['error'] = str(exc)
     if find_spec('cryptography') is not None:
         from ios_server.certificates import CertificateStore
         result['certificates'] = CertificateStore(config.root).inspect()

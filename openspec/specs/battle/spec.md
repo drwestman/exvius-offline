@@ -329,6 +329,14 @@ The system SHALL validate BattleBundle according to these rules:
 - **WHEN** field_mission_bundle is compiled
 - **THEN** Returns bundle containing enemy encounters without opening combat phases
 
+#### Scenario: BuildIosPinnedFieldPlan
+- **GIVEN** An initialized iOS campaign with field encounters enabled and a pinned plan
+- **WHEN** field_mission_bundle is compiled
+- **THEN** Finite encounters follow the pinned zone budgets and native occurrence indexes
+- **AND** Script-bound bosses, explicit group bindings, and native monster/skill dependencies remain present
+- **AND** Derivation writes no disk cache and grants no hypothetical loot
+- **AND** Disabled or unplanned fields use the canonical field path; legacy behavior is preserved
+
 #### Scenario: AssembleBattlePayloadWithAtomicCacheWrite
 - **GIVEN** A battle mission request and cache destination
 - **WHEN** assemble is executed

@@ -583,7 +583,11 @@ def field_mission_bundle(carrier: dict, mission: dict) -> dict:
     group_ids.update(_FIELD_GROUP_BINDINGS.get(mid, []))
     if data_paths.PROFILE.name == 'ios-revival':
         from revival_exploration import field_bundle
-        planned = field_bundle(carrier, mission, source, group_ids)
+        from revival_loot import settings
+        from ffbe_state import State
+        policy = settings(State.player.data) if State.player else None
+        planned = field_bundle(carrier, mission, source, group_ids,
+                               enabled=bool(policy and policy['field_encounters']))
         if planned is not None:
             return planned
     out = story_mission_bundle(carrier, mission)

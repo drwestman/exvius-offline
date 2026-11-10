@@ -4,6 +4,7 @@
 
 This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
+pinned exploration encounters and rare quest loot,
 and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
@@ -205,14 +206,17 @@ SHALL preserve the original attempt and rewards.
 - Then original supported rewards are granted once
 - And a repeated result grants nothing and a new closed entry remains unavailable.
 
-### Requirement: ServeAddedExplorationEncounters
+### Requirement: ServePinnedExplorationEncounters
 
-The ten added explorations SHALL use an exact subset of the pinned finite encounter
-plans, including the two authored enemy formations. Map-script boss groups and
-explicit group bindings SHALL remain present. Native encounter rows SHALL carry
-per-field/per-group occurrence indexes and the referenced monster/skill data
-without creating an opening combat phase. Other explorations and the legacy
-profile SHALL retain their existing behavior.
+The iOS profile SHALL use all 248 finite exploration plans and 285 authored group
+formations from the pinned source. Its five partial lineups SHALL retain their
+declared omissions; 189 unresolved mission descriptions SHALL not acquire
+invented plans. Unplanned missions SHALL use their canonical path. Map-script
+boss groups and explicit group bindings SHALL remain present. Native encounter
+rows SHALL carry per-field/per-group occurrence indexes and the referenced
+monster/skill data without creating an opening combat phase. Budgets SHALL use
+the pinned field-to-zone mapping, including Crystal Tower fields 70–75. The legacy
+profile SHALL retain its existing behavior.
 
 Future field battles SHALL roll their own drop candidates with the canonical
 keep-one rule. Served drops SHALL retain at least four fields; empty drops SHALL
@@ -221,6 +225,7 @@ field fights SHALL not populate the normal drop ledger or grant inventory. Only
 the client's reported completed fights/loot SHALL be credited by canonical
 settlement, with existing completion/retry guards. Loading and deriving encounter
 data SHALL not create disk caches or modify pinned source metadata.
+Doctor SHALL report plan coverage and declared gaps without initializing state.
 
 #### Scenario: Load an exploration before fighting
 
@@ -228,6 +233,45 @@ data SHALL not create disk caches or modify pinned source metadata.
 - When its mission resource command runs
 - Then map/script groups remain alongside the finite encounter rows, without an opening battle
 - And no hypothetical enemy drops enter inventory or the normal result ledger.
+
+#### Scenario: Load a partial multi-zone plan
+
+- Given a pinned plan with distinct zone budgets or declared missing monsters
+- When its field bundle is derived
+- Then each native field receives only its matching zone's finite encounters
+- And declared gaps remain visible without replacing scripted bosses.
+
+### Requirement: RecordIosLootPolicyAndFixedBonuses
+
+Campaign initialization SHALL record `EXVIUS_FIELD_ENCOUNTERS=1` and
+`EXVIUS_CALAMITY_WRIT_DROP=0.5` defaults once. Missing settings SHALL backfill
+atomically without changing the replay anchor. Writ chance SHALL be finite and
+between zero and 100; field enablement SHALL be boolean. Existing settings SHALL
+survive environment edits, and malformed settings or receipts SHALL fail without
+repair. Disabling field plans SHALL retain the canonical scripted field path.
+
+Each ordinary wave or planned future field drop row MAY append one supported
+Calamity Writ, using an injected RNG and the recorded strict percentage chance
+after the canonical keep-one roll. Missing policy, unsupported item masters,
+non-live players, disabled persistence, and zero chance SHALL offer no bonus.
+Forecast field rows SHALL never grant inventory or populate the normal drop ledger.
+
+For capture and fixed Enlightenment missions, the resource-load command SHALL
+record native drop rows and their Writ count with the existing pending attempt.
+Reload SHALL reuse those recorded facts. A pre-port pending attempt without a
+receipt SHALL not acquire a retroactive bonus. Successful settlement SHALL grant
+exactly the recorded bonus alongside original capture/fixed rewards, ignoring
+client-supplied Writ counts. Incomplete grants or save failures SHALL roll back
+the entire result. Uncleared attempts SHALL grant no protected bonus. Retries
+SHALL project the recorded result without changing saved echoes or paying again.
+Normal and field loot SHALL retain canonical reported-loot settlement.
+
+#### Scenario: Retry a protected chamber after reload
+
+- Given a loaded capture or Enlightenment attempt with recorded rare loot
+- When the campaign reloads, resumes, clears, and retries its result
+- Then resume performs no new rare-loot roll, and the original bonus pays once
+- And capture rewards and fixed stone quantities remain authoritative.
 
 ### Requirement: AuthorizeReplayEventEntry
 

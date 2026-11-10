@@ -120,10 +120,25 @@ def roll_drops(spec, mid: str | None = None, is_battle_bundle: bool = False):
     if not ROLL_DROPS:
         return spec            # reference state: serve the payload's own candidate list verbatim
     from engine_profile import current_profile
-    if current_profile().replay is not None:
-        from revival_exploration import MISSIONS, roll_drops as roll_field_drops
-        if str(mid) in MISSIONS:
-            spec = roll_field_drops(spec, DROP_TABLE, random.randint)
+    revival = current_profile().replay is not None
+    writ_chance, recorded_rows = 0, None
+    if revival:
+        import revival_loot as loot
+        from revival_exploration import has_plan, roll_drops as roll_field_drops
+        policy = loot.settings(State.player.data) if State.player else None
+        fixed = mid in CAPTURE_MISSIONS or mid in ENLIGHTENMENT_DROPS
+        pending_fixed = bool(is_battle_bundle and fixed and State.player and loot.pending(State.player.data, mid))
+        if pending_fixed:
+            receipt = loot.fixed_receipt(State.player.data)
+            recorded_rows = receipt['rows'] if receipt else None
+        elif is_battle_bundle:
+            writ_chance = loot.chance(State.player, st.STATE_PERSIST)
+        if policy and not policy['field_encounters'] and '6v0LPiRe' in spec:
+            spec = dict(spec)
+            spec.pop('6v0LPiRe', None)
+        elif has_plan(mid):
+            spec = roll_field_drops(spec, DROP_TABLE, random.randint,
+                bonus=lambda items: loot.add_writ(items, writ_chance, random.random))
     rows = spec.get(DROP_TAG_ROWS)
     if not isinstance(rows, list):
         # This mission's bundle carries no drop rows at all, so it OWNS its slot and claims it empty --
@@ -133,6 +148,8 @@ def roll_drops(spec, mid: str | None = None, is_battle_bundle: bool = False):
         return spec
     spec = dict(spec)
     out = []
+    if recorded_rows is not None and {r.get('6v7y3QcJ') for r in rows} != {r['6v7y3QcJ'] for r in recorded_rows}:
+        raise ValueError('Recorded iOS fixed loot phases differ from the loaded battle.')
     captures = {}
     if is_battle_bundle and mid in CAPTURE_MISSIONS:
         groups = {}
@@ -143,6 +160,9 @@ def roll_drops(spec, mid: str | None = None, is_battle_bundle: bool = False):
         captures = {phase['6v7y3QcJ']: groups.get(phase.get('2fY1IomW'), {})
                     for phase in spec.get(PHASE_TAG, [])}
     for row in rows:
+        if recorded_rows is not None:
+            out.append(copy.deepcopy(next(r for r in recorded_rows if r['6v7y3QcJ'] == row.get('6v7y3QcJ'))))
+            continue
         if not isinstance(row, dict) or DROP_TOKEN not in row:
             out.append(row)
             continue
@@ -166,6 +186,8 @@ def roll_drops(spec, mid: str | None = None, is_battle_bundle: bool = False):
                 rolled.append(it)
         if not rolled and items:
             rolled = [items[-1]]
+        if revival:
+            rolled = loot.add_writ(rolled, writ_chance, random.random)
         row = dict(row)
         # SERVE 4 FIELDS -- the parser reads fields [0..3] with NO bounds check (`getMissionDropItemInfo`
         # 0x19f7c28: `add x0,x8,#0x48` then StrToInt, BEFORE the count>=5 guard at 0x19f7cfc), so a
@@ -612,6 +634,15 @@ def credit_mission_rewards(plaintext: str | None, spec=None):
     before, dirty_before = copy.deepcopy(player.data), player.dirty
     if not claim_mission_rewards(player, mid):
         _note('normal mission rewards withheld: no unpaid loaded attempt')
+        from engine_profile import current_profile
+        if current_profile().replay is not None and (mid in CAPTURE_MISSIONS or mid in ENLIGHTENMENT_DROPS):
+            attempt = player.data.get('exvius_repeat', {}).get('attempt', {})
+            echo = player.data.get('exvius_repeat', {}).get('echo', {})
+            if attempt.get('mid') == mid and attempt.get('status') == 'completed' and echo.get('mid') == mid:
+                for row in spec.get(RESULT_TAG, []):
+                    for token in (RESULT_DROP_TOKEN, *TYPED_RESULT_DROPS.values()):
+                        row.pop(token, None)
+                    _set_result_drops(row, str(echo.get('drops') or ''))
         return spec
     try:
         return _credit_mission_rewards(plaintext, spec, mid)
@@ -683,20 +714,35 @@ def _credit_mission_rewards(plaintext: str | None, spec=None, mid=None):
             from ffbe_player import score_daily
             score_daily('gil_earn', int(gil))
             paid.append(f"{int(gil)}gil")
+    fixed_writ = 0
+    from engine_profile import current_profile
+    if current_profile().replay is not None and cleared and (mid in CAPTURE_MISSIONS or mid in ENLIGHTENMENT_DROPS):
+        from revival_loot import fixed_bonus
+        fixed_writ = fixed_bonus(State.player, mid)
+    bonus_drop = f'20:290060400:{fixed_writ}' if fixed_writ else ''
     if mid in ENLIGHTENMENT_DROPS:
         drops = ENLIGHTENMENT_DROPS[mid] if cleared else ''
-        if drops:
-            for row in spec[RESULT_TAG]:
-                row[RESULT_DROP_TOKEN] = drops
     else:
         drops = '' if mid in CAPTURE_MISSIONS else _reported_drops(src)
+    if bonus_drop:
+        drops = ','.join(filter(None, (drops, bonus_drop)))
+    if drops and (mid in ENLIGHTENMENT_DROPS or mid in CAPTURE_MISSIONS):
+        for row in spec[RESULT_TAG]:
+            row[RESULT_DROP_TOKEN] = drops
     projected_kinds = set()
     for entry in drops.split(","):
         f = entry.split(":")
         if len(f) < 3 or not f[0].isdigit() or not f[1].isdigit() or not f[2].isdigit():
             continue
         reward = {'kind': int(f[0]), 'id': int(f[1]), 'count': int(f[2])}
-        if State.player._can_credit(reward) and State.player._grant_items([reward]):
+        supported = State.player._can_credit(reward)
+        protected_bonus = fixed_writ and f[:2] == ['20', '290060400']
+        if protected_bonus and not supported:
+            raise ValueError('The recorded iOS fixed loot bonus has no supported master.')
+        granted = State.player._grant_items([reward]) if supported else []
+        if protected_bonus and granted != [reward]:
+            raise ValueError('The recorded iOS fixed loot bonus was not granted completely.')
+        if granted:
             paid.append(f"{f[0]}:{f[1]}x{f[2]}")
             projected_kinds.add(reward['kind'])
     if 28 in projected_kinds:

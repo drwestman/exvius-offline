@@ -17,13 +17,13 @@ HALLOWEEN = datetime(2027, 10, 25, 3, tzinfo=timezone.utc)
 
 
 class ExplorationContentBehavior(unittest.TestCase):
-    def test_given_pinned_explorations_when_loaded_then_limit_the_port_to_ten_complete_missions(self):
+    def test_given_full_explorations_when_loaded_then_retain_the_approved_ten_mission_subset(self):
         import revival_exploration as field
         doc = field.plans()
-        self.assertEqual(set(doc['missions']), field.MISSIONS)
-        self.assertEqual(len(doc['groups']), 2)
-        self.assertEqual(set(doc['groups']), {'900000146', '900000209'})
-        self.assertTrue(all(not row['missing'] for row in doc['missions'].values()))
+        approved = json.loads((field.HERE / 'content' / 'exploration_encounters_added.json').read_text())
+        self.assertEqual({mid:doc['missions'][mid] for mid in field.ADDED_MISSIONS}, approved['missions'])
+        self.assertEqual({gid:doc['groups'][gid] for gid in approved['groups']}, approved['groups'])
+        self.assertTrue(all(not doc['missions'][mid]['missing'] for mid in field.ADDED_MISSIONS))
 
     def test_given_repeated_group_when_projected_then_emit_finite_indexes_for_each_native_field(self):
         import revival_exploration as field

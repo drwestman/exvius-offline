@@ -574,3 +574,62 @@ Calamity Writ loot rule as remaining engine work. Native asset preparation,
 missing artwork and replay home banners, gameplay hosting, and physical iPhone
 acceptance remain pending. The running service still serves the accepted
 connection check. Earlier Android fixture/tooling validation limitations remain.
+
+## Full exploration and rare-loot checkpoint — November 10, 2026
+
+Completed the broader exploration/loot engine slice identified above. The full
+pinned packet now supplies **248 finite exploration plans and 285 authored group
+formations**, retaining the approved ten-mission subset. Native fields receive
+their own zone budgets and occurrence indexes, including Crystal Tower fields
+70–75. Script-bound bosses and explicit group bindings remain present without
+an opening combat phase. Unplanned missions retain the canonical path; derivation
+creates no disk caches.
+
+The source declares five partial lineups: Fledgling Rukh is missing from missions
+`7840101`, `11310505`, and `11430201`; Roborg and Will O' Wisp are missing from
+`41930101` and `41930102`. Those omissions remain explicit. The 189 unresolved
+mission descriptions do not gain invented plans. Doctor reports coverage and
+partial lineups without changing content or campaign state.
+
+Campaign initialization records `EXVIUS_FIELD_ENCOUNTERS=1` and
+`EXVIUS_CALAMITY_WRIT_DROP=0.5` once. Missing settings backfill atomically without
+moving the replay anchor. Existing settings survive environment changes; invalid
+saved settings/receipts fail without repair. Field enablement is boolean and Writ
+chance is a finite percentage from zero to 100. Disabled fields retain canonical
+scripted encounters. Legacy behavior remains unchanged.
+
+The rare-loot policy adds a supported Calamity Writ after the canonical keep-one
+roll, independently per wave/future field encounter row. Forecasts never grant
+inventory or populate the normal drop ledger. Capture and fixed Enlightenment
+loads record their native rows and bonus count with the existing pending attempt;
+reload reuses those facts. Clears pay the recorded bonus alongside original
+captures/fixed stone quantities, ignoring client-supplied bonus counts. Old pending
+attempts receive no retroactive bonus. Failed grants or saves roll back the whole
+result; retries project the saved result echo without changing save bytes.
+
+Validation: **22 new BDD scenarios; 229 iOS engine checks, 27 native connectivity
+checks, and 186 legacy gameplay/event checks passed.** Coverage includes pinned
+inventory/gaps, zone budgets, policy backfill, malformed facts, strict chance
+boundaries, disabled/missing policy, old pending attempts, protected reloads,
+uncleared results, incomplete grants, save failures, read-only diagnostics, and
+normal/protected result retries. Python syntax and whitespace checks passed.
+
+A disposable real-data sweep derived all **248 plans and 60,444 native encounter
+rows**, validating group/skill references and preservation of scripted groups.
+Eight representative encrypted loads covered single/multi-zone fields, Crystal
+Tower, a partial lineup, an unplanned scripted boss, normal waves, capture, and
+Enlightenment. Four reward settlements verified normal/field/protected Writs,
+the original 350-stone reward, and byte-stable retries after reload. Event checks
+used eligible replay windows rather than bypassing entry policy. The audit guard
+rejected network access and writes outside the disposable runtime; no shared
+data, real campaign, or live service was changed. The full packet matches the
+pinned source byte-for-byte, with SHA-256
+`4e6f41a9f1cd45382c21fb6360e996aeee8f42f6fb6e917f0f300ade69a4ecd2`.
+
+**Stage 1 engine feature ports have reached the asset-preparation boundary.** Next
+is native data preparation/installation: master/version and text compatibility,
+banner packs and missing artwork, replay home banners, sound/story resources,
+and served-byte verification. Gameplay routing/hosting and full physical-iPhone
+acceptance remain pending. The running native service still serves the accepted
+connection check. Earlier Android fixture/tooling limitations still prevent a
+complete repository or packaged-build validation claim.

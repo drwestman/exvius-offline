@@ -220,13 +220,31 @@ areas. Six Halloween battles use the pinned original-Global reconstruction;
 the other missions retain canonical battle/story paths. Bad content packets fail
 visibly rather than exposing incomplete battles. Legacy content is unchanged.
 
-The ten added explorations include their pinned finite encounter plans and two
-authored enemy formations. Map-script bosses remain, and no opening battle is
-invented for an exploration. Field drops retain native four-field formatting;
-planned fights never grant loot. Canonical settlement pays only reported loot
-and completed quest rewards, preserving reload/retry and failed-save protections.
-All derivation stays in memory. The pinned pack's broader exploration plans and
-rare Calamity Writ rule remain a follow-up engine slice.
+All **248 pinned exploration plans** and **285 authored group formations** are now
+included. Native field IDs select their original zone budgets, including Crystal
+Tower's extra fields. Map-script bosses remain, and explorations open without a
+battle. Five plans retain declared missing monsters (Fledgling Rukh, Roborg, or
+Will O' Wisp); 189 unresolved descriptions remain unplanned. Doctor reports this
+coverage. Unplanned missions retain their canonical path. Field drops retain
+native four-field formatting, and planned fights never grant loot. All derivation
+stays in memory.
+
+Initialization records `EXVIUS_FIELD_ENCOUNTERS=1` and
+`EXVIUS_CALAMITY_WRIT_DROP=0.5` once. Each wave or future field encounter rolls a
+0.5% chance for one additional Calamity Writ after the ordinary keep-one drop roll.
+The chance accepts finite percentages from 0 to 100; zero disables it. Set field
+encounters to `0`, `off`, `false`, or `no` to retain canonical scripted fields.
+Missing settings backfill atomically; saved settings survive environment edits.
+An installation missing the Writ item master offers no bonus.
+
+Normal and field settlement credits reported loot with the existing completion
+guards. Capture and fixed Enlightenment missions record their native drop rows
+and Writ count with the pending attempt; reloads reuse that roll. A clear pays
+the recorded bonus alongside original captures or fixed stone quantities,
+ignoring client-supplied bonus counts. Failed grants/saves roll back the result,
+and retries preserve inventory and saved result echoes. Older pending attempts
+without a receipt gain no retroactive bonus. Diagnostics validate saved facts
+without repair. Legacy loot and field behavior are unchanged.
 
 Native asset preparation is still pending. Pure preparation helpers provide
 converted master rewards and custom daily text; these are not yet installed into
