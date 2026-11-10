@@ -247,10 +247,9 @@ and retries preserve inventory and saved result echoes. Older pending attempts
 without a receipt gain no retroactive bonus. Diagnostics validate saved facts
 without repair. Legacy loot and field behavior are unchanged.
 
-The first native table-preparation slice is available below. Custom daily text
-can now be prepared into private native files. Remaining English text, converted
-master reward displays, full table coverage, art/audio/story packs, and native
-gameplay asset routing still need preparation and device acceptance.
+Native preparation now covers the pinned English label families and converted
+challenge/Arena reward displays. Full table coverage, art/audio/story packs, and
+native gameplay asset routing still need preparation and device acceptance.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -266,7 +265,7 @@ the existing canonical engine without listeners, and persists the calendar once.
 Engine diagnostics go to stderr; stdout remains one JSON document. A failed
 initialization releases the lock. Use a fresh process to reconfigure engine paths.
 
-## Offline core table preparation
+## Offline native table preparation
 
 From the repository root, using existing prepared content:
 
@@ -280,29 +279,48 @@ Stop the connection service before preparing its runtime, or select a separate
 private root with `--root /path/to/private-ios-runtime`. Verification is read-only
 and may run while the service is active. Both commands use the dedicated Python
 environment and emit one JSON document. Neither starts services, downloads packs,
-loads a campaign, or changes the shared content tree. Managed `static/native`
+loads the engine/player aggregate, or changes the shared content tree. Managed `static/native`
 data layouts are also supported.
 
-The initial snapshot contains seven native files: resource definitions/versions,
-quest rewards, WebView URLs, the localized-text index, and daily names/details.
+Snapshots now contain 35 native files: resource definitions/versions, quest rewards,
+WebView URLs, the localized-text index, all 25 pinned English label families, and
+five challenge/Arena economy masters. Four additional native inputs provide
+exchange stock and original unit/card/recipe names.
 It moves `resources_common.cpk` and `resources.cpk` into the tutorial download,
 removes resource rows without a base or English file version, reveals quest
 rewards with their original quantities, and sets the Drop Rates URL to the v910
-route. It adds all 22 custom daily quest names/details and updates English text
-versions, MD5s and sizes together. Native padding/column shapes and unrelated
-records remain intact; encrypted lines use LF endings.
+route. English labels include all canonical revival bundles, ticket names and
+descriptions, summon names/details, reconstructed abilities/monsters/skills,
+native event modes, exchange products, items/equipment/materia, and all 22 custom
+daily quests. The pinned fallback file supplies 44 recoverable item names;
+unresolved exchange products are reported rather than invented. Append-only
+text preserves existing records, hook fills retain usable English, and explicit
+overrides replace only the intended keys. English versions, MD5s and byte sizes
+update together. Padding/column shapes, other languages and unrelated records
+remain intact; encrypted lines use LF endings.
+
+Master reward displays use the selected `--slot` campaign's saved economy settings.
+Environment changes cannot override those recorded settings. Before settings
+exist, preparation reports `preparation.economy.source: provisional` and uses
+validated defaults without creating/backfilling a save. After initialization or
+changing saved settings, run preparation again. Unrelated campaign progress does
+not invalidate a snapshot. Conversion starts from the original source rows, so
+re-preparation never multiplies a previously converted reward. Source quantities,
+unit metadata, purchases, balances and reward receipts remain unchanged.
 
 Files are staged under the private `assets/tables/` directory. An atomic
 `current.json` pointer selects one validated generation. Identical inputs reuse
 it; changed source files or preparation revisions publish higher versions and
 retain the previous files. Failed publication leaves the active pointer intact.
+Existing seven-table snapshots validate and upgrade atomically to the expanded
+schema, keeping their old files and versions. Missing new inputs leave the old
+snapshot available.
 Malformed sources or corrupt published snapshots fail visibly without repair.
 `verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
 
-Results explicitly report `scope: core-native-tables` and `gameplay_ready: false`.
+New results explicitly report `scope: native-tables` and `gameplay_ready: false`.
 These files are prepared for the future gameplay host; the current hello service
-does not serve them. Full table coverage, remaining English labels and earned-Lapis
-master displays, managed-pack downloading/installing, banners/art, sound/story
+does not serve them. Full table coverage, managed-pack downloading/installing, banners/art, sound/story
 compatibility, gameplay routes, and physical iPhone acceptance remain pending.
 
 ## Replay notices

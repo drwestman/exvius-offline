@@ -693,3 +693,77 @@ snapshots expose a version projection and exact-path lookup for that later host;
 the current hello service does not consume them. Commands report
 `scope: core-native-tables` and `gameplay_ready: false`. Full physical-iPhone
 gameplay acceptance and earlier Android tooling/fixture limitations remain.
+
+## Native English labels and economy displays checkpoint — November 10, 2026
+
+Expanded explicit preparation to **35 output tables**: five core masters, all
+25 pinned English label families, and five economy masters. Four additional
+native inputs provide exchange stock and original unit/card/recipe names.
+English source versions/checksums remain authoritative. The five economy-table
+filename/key mappings were recovered from the literal-returning ARM64 getters
+in the local v0.1.25 client artifact and corroborated by decrypting all five
+prepared source files.
+
+Ported the pinned append/fill/override rules for bundles, tickets, summons,
+reconstructed abilities/monsters/skills, native event modes, item/equipment/materia
+and important-item text, generated exchange products, and custom dailies. The
+canonical revival bundle catalogue includes all 13 additions absent from the
+legacy catalogue. Usable English, native columns/padding, duplicate shipped keys,
+other languages and unrelated records remain intact except for declared
+overrides. The pinned 44-item fallback file matches its source byte-for-byte;
+SHA-256 is `178159ec91405a700bb161600c56ed3a9ee1a82469261a83fd96fbbed9e4b5b6`.
+Unresolved product names are reported without invented translations.
+
+Extracted the existing exchange calculation and reward tuple decoder into pure
+helpers shared with gameplay. The engine still supplies its canonical unit-master
+lookup. Product IDs, prices, currencies, stock limits, receipts, event associations
+and unit reward metadata retain their existing meaning. Native preparation uses
+the state-free summon catalogue and performs no gameplay writes or RNG rolls.
+
+Challenge/panel/special-challenge and both Arena masters use the canonical earned-
+Lapis display conversion. Preparation reads the selected slot's recorded economy
+settings without loading an aggregate or repairing a save. Missing settings use
+validated provisional defaults. Recorded settings ignore later environment edits;
+unrelated campaign progress does not invalidate preparation. Changed settings
+require an explicit new generation. Every conversion starts from original native
+rows, so repeated preparation does not multiply a converted display again.
+
+Schema-2 manifests record effective policy, slot, label coverage and source
+provenance. Valid schema-1 seven-table snapshots remain readable and upgrade
+atomically with higher versions. Missing new inputs, malformed metadata/settings,
+or publication failures leave the prior snapshot available. Queries still perform
+no writes, downloads, campaign initialization, grants, or service changes.
+
+Validation: **16 new BDD scenarios; 264 iOS engine/preparation checks, 27 native
+connectivity checks, and 186 legacy gameplay/event checks passed.** Coverage
+includes English preservation/overrides, all item families and revival bundles,
+unresolved references, injected unit metadata, stable exchange contracts, saved
+versus provisional settings, raw-source conversion, unchanged progress, corrupt
+settings/metadata, and successful/refused seven-table upgrades. Existing snapshot
+failure/containment and CLI checks remain green.
+
+The server and iOS specs document the new boundaries, with exact implementation
+anchors for the extracted helpers. Strict OpenSpec validation was run against
+both the working tree and an isolated HEAD baseline: both retain **417 existing
+errors and three warnings**, with no new findings. Those pre-existing generated-
+spec structure issues (including the iOS spec's missing Purpose header) remain
+unresolved; this is not a claim that repository-wide spec validation passed.
+
+A guarded disposable real-data upgrade produced **62,481,210 bytes across 35
+files**, retaining the prior seven-table generation. All **25 English files and
+the localized index matched the pinned patcher byte-for-byte**, using destination
+catalogues and native English inputs. It covered **1,053 summon definitions,
+2,079 exchange products with no unresolved names, and 52 bundle name/detail keys**.
+All **20,307 positive Lapis reward entries** in the five economy masters converted
+correctly, preserving other fields and padding. The pure exchange calculation
+matched the checked-in prior calculation in both profiles. All 39 native source
+hashes, the source metadata and gameplay RNG stayed unchanged. The guard rejected
+networking, writes outside the disposable runtime and all verification writes;
+no engine state loader was imported or campaign created.
+
+**Next is full native-table coverage and version delivery**, followed by native
+banner/art packs, sound/story compatibility, managed-pack installation and
+gameplay asset/API routing. Results now report `scope: native-tables` and
+`gameplay_ready: false`. Prepared bytes remain offline; the live service still
+serves the accepted connection check. Physical-iPhone gameplay acceptance and
+the earlier Android fixture/tooling limitations remain pending.

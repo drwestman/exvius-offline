@@ -1,7 +1,8 @@
 """Explicit native-table preparation and read-only verification.
 
 Publish immutable generations through one atomic pointer under the private root.
-Neither command imports the engine, reads a campaign, downloads, or starts a service.
+Commands inspect economy settings without importing the engine, repairing saves,
+downloading, or starting a service.
 """
 import copy
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ from engine_profile import REVIVAL_COMMIT
 from ios_server import native_tables as rules
 from ios_server.runtime import InstanceLock, private_path
 
-SCOPE = 'core-native-tables'
+SCOPE = 'native-tables'
 POINTER = 'assets/tables/current.json'
 
 
@@ -29,56 +30,12 @@ def _sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-def _content(config, path):
-    if not path.resolve().is_relative_to(config.data):
-        raise ValueError('Native table source escapes shared data: ' + str(path))
-    return path.read_bytes()
-
-
 def _inputs(config):
-    env = config.engine_environment()
-    roots = list(dict.fromkeys(Path(env[key]) for key in ('CDN_OVERLAY', 'CDN_ROOT')))
-    sources, records = {}, {}
-
-    def read(table, version=None):
-        for root in roots:
-            folder = root / ('localized_texts/en' if table.localized else 'mst')
-            if not folder.resolve().is_relative_to(config.data):
-                raise ValueError('Native table folder escapes shared data: ' + str(folder))
-            if version is None:
-                matches = [(int(m[1]), path) for path in folder.glob('Ver*_' + table.token + '.dat')
-                           if (m := re.fullmatch(r'Ver([0-9]+)_' + table.token + r'\.dat', path.name))]
-                path = max(matches, default=(0, None), key=lambda p: p[0])[1]
-            else:
-                path = folder / Path(table.path(version)).name
-                if not path.exists():
-                    path = None
-            if path is not None:
-                base = int(re.match(r'Ver([0-9]+)_', path.name)[1])
-                if base < 1:
-                    raise ValueError('Native source version must be positive: ' + str(path))
-                raw = _content(config, path)
-                sources[table.name] = (base, raw)
-                records[table.name] = {'path': str(path.relative_to(config.data)), 'version': base, 'sha256': _sha(raw)}
-                return
-        raise ValueError('Missing native source table: ' + table.name + (f' Ver{version}' if version else ''))
-
-    for table in rules.TABLES:
-        if not table.localized:
-            read(table)
-    localized = rules.english_versions(sources[rules.INDEX.name][1])
-    for table in rules.TABLES:
-        if table.localized:
-            read(table, localized[table.name])
-    for _, row, _ in rules.master_rows(sources[rules.INDEX.name][1], rules.INDEX.key):
-        name = row.get('a4hXTIm0')
-        if name in localized:
-            raw = sources[name][1]
-            if str(row.get('MLOSu5E0')) != str(len(raw)) or str(row.get('zptmZGqa')).lower() != hashlib.md5(raw).hexdigest():
-                raise ValueError('English source checksum disagrees with localized index: ' + name)
-    fingerprint = _sha(_json({'pipeline': rules.PIPELINE_VERSION, 'reference': REVIVAL_COMMIT,
-                             'source_root': str(config.data), 'sources': records, 'daily_text': rules.additions()}))
-    return sources, records, fingerprint
+    from ios_server.native_inputs import collect
+    try:
+        return collect(config)
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise ValueError(f'Invalid native preparation metadata: {exc}') from exc
 
 
 @dataclass(frozen=True)
@@ -106,10 +63,11 @@ class PreparedTables:
         return out
 
     def describe(self):
-        return {'ok': True, 'scope': SCOPE, 'generation': self.manifest['generation'],
+        return {'ok': True, 'scope': self.manifest['scope'], 'generation': self.manifest['generation'],
                 'directory': str(self.directory), 'tables': len(self.manifest['tables']),
                 'changed_rows': {name: row['changed_rows'] for name, row in self.manifest['tables'].items()},
-                'gameplay_ready': False}
+                'gameplay_ready': False, **({'preparation': copy.deepcopy(self.manifest['preparation'])}
+                                           if self.manifest['version'] == 2 else {})}
 
 
 def load_prepared(config):
@@ -129,21 +87,40 @@ def load_prepared(config):
         if _sha(manifest_raw) != ref['manifest_sha256']:
             raise ValueError('manifest checksum mismatch')
         manifest = json.loads(manifest_raw)
-        if (set(manifest) != {'version', 'scope', 'reference_commit', 'source_root', 'pipeline_version',
-                             'generation', 'fingerprint', 'sources', 'tables'}
-                or type(manifest['version']) is not int or manifest['version'] != 1
-                or manifest['scope'] != SCOPE or manifest['reference_commit'] != REVIVAL_COMMIT
+        version = manifest['version']
+        if type(version) is not int or version not in (1, 2):
+            raise ValueError('unsupported manifest version')
+        tables = rules.CORE_TABLES if version == 1 else rules.TABLES
+        registry = {table.name: table for table in tables}
+        keys = {'version', 'scope', 'reference_commit', 'source_root', 'pipeline_version',
+                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version == 2 else set())
+        if (set(manifest) != keys or manifest['scope'] != ('core-native-tables' if version == 1 else SCOPE)
+                or manifest['reference_commit'] != REVIVAL_COMMIT
                 or type(manifest['generation']) is not int or not 1 <= manifest['generation'] <= 99999999
                 or type(manifest['pipeline_version']) is not int or manifest['pipeline_version'] < 1
                 or not isinstance(manifest['source_root'], str) or not Path(manifest['source_root']).is_absolute()
                 or not re.fullmatch(r'[a-f0-9]{64}', manifest['fingerprint'])
                 or ref['directory'] != f"{manifest['generation']:08d}-{manifest['fingerprint']}"
-                or set(manifest['sources']) != rules.BY_NAME.keys()
-                or set(manifest['tables']) != rules.BY_NAME.keys()):
+                or set(manifest['tables']) != registry.keys()):
             raise ValueError('unsupported manifest')
+        if version == 1:
+            if set(manifest['sources']) != registry.keys():
+                raise ValueError('invalid core source inventory')
+        else:
+            if (set(manifest['sources']) != {'tables', 'documents'}
+                    or set(manifest['sources']['tables']) != {table.name for table in rules.INPUT_TABLES}):
+                raise ValueError('invalid expanded source inventory')
+            from revival_economy import settings
+            context = manifest['preparation']
+            policy = context['economy']
+            if (set(context) != {'economy', 'labels'} or set(policy) != {'source', 'slot', 'settings'}
+                    or policy['source'] not in ('provisional', 'campaign')
+                    or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
+                raise ValueError('invalid preparation policy')
+            settings({'ios_economy': {'version': 1, 'settings': policy['settings']}})
         outputs, versions, files = {}, {}, {}
         for name, entry in manifest['tables'].items():
-            table = rules.BY_NAME[name]
+            table = registry[name]
             version, base = entry['version'], entry['source_version']
             if (set(entry) != {'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'changed_rows'}
                     or type(version) is not int or type(base) is not int or base < 1 or version > 2147483647
@@ -158,7 +135,7 @@ def load_prepared(config):
             if len(raw) != entry['size'] or _sha(raw) != entry['sha256'] or hashlib.md5(raw).hexdigest() != entry['md5']:
                 raise ValueError('table checksum mismatch: ' + name)
             outputs[name], versions[name], files[entry['path']] = raw, version, raw
-        rules.validate(outputs, versions)
+        rules.validate(outputs, versions, tables=tables)
         return PreparedTables(directory, manifest, files)
     except (OSError, KeyError, TypeError, AttributeError, ValueError) as exc:
         raise ValueError(f'Invalid native table snapshot: {exc}') from exc
@@ -171,10 +148,11 @@ def verify_data(config):
         if snapshot is None:
             return {'ok': False, 'scope': SCOPE, 'prepared': False, 'gameplay_ready': False,
                     'error': 'No native table snapshot. Run prepare-data with the selected --data root.'}
-        _, records, fingerprint = _inputs(config)
+        _, records, fingerprint, context, _ = _inputs(config)
         if (snapshot.manifest['fingerprint'] != fingerprint or snapshot.manifest['sources'] != records
                 or snapshot.manifest['source_root'] != str(config.data)
-                or snapshot.manifest['pipeline_version'] != rules.PIPELINE_VERSION):
+                or snapshot.manifest['pipeline_version'] != rules.PIPELINE_VERSION
+                or snapshot.manifest.get('preparation') != context):
             raise ValueError('Native table inputs changed. Run prepare-data to publish a new generation.')
         return {**snapshot.describe(), 'prepared': True}
     except (OSError, ValueError) as exc:
@@ -231,17 +209,18 @@ def prepare_data(config):
     """Build and validate first, then publish under the exclusive private-runtime lock."""
     with InstanceLock(config.root):
         current = load_prepared(config)
-        sources, records, fingerprint = _inputs(config)
+        sources, records, fingerprint, context, labels = _inputs(config)
         if current is not None and current.manifest['fingerprint'] == fingerprint:
             if (current.manifest['sources'] != records or current.manifest['source_root'] != str(config.data)
-                    or current.manifest['pipeline_version'] != rules.PIPELINE_VERSION):
+                    or current.manifest['pipeline_version'] != rules.PIPELINE_VERSION
+                    or current.manifest.get('preparation') != context):
                 raise ValueError('Invalid native table snapshot provenance.')
             return {**current.describe(), 'prepared': True, 'prepared_now': False}
         generation = current.manifest['generation'] + 1 if current else 1
-        outputs, versions, changes = rules.build(sources, generation)
-        manifest = {'version': 1, 'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
+        outputs, versions, changes = rules.build(sources, generation, labels=labels, economy=context['economy']['settings'])
+        manifest = {'version': 2, 'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
                     'source_root': str(config.data), 'pipeline_version': rules.PIPELINE_VERSION,
-                    'generation': generation, 'fingerprint': fingerprint, 'sources': records, 'tables': {}}
+                    'generation': generation, 'fingerprint': fingerprint, 'sources': records, 'preparation': context, 'tables': {}}
         for table in rules.TABLES:
             raw = outputs[table.name]
             manifest['tables'][table.name] = {'path': table.path(versions[table.name]),

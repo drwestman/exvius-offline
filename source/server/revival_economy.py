@@ -33,20 +33,25 @@ def settings(data):
         raise ValueError(f'Invalid iOS economy: {exc}') from exc
 
 
-def initialize(data):
-    if settings(data) is not None:
-        return False
+def defaults():
+    """Read and validate provisional settings without initializing campaign state."""
     try:
         state = {'multiplier': float(os.environ.get('EXVIUS_LAPIS_MULTIPLIER', '5')),
                  'daily_lapis': int(os.environ.get('EXVIUS_DAILY_QUEST_LAPIS', '150')),
                  'all_bonus': int(os.environ.get('EXVIUS_DAILY_ALL_BONUS', '200')),
                  'custom': os.environ.get('EXVIUS_DAILY_CUSTOM', '1').strip().lower() not in ('0', 'false', 'off', ''),
                  'count': int(os.environ.get('EXVIUS_DAILY_QUEST_COUNT', '5'))}
-        candidate = {**data, 'ios_economy': {'version': 1, 'settings': state}}
+        candidate = {'ios_economy': {'version': 1, 'settings': state}}
         settings(candidate)
     except (TypeError, ValueError) as exc:
         raise ValueError(f'Invalid iOS economy defaults: {exc}') from exc
-    data['ios_economy'] = candidate['ios_economy']
+    return candidate['ios_economy']['settings']
+
+
+def initialize(data):
+    if settings(data) is not None:
+        return False
+    data['ios_economy'] = {'version': 1, 'settings': defaults()}
     return True
 
 

@@ -259,6 +259,58 @@ The system SHALL validate ExchangeShop according to these rules:
 - **WHEN** shop_exchange_unit is called
 - **THEN** Unit is removed from player roster and reward items are granted
 
+### Requirement: ShareDeterministicExchangeDefinitions
+
+- **Implementation**: `build_catalogue::source/server/exchange_catalogue.py`
+
+Gameplay and offline preparation SHALL share a pure exchange calculation over
+supplied content and reward decoders. It SHALL preserve canonical IDs, prices,
+limits, currencies, receipts, event associations and unit metadata without reading
+player state or mutating inputs. Purchase commands SHALL retain their transaction
+checks.
+
+#### Scenario: Reuse exchange content offline
+
+- **GIVEN** The same master stock and shop definitions
+- **WHEN** Gameplay and native preparation compile their exchange definitions
+- **THEN** Products keep the same identities, prices, limits and reward metadata
+- **AND** Native text generation performs no gameplay mutation.
+
+### Requirement: DecodeRewardTuplesWithInjectedUnitMaster
+
+- **Implementation**: `parse::source/server/reward_tuples.py`
+
+The system SHALL decode native reward tuples through a pure parser with an
+injected unit-master lookup. Supported tuple lengths, positive quantities,
+100-percent rate checks, unit/card levels, generic/specific trust descriptors and
+fusion restrictions SHALL retain their existing interpretation. The gameplay
+adapter SHALL supply its canonical unit lookup; offline consumers SHALL not bind
+the engine merely to inspect reward references.
+
+#### Scenario: Decode a specific trust moogle
+
+- **GIVEN** A rated unit reward carrying a specific trust target
+- **WHEN** The parser receives that target's unit master through its lookup
+- **THEN** Affinity descriptors and points match the canonical reward format
+- **AND** Generic targets retain their encoded percentage fallback.
+
+### Requirement: ReadProvisionalEconomyDefaultsWithoutInitialization
+
+- **Implementation**: `defaults::source/server/revival_economy.py`
+
+The system SHALL expose validated provisional economy defaults independently of
+campaign initialization. Invalid environment values SHALL fail visibly. Reading
+defaults SHALL not create or modify a campaign or grant rewards. Initialization
+SHALL continue to preserve previously recorded settings; native master conversion
+SHALL use explicit policy data and leave source rows unchanged.
+
+#### Scenario: Preview before campaign initialization
+
+- **GIVEN** No recorded economy settings
+- **WHEN** Native preparation reads validated defaults
+- **THEN** The provisional policy is available without initializing a save
+- **AND** A recorded policy takes precedence once present.
+
 ### Requirement: InventoryItemValidation
 
 The system SHALL validate InventoryItem according to these rules:

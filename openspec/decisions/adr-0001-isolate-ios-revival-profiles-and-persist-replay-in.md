@@ -16,6 +16,12 @@ Isolate iOS revival profiles and persist replay initialization with the campaign
 
 ## Consequences
 
+Reviewed November 10, 2026 for native label/economy preparation. The profile and
+private-runtime boundaries remain in force. Offline preparation reads only
+recorded settings or validated provisional defaults; it does not import the
+state loader, initialize/backfill campaigns, or modify shared source rewards.
+Gameplay retains canonical unit lookup and purchase transactions through pure
+helper adapters. See [ADR-0007](adr-0007-prepare-native-labels-and-economy-displays.md).
 
 
 > Recorded by openlore decisions on 2026-11-09

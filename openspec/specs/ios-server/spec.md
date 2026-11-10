@@ -5,7 +5,7 @@
 This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
 pinned exploration encounters and rare quest loot,
-offline core native-table preparation, and hello-only native connectivity of
+offline native-table and label preparation, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -638,9 +638,9 @@ and unit metadata SHALL survive projection. Item-drop channels SHALL retain thei
 existing interpretation. Legacy grants and projections SHALL remain unchanged.
 
 Native master conversion and custom daily text SHALL be pure preparation inputs;
-queries SHALL not write shared tables. Explicit core preparation SHALL install
-custom daily text into a private snapshot. Remaining native master conversion,
-gameplay asset routing, and visual device acceptance remain later checkpoints.
+queries SHALL not write shared tables. Explicit preparation SHALL install custom
+daily text and converted challenge/Arena master displays into a private snapshot.
+Gameplay asset routing and visual device acceptance remain later checkpoints.
 
 #### Scenario: Buy Lapis while earned Lapis is boosted
 
@@ -815,16 +815,19 @@ Legacy callers SHALL retain their existing cache behavior.
 
 The prepare-data command SHALL reuse prepared or managed static/native inputs
 read-only, without loading an engine/campaign or starting services/downloads.
-It SHALL acquire the private runtime's exclusive instance lock and publish an
-initial seven-table snapshot: resource definitions and versions, quest rewards,
-WebView URLs, the localized-text index, and daily quest names/details.
+It SHALL acquire the private runtime's exclusive instance lock and publish a
+35-table snapshot: resource definitions and versions, quest rewards, WebView URLs,
+the localized-text index, all 25 pinned English label families, and five economy
+masters. Four additional native inputs SHALL supply exchange stock and original
+unit/card/recipe names. Earlier seven-table snapshots SHALL remain valid for
+inspection and atomic upgrade; incomplete new inputs SHALL preserve them.
 
 Preparation SHALL use the pinned CBC master and ECB localized-text formats,
 preserve source padding layers and text columns, and emit LF between encrypted
 lines. Invalid encryption, unsupported row shapes, missing required tables, or
 English source checksum/size mismatches SHALL fail before publication. Existing
 shipped text records, including duplicate keys, SHALL remain unless explicitly
-replaced by a custom daily definition.
+replaced by a declared native label rule.
 
 Both tutorial resource packs SHALL download up front; resource rows with no base
 or English file version SHALL be excluded. Quest reward visibility SHALL be shown
@@ -860,9 +863,9 @@ Missing and corrupt preparation SHALL be reported distinctly.
 
 Verified snapshots SHALL provide exact published-path lookup and a private
 version-response projection; unrelated version rows SHALL remain unchanged.
-Preparation and verification SHALL report scope core-native-tables and
-gameplay_ready false. Native gameplay/asset routing, full-table and remaining
-text/economy preparation, art/audio/story packs and device acceptance are pending.
+New preparation and verification SHALL report scope native-tables and
+gameplay_ready false. Native gameplay/asset routing, full-table coverage,
+art/audio/story packs and device acceptance are pending.
 
 #### Scenario: Inspect prepared native files
 
@@ -870,6 +873,57 @@ text/economy preparation, art/audio/story packs and device acceptance are pendin
 - When verify-data runs and its versions are projected for an asset consumer
 - Then every advertised snapshot version resolves to its validated bytes
 - And text MD5s/sizes agree with the localized index without filesystem writes.
+
+### Requirement: PreparePinnedEnglishLabels
+
+Preparation SHALL apply the pinned English text rules to all 25 localized label
+families: bundles, items/equipment/materia/important items, summon names/details,
+reconstructed abilities/monsters/skills, area/dungeon labels, generated exchanges,
+and custom dailies. All canonical revival bundles SHALL have labels, including
+the 13 additions absent from the legacy bundle catalogue. Append-only bundle,
+ticket and summon-detail rules SHALL preserve existing text. Hook fills SHALL
+replace missing, raw-key, TFA or Japanese placeholders while preserving usable
+English. Explicit summon name overrides, generated product labels, native mode
+names and custom dailies MAY replace existing records.
+
+The state-free summon catalogue and one pure exchange calculation SHALL supply
+label identities. Gameplay SHALL retain the same product IDs, prices, limits,
+currencies and reward metadata. Preparation SHALL name products from original
+English reward names or the pinned 44-item fallback file. Unresolved products
+SHALL be listed without invented translations. Text generation SHALL not alter
+catalogue selection, payments, rewards, RNG, historical eligibility or stock.
+
+#### Scenario: Preserve usable English
+
+- Given shipped English names and missing or placeholder hook text
+- When native labels are prepared
+- Then existing usable English remains unless a declared override applies
+- And required additions retain native columns/padding and matching index checksums.
+
+### Requirement: PrepareRecordedEconomyDisplays
+
+Native preparation SHALL read the selected slot's recorded economy policy without
+loading a player aggregate, initializing/backfilling settings, or repairing saves.
+If no recorded policy exists, validated environment defaults SHALL be marked
+provisional. Recorded settings SHALL take precedence over later environment edits.
+Malformed save/settings or required metadata SHALL fail without replacing the save
+or active snapshot.
+
+The canonical pure conversion SHALL normalize Lapis reward fields in
+F_CHALLENGE_MST, F_PANEL_QUEST_MST, F_SP_CHALLENGE_MST, F_RB_SS_MST and
+F_RB_SS_REWARD_MST. Conversion SHALL start from original native source rows on
+every generation, preserve unit/other-item metadata and all unrelated fields,
+and leave canonical source rewards unchanged. Slot, effective policy, label
+projections and source provenance SHALL participate in snapshot freshness;
+unrelated campaign progress SHALL not. Changed settings SHALL require explicit
+re-preparation and monotonically higher versions.
+
+#### Scenario: Rebuild after an economy edit
+
+- Given a snapshot prepared with a recorded multiplier of five
+- When that slot records three and prepare-data runs again
+- Then an original 20-Lapis master reward displays 60 in the new generation
+- And the previous 100-Lapis display remains in the old generation without any grant.
 
 ### Requirement: ContainCdnFallbackPaths
 

@@ -89,8 +89,10 @@ def patch_text(raw, key, entries):
             if columns is None:
                 columns, shape_layers = len(fields) - 1, layers
             if fields[0] in entries:
-                replacement = [entries[fields[0]]] * (len(fields) - 1)
-                if fields[1:] != replacement:
+                entry = entries[fields[0]]
+                value, replace = entry if isinstance(entry, tuple) else (entry, True)
+                replacement = [value] * (len(fields) - 1)
+                if replace and fields[1:] != replacement:
                     records[index] = '^'.join([fields[0], *replacement])
                     touched = True
                     changed += 1
@@ -99,7 +101,8 @@ def patch_text(raw, key, entries):
         out.append(line)
     missing = sorted(entries.keys() - seen)
     if missing:
-        plain = ''.join('^'.join([name] + [entries[name]] * columns) + '\n' for name in missing).encode()
+        plain = ''.join('^'.join([name] + [entries[name][0] if isinstance(entries[name], tuple) else entries[name]] * columns)
+                        + '\n' for name in missing).encode()
         out.append(base64.b64encode(_ecb(key, _pad(plain, shape_layers), True)).decode())
         changed += len(missing)
     return ('\n'.join(out) + '\n').encode('ascii'), changed

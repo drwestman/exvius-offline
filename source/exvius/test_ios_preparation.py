@@ -89,14 +89,17 @@ class NativePreparation(unittest.TestCase):
             rules.URL.name:[{'gu8McTA6':'GACHA_RATE_URL','G4L0YIB2':'original','en':'<WEB>/old','empty':''},
                             {'gu8McTA6':'OTHER','en':'unchanged'}],
             rules.INDEX.name:[{'a4hXTIm0':t.name,'00zAYGYS':'10','zptmZGqa':'old','MLOSu5E0':'1',
-                               '7aj3QkBT':'99'} for t in (rules.DAILY_NAME,rules.DAILY_DETAIL)] +
+                               '7aj3QkBT':'99'} for t in rules.INPUT_TABLES if t.localized] +
                              [{'a4hXTIm0':'F_TEXT_OTHER','00zAYGYS':'10','zptmZGqa':'other','MLOSu5E0':'5'}]}
-        for table in rules.TABLES:
+        for table in rules.INPUT_TABLES:
             path=native/table.path(10); path.parent.mkdir(parents=True,exist_ok=True)
-            raw=text(table.key,['original^Keep^Keep']) if table.localized else master(table.key,rows[table.name])
+            fallback=[{'id':'1','dX6cor8j':'50:1:20:100:1,20:1:3:100:1',
+                       'dJ1g6p8h':'50:1:20','6Emk0agT':'50:1:2'}]
+            raw=text(table.key,['original^Keep^Keep']) if table.localized else master(table.key,rows.get(table.name,fallback))
             path.write_bytes(raw)
         for row in rows[rules.INDEX.name][:-1]:
-            raw=(native/rules.BY_NAME[row['a4hXTIm0']].path(10)).read_bytes()
+            table=next(table for table in rules.INPUT_TABLES if table.name==row['a4hXTIm0'])
+            raw=(native/table.path(10)).read_bytes()
             row['zptmZGqa']=hashlib.md5(raw).hexdigest(); row['MLOSu5E0']=str(len(raw))
         (native/rules.INDEX.path(10)).write_bytes(master(rules.INDEX.key,rows[rules.INDEX.name]))
         self.native=native
@@ -120,7 +123,7 @@ class NativePreparation(unittest.TestCase):
                     self.assertTrue(prep.verify_data(self.config)['ok'])
                 snapshot=prep.load_prepared(self.config)
                 self.assertTrue(report['prepared_now']); self.assertFalse(report['gameplay_ready'])
-                self.assertEqual(report['tables'],7)
+                self.assertEqual(report['tables'],35)
                 self.assertFalse(self.config.state_file.exists())
                 resource=[r for _,r,_ in master_rows(snapshot.lookup(rules.RESOURCE.path(210010)),rules.RESOURCE.key)]
                 self.assertEqual({r['9ZCEWn0z'] for r in resource},{'1','2'})
