@@ -41,3 +41,7 @@ snapshots fail without implicit preparation or save repair. Query delivery never
 writes files, downloads assets or changes campaign state. The default adapter and
 hello-only LAN service are unchanged. Full gameplay hosting, native art/audio/story
 preparation, managed installation and physical-iPhone acceptance remain pending.
+
+Reviewed for the Vortex checkpoint: schema 4 extends the same complete-table and
+exact-delivery contracts with an explicitly enabled pack and coordinated resource
+facts. See [ADR-0009](adr-0009-publish-vortex-art-with-resource-tables.md).

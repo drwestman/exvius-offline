@@ -1,13 +1,15 @@
-"""Serve exact verified table bytes; ordinary asset routing stays with the engine."""
+"""Serve exact verified tables/packs; ordinary asset routing stays with the engine."""
 
 
 def serve(handler, snapshot, relative):
     if handler.command not in ('GET', 'HEAD'):
         return False
-    if snapshot is None or snapshot.manifest['version'] != 3:
+    if snapshot is None or snapshot.manifest['version'] not in (3, 4):
         return False
     if not relative.startswith(('mst/', 'localized_texts/en/')):
-        return False
+        from ios_server.vortex_art import owns
+        if snapshot.manifest['version'] != 4 or not owns(relative):
+            return False
     raw = snapshot.lookup(relative)
     handler.send_response(200 if raw is not None else 404)
     handler.send_header('Content-Type', 'application/octet-stream')

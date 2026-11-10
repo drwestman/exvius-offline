@@ -249,8 +249,9 @@ without repair. Legacy loot and field behavior are unchanged.
 
 Native preparation now covers all 364 registered tables in the supported client
 corpus, including the pinned English labels and converted challenge/Arena displays.
-An opt-in engine consumer delivers their exact versions. Art/audio/story packs,
-full gameplay hosting and physical-device acceptance remain pending.
+An opt-in engine consumer delivers their exact versions and an explicitly prepared
+Vortex banner pack. Remaining art/audio/story compatibility, full gameplay hosting
+and physical-device acceptance remain pending.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -332,8 +333,44 @@ Malformed sources or corrupt published snapshots fail visibly without repair.
 
 New results explicitly report `scope: native-tables` and `gameplay_ready: false`.
 The current hello service does not serve these files. Managed-pack downloading/
-installation, banners/art, sound/story compatibility, full gameplay hosting and
+installation, remaining art, sound/story compatibility, full gameplay hosting and
 physical iPhone acceptance remain pending.
+
+### Native Vortex artwork
+
+To include the stock iPhone's English Vortex banner pack:
+
+```sh
+python3 source/exvius/macos_ios_server.py prepare-data --vortex-art --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-data --data source/out/browser-data
+```
+
+This upgrades to schema 4 and publishes `spdungeon1.cpk` with all 364 tables under
+one atomic pointer. Resource 6108101 gets upfront download class `TUTO`, the pack's
+new English file version and exact byte size. Once enabled for the runtime,
+ordinary `prepare-data` refreshes keep Vortex art enabled. The option applies only
+to preparation. Older schema-1/2/3 generations remain readable and intact.
+
+Preparation preserves original payloads, compression metadata, IDs and duplicate
+shipped names, appending available canonical event/dungeon/raid images without
+replacing names already in the pack. The archive keeps masked native UTF metadata,
+case-insensitive TOC ordering, aligned payloads and correct header/content sizes.
+Source versions/sizes, source hashes, PNG chunks, paths and the supported CPK layout
+are validated before publication. Missing required images or corrupt sources fail
+without changing the current generation. Unsupported pack layouts fail visibly.
+
+The current corpus adds 692 images to 1,237 original entries. Nine authored-event
+images remain unavailable: areas 703, 711, 712, 746, 747, 749, 797, 919 and 921.
+`preparation.art.missing_added` reports them; their existing gameplay fallback is
+mounted from the common pack. This command downloads or invents no artwork.
+Supplying an image and explicitly preparing again clears its gap. Changes to art
+bytes, even at the same size, or metadata make verification stale. Verification
+validates published bytes and resource-table agreement without rebuilding a pack.
+
+The prepared engine serves exact Vortex GET/HEAD bytes and returns 404 for old pack
+versions without falling back to stock files. Both prepared and managed data
+layouts are supported. Physical-iPhone mounting/visual acceptance, summon-banner
+fitting, other artwork, and sound/story compatibility remain separate checkpoints.
 
 ### Prepared engine consumer
 
@@ -345,10 +382,11 @@ loading engine state. Missing, old partial, corrupt, stale or provisional snapsh
 fail without automatic preparation or campaign initialization. Default engine
 construction retains its existing behavior; `serve` remains the connection check.
 
-The prepared engine projects exactly 364 unique published versions after canonical
+The prepared engine projects exactly 364 unique published table versions after canonical
 version handling. Table GET/HEAD requests return exact snapshot bytes and lengths;
 HEAD has no body. Unknown or old versions under `mst/` and `localized_texts/en/`
-return 404 without falling back to stock files. Path validation runs before lookup.
+return 404 without falling back to stock files. Schema-4 snapshots apply the same
+exact-version rule to the prepared Vortex pack. Path validation runs before lookup.
 Reads do not write caches, refresh inputs, download or change the campaign. Closing
 the engine unbinds its snapshot. This adapter is ready for the later gameplay host.
 
@@ -451,6 +489,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_notices.py
 .venv-ios/bin/python -B source/exvius/test_ios_authored_content.py
 .venv-ios/bin/python -B source/exvius/test_ios_full_tables.py
+.venv-ios/bin/python -B source/exvius/test_ios_vortex_art.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

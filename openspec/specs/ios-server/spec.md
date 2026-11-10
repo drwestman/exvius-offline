@@ -877,8 +877,8 @@ version-response projection. Complete snapshots SHALL advertise each published
 identity once and omit unknown identities; older partial snapshots SHALL retain
 their existing overlay behavior.
 New preparation and verification SHALL report scope native-tables and
-gameplay_ready false. Full native gameplay hosting,
-art/audio/story packs and device acceptance are pending.
+gameplay_ready false. Full native gameplay hosting, remaining art/audio/story
+compatibility and device acceptance are pending.
 
 #### Scenario: Inspect prepared native files
 
@@ -897,7 +897,7 @@ hello service and default engine adapter SHALL retain their existing behavior.
 
 Only the iOS profile with the bound verified snapshot SHALL project its complete
 versions after canonical forced-version handling. GET/HEAD under mst/ and
-localized_texts/en/ SHALL return exact published bytes and sizes. An absent version
+localized_texts/en/, and for a prepared Vortex pack, SHALL return exact published bytes and sizes. An absent version
 SHALL return 404 without a stock/token fallback. HEAD SHALL omit the body. Path
 validation SHALL precede lookup. Delivery SHALL not write files, refresh sources,
 download assets or change campaign facts. Closing the engine SHALL unbind it.
@@ -908,6 +908,78 @@ download assets or change campaign facts. Closing the engine SHALL unbind it.
 - When the opt-in engine answers encrypted initialization and table GET/HEAD requests
 - Then all 364 unique advertised versions resolve to the snapshot bytes
 - And stale/unknown paths return 404 and traversal returns 400 without query writes.
+
+### Requirement: PrepareVortexArtworkExplicitly
+
+The prepare-data command with --vortex-art SHALL build the English spdungeon1.cpk
+from shared native inputs and available canonical event, dungeon, added-event and
+raid artwork. Later refreshes SHALL retain that enabled feature. Collection SHALL
+hash source bytes and metadata, enforce containment and validate image structure.
+Missing required art SHALL fail; missing added-event images SHALL remain reported
+gaps using the existing common-pack fallback without invented art or downloads.
+
+- **Implementation**: `collect::source/ios_server/vortex_art.py`
+
+#### Scenario: Add an image after a reported gap
+
+- Given an added-event image was unavailable during preparation
+- When that image becomes available and preparation runs again
+- Then its content enters the new pack and the reported gap clears
+- And old generations remain unchanged.
+
+### Requirement: PreserveNativeBannerPackLayout
+
+The pure CPK builder SHALL preserve every original file payload, compression
+metadata, ID and duplicate shipped filename. Additions SHALL not replace names
+already present case-insensitively. Rebuilt archives SHALL use masked native UTF
+tables, sorted TOC names, TOC-relative offsets, eight-byte payload alignment and
+correct file/content sizes. Truncation, directories, unsupported indexes or CRC
+layouts SHALL fail visibly before publication.
+
+- **Implementation**: `rebuild::source/ios_server/cpk.py`
+- **Implementation**: `inspect::source/ios_server/cpk.py`
+
+#### Scenario: Preserve compressed original entries
+
+- Given a flat source pack with compressed entries and duplicate original names
+- When archive images are appended
+- Then original payload bytes, IDs and extract sizes remain intact
+- And the rebuilt pack has valid masked metadata, sizes and aligned offsets.
+
+### Requirement: PublishVortexPackWithItsResourceTables
+
+Schema-4 preparation SHALL atomically publish the pack with all 364 tables.
+Resource 6108101 SHALL have upfront class TUTO, the pack's English file version
+and its exact byte size. Pack and table versions SHALL advance monotonically,
+including after a source version decreases; overflow SHALL fail. Schema-1/2/3
+snapshots SHALL remain inspectable and upgrade without losing prior generations.
+Failed builds or publication SHALL preserve the active pointer.
+
+- **Implementation**: `prepare::source/ios_server/vortex_art.py`
+
+#### Scenario: Interrupt pack publication
+
+- Given a valid table snapshot and Vortex preparation enabled
+- When writing the pack or replacing the pointer fails
+- Then the old generation remains authoritative
+- And a retry can reuse complete unpublished files and publish consistent tables and pack.
+
+### Requirement: VerifyAndDeliverVortexWithoutPreparation
+
+Verification SHALL validate pack paths, bytes, hashes, layout and agreement with
+the recorded resource tables, and detect stale source art or metadata without
+building a pack, writing files or importing the engine. The prepared engine SHALL
+serve exact Vortex GET/HEAD bytes and refuse unpublished versions without stock
+fallback. Hello-only hosting, unrelated assets and legacy behavior SHALL remain.
+
+- **Implementation**: `load::source/ios_server/vortex_art.py`
+
+#### Scenario: Request a stock Vortex version
+
+- Given an opt-in iOS engine bound to a schema-4 snapshot and a stock pack on disk
+- When the client requests the old pack version
+- Then it receives 404 rather than stock bytes
+- And exact GET/HEAD requests match the snapshot without filesystem or campaign writes.
 
 ### Requirement: PreparePinnedEnglishLabels
 

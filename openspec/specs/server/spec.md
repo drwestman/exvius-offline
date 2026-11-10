@@ -204,7 +204,7 @@ materials, and gacha summon tickets.
 
 ### Requirement: ServeExactPreparedIosTables
 
-The handler SHALL validate paths before exact prepared iOS table GET/HEAD lookup,
+The handler SHALL validate paths before exact prepared iOS table/pack GET/HEAD lookup,
 return 404 for unpublished versions without fallback, and omit HEAD bodies.
 Delivery SHALL perform no writes, downloads or campaign changes.
 
@@ -217,6 +217,13 @@ Delivery SHALL perform no writes, downloads or campaign changes.
 - **WHEN** The client requests that unpublished table path
 - **THEN** It receives 404 instead of stock bytes
 - **AND** Exact published GET/HEAD requests retain their verified body and headers.
+
+#### Scenario: Deliver a prepared Vortex pack
+
+- **GIVEN** A schema-4 iOS snapshot with the rebuilt English Vortex banner pack
+- **WHEN** GET or HEAD requests its published native resource version
+- **THEN** The exact bytes and length agree with the snapshot's resource tables
+- **AND** Old pack versions return 404 without a stock fallback or query writes.
 
 ### Requirement: VisionCardValidation
 

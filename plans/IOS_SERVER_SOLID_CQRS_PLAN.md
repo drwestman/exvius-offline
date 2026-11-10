@@ -838,3 +838,74 @@ managed-pack installation, full gameplay hosting and physical-iPhone acceptance.
 Results retain `scope: native-tables` and `gameplay_ready: false`; the live native
 service remains the accepted connection check. The known Android fixture/tooling
 limitations remain pending.
+
+## Native Vortex banner pack checkpoint — November 10, 2026
+
+Added explicit `prepare-data --vortex-art` for the English `spdungeon1.cpk`.
+The stock iPhone loads Vortex textures from mounted CPKs, without Android's
+loose-image hooks. Schema-4 generations publish the rebuilt pack with all 364
+tables through the existing atomic pointer. Resource 6108101 is marked `TUTO`
+for upfront download, its English file version names the prepared pack, and its
+English checksum size matches the exact delivered bytes. Ordinary preparation
+refreshes retain the enabled feature. Schema-1/2/3 snapshots remain inspectable
+and upgrade without rewriting old generations.
+
+Separate the pure flat CPK codec, read-only source/art collection and artifact
+policy, atomic publication and exact delivery. Preserve all original payload
+bytes, compression metadata, IDs and duplicate shipped names. Append available
+canonical event, dungeon and raid images without replacing existing names.
+Keep native masked UTF metadata, sorted TOC entries, TOC-relative offsets and
+eight-byte payload alignment. Header `FileSize` and `TotalDataSize` are populated
+with the rebuilt facts, including when the source used zero-storage cells.
+Unsupported directories, indexed/CRC layouts, TOC storage or truncated data fail
+before publication. PNG chunks/CRCs and source resource versions/sizes validate.
+
+Fingerprint source bytes, image bytes and all four artwork metadata documents;
+same-size changes invalidate freshness. Source and private paths retain containment
+checks and overlay precedence. Missing required images fail preparation. The nine
+added-area images for **703, 711, 712, 746, 747, 749, 797, 919 and 921** remain
+reported in `preparation.art.missing_added`, retaining the existing fallback mounted
+from the common pack. No art is invented or downloaded. Supplying a missing image
+and explicitly preparing again adds it and clears its gap.
+
+Pack/table versions advance monotonically, including after source-version
+decreases; overflow fails before building. Build, table/pack writes and pointer
+failures retain the active generation. Retries can reuse complete unpublished
+files. Verification validates pack bytes, hashes, layout and resource-table
+agreement without rebuilding, writing or importing engine state. The prepared
+engine serves exact Vortex GET/HEAD bytes and refuses old versions without a
+stock/token fallback. Request paths are validated first. No query creates caches,
+downloads or changes campaign facts. Legacy/default adapters and hello hosting
+retain their behavior.
+
+Validation: **19 new BDD scenarios; 299 iOS engine/preparation checks, 27 native
+connectivity checks, 186 legacy gameplay/event checks and six decoder checks
+passed.** Tests cover native UTF storage, original compressed/duplicate entries,
+unsupported and malformed archives, both layouts, source/PNG failures, image
+arrival and same-size edits, monotonic versions/overflow, atomic schema upgrades,
+write/pointer failures and retry, locks, symlink containment, corrupt published
+facts, table/pack disagreement, real CLI JSON, encrypted initialization, exact
+GET/HEAD and write-free delivery.
+
+A guarded disposable real-data upgrade retained the old **364-table** generation
+and published **610,430,498 bytes** across the tables and one **242,483,910-byte**
+pack. It preserves **1,237 original entries** and appends **692 images**, for
+**1,929 entries**. The rebuilt inventory and every file payload match the pinned
+builder; native header sizes, sort order and offsets also verify independently.
+All **730 GET/HEAD checks** matched snapshot bytes and **365 old source-version
+paths** returned 404. Repeated preparation was idempotent. Shared source/metadata
+hashes and gameplay RNG stayed unchanged; guards rejected networking, writes
+outside the disposable runtime and all verification/delivery writes. Only an
+isolated disposable campaign was initialized.
+
+Strict OpenSpec validation retains **417 existing errors and three warnings**
+against an isolated HEAD baseline, with no new findings. The generated-spec
+structure issues remain unresolved; this does not claim repository-wide strict
+validation passed. Updated the iOS/server contracts and ADR-0009 for this slice.
+
+**Next are summon-banner fitting, remaining art and sound/story compatibility**,
+followed by managed-pack installation and full gameplay hosting. Physical-iPhone
+mounting, artwork review and full gameplay acceptance remain pending. Results
+retain `scope: native-tables` and `gameplay_ready: false`; the live native service
+remains the accepted connection check. Earlier Android fixture/tooling limitations
+remain pending.

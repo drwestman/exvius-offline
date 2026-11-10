@@ -18,6 +18,7 @@ def main(argv=None) -> int:
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
+    parser.add_argument('--vortex-art', action='store_true', help='include the native Vortex banner pack during prepare-data')
     parser.add_argument('--weeks', type=int, default=1, help='rotation preview length, 1 to 52')
     parser.add_argument('--lan-address', help='Mac IPv4 address on the selected home network')
     parser.add_argument('--upstream-dns', help='upstream IPv4 DNS resolver; defaults to the Mac resolver')
@@ -25,6 +26,8 @@ def main(argv=None) -> int:
     parser.add_argument('--http-port', type=int, default=80)
     parser.add_argument('--https-port', type=int, default=443)
     args = parser.parse_args(argv)
+    if args.vortex_art and args.command != 'prepare-data':
+        parser.error('--vortex-art applies only to prepare-data')
     try:
         config = Configuration(args.root, args.data, args.slot)
         if args.command == 'setup':
@@ -54,7 +57,7 @@ def main(argv=None) -> int:
                 engine.close()
         elif args.command in ('prepare-data', 'verify-data'):
             from ios_server.preparation import prepare_data, verify_data
-            result = {'prepare-data': prepare_data, 'verify-data': verify_data}[args.command](config)
+            result = prepare_data(config, vortex_art=args.vortex_art) if args.command == 'prepare-data' else verify_data(config)
         elif args.command == 'rotation':
             result = rotation(config, weeks=args.weeks)
         else:
