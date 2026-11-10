@@ -1362,8 +1362,8 @@ def gift_update(spec, req):
     selected = str(n.get('Utx8P1Qo') or State.player.data['profile'].get('gift_id') or _define('INITIAL_GIFT_ID'))
     _require(selected in masters, 'unknown preferred gift')
     if n.get("2L0dxwuN"):
-        from ffbe_friends import load_friends
-        friends = {str(f['friend_id']): f for f in load_friends()}
+        from ffbe_friends import all_friends
+        friends = {str(f['friend_id']): f for f in all_friends()}
         today = time.strftime('%Y-%m-%d', time.gmtime())
         sent = state.setdefault('sent', {})
         seen = set()

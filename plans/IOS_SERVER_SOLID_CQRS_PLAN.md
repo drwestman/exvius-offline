@@ -241,3 +241,43 @@ and friend behavior, followed by arena progression, remaining rewards/economy, a
 added authored content. Native gameplay routing, data/asset preparation (including
 generated deal artwork), and full iPhone gameplay acceptance remain pending. The
 native service continues to serve the accepted connection check.
+
+## Simulated friends checkpoint — November 9, 2026
+
+Ported the pinned crowd's deterministic handles, ranks, weekly helpers, and daily
+suggestions into the iOS profile. The default crowd has 200 accounts, with 15
+starting friendships and 10 daily suggestions, alongside the curated YAML helpers.
+Helpers use the saved replay calendar, historical release eligibility, shipped
+names, valid stats, and each form's level cap. Suggestions use the saved timezone.
+
+Campaign initialization now saves starting friendships and crowd settings in the
+same atomic candidate as the replay anchor and Vortex unlock. Existing campaigns
+receive an explicit backfill without resetting their anchors, favorites, or
+removal tombstones. Reads never initialize or migrate friendships. Configuration
+is recorded once; changing process defaults does not resize an existing crowd.
+
+Extended the canonical relationship model rather than importing the fork's
+parallel state store. iOS friend requests accept immediately; search, details,
+favorites, removal, counts, capacity checks, and invite quest progress use the
+existing native rows. Relationship commands save their candidate before publishing
+it and preserve the previous campaign on save failure. Duplicate requests do not
+repeat progress or rewrite the save. Legacy behavior remains unchanged.
+
+Generated and curated accepted friends share the canonical gift transaction:
+one reciprocal delivery per friend per UTC day, persistent receipts, one-time
+collection, and existing quest/archive accounting. Removed recipients are refused.
+
+Validation: **14 new BDD scenarios, 76 existing iOS checks, 23 legacy arena/social
+checks, and 65 shop/gift checks passed (178 distinct checks).** They cover read-only
+encrypted pages, deterministic initialization, timezone/DST suggestions, historical
+helper eligibility, malformed settings, backfill/save failures, retries, capacity,
+frozen players, favorites, curated/generated removals, reloads, and gifts.
+A disposable real-data campaign exercised encrypted social and gift flows with
+17 accepted helpers; a 201-week sweep checked 40,200 generated helper projections.
+All writes stayed within the disposable root; no network was used. This sweep
+found statless master placeholders, now excluded from helpers.
+
+**Stage 1 remains in progress.** Next is arena progression, followed by remaining
+rewards/economy and added authored content. Native gameplay routing, data/asset
+preparation, and full iPhone gameplay acceptance remain pending. The running
+native service continues to serve the accepted connection check.

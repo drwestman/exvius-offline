@@ -144,6 +144,8 @@ class ReplaySummonIntegration(unittest.TestCase):
         units += list(getattr(self, 'extra_units', ()))
         (masters / 'F_UNIT_MST.ndjson').write_text('\n'.join(json.dumps({
             '3HriTp6B': uid, 'woghJa61': uid, 'aU3o2D4t': 100, '9fW0TePj': rarity,
+            **{stat: '10,100,0,0' for stat in ('em5hx4FX', 'L0MX7edB', 'o7Ynu1XP', '6tyb58Kc', 'Y9H6TWnv', 'sa8Ewx3H')},
+            **getattr(self, 'unit_fields', {}).get(uid, {}),
         }) for uid, rarity in units))
         (masters / 'F_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({'tL6G9egd': iid})
             for iid in ('106213050', '106213030', *getattr(self, 'extra_items', ()))))

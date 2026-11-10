@@ -2,7 +2,7 @@
 
 ## Scope
 
-This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges,
+This specification covers the profile/calendar foundation, replay-aware summons/events/exchanges/friends,
 and hello-only native connectivity checkpoint of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
@@ -53,7 +53,8 @@ saved data SHALL be reported without repair, quarantine, or replacement.
 ### Requirement: InitializeCampaignExplicitly
 
 The first InitializeRequest, or the explicit init-campaign command, SHALL persist
-the replay anchor and immutable settings in one canonical player-save operation.
+the replay anchor, immutable settings, and starting simulated friendships in one
+canonical player-save operation.
 It SHALL publish candidate state only after a successful save. Projections SHALL
 read recorded facts without creating an anchor. Frozen or disabled persistence
 SHALL not initialize a campaign.
@@ -288,6 +289,70 @@ Ticket ownership SHALL not bypass the historical unit cutoff.
 - When its encrypted purchase succeeds and that ticket is redeemed
 - Then the ticket is granted once, spent at the master price, and the selected unit is credited
 - And a paid-purchase retry or exhausted-stock redemption does not grant again.
+
+### Requirement: InitializeSimulatedFriendsExplicitly
+
+The iOS initialization command SHALL create the pinned deterministic crowd's
+starting friendships once. Defaults SHALL be 200 generated accounts, 15 starting
+friends, and 10 daily suggestions, in addition to configured YAML helpers. The
+command SHALL record crowd size and suggestion count so later environment edits
+cannot change an existing campaign. Initialization SHALL preserve previous
+friend removals, favorites, replay anchors, and the canonical capacity limit.
+An older campaign missing this checkpoint SHALL be backfilled atomically.
+
+#### Scenario: Fail a friend backfill
+
+- Given an existing replay anchor and a removed friend
+- When the friend initialization candidate cannot save
+- Then the original player and save remain unchanged
+- And a successful retry preserves the anchor and the removal.
+
+### Requirement: ProjectSimulatedFriendsWithoutWrites
+
+Friend lists, search, details, suggestions, and companion lists SHALL be read-only.
+Generated handles and ranks SHALL retain the pinned deterministic seeds. Helpers
+SHALL rotate with the saved calendar's real week and use named, renderable shipped
+base units available in the historical window, within their form's level cap.
+Statless placeholder masters SHALL be excluded. Daily suggestions SHALL exclude
+existing relationships and use the saved calendar timezone, including DST.
+Projections SHALL neither seed missing friendships nor consume global gameplay RNG.
+
+#### Scenario: Read native social pages
+
+- Given an initialized campaign
+- When encrypted friend, suggestion, search, and reinforcement requests run
+- Then they return complete native rows for the current relationships
+- And campaign data and save bytes remain unchanged.
+
+### Requirement: PersistIosFriendCommands
+
+iOS requests and agreements with known local players SHALL accept immediately,
+subject to the canonical capacity limit. Favorites and removal tombstones SHALL
+persist across reloads. Retried commands SHALL not duplicate relationships or
+invite quest progress. Each command SHALL stage and save its candidate before
+publishing it. Frozen, unknown, self, invalid-category, and over-capacity commands
+SHALL leave the campaign unchanged. Legacy friendship behavior SHALL be retained.
+
+#### Scenario: Remove a generated or curated helper
+
+- Given an accepted friend
+- When the friend is removed and the campaign reloads or initializes again
+- Then the friend remains absent from accepted and companion lists
+- And a later explicit request may restore the friendship.
+
+### Requirement: GiftAcceptedIosFriends
+
+The canonical gift transaction SHALL accept currently accepted iOS friends,
+including generated accounts. Removed or unknown recipients SHALL be refused.
+Existing per-friend UTC-day reciprocal limits, receipt ownership, atomic batch
+validation, quest/archive progress, and one-time collection SHALL be preserved.
+
+#### Scenario: Retry a generated friend's gift
+
+- Given an accepted generated friend
+- When a gift is sent repeatedly and its reciprocal receipt collected after reload
+- Then one send and one reciprocal receipt are recorded for the UTC day
+- And collecting the same receipt again grants no additional reward.
 
 ### Requirement: SeparateViewCachingFromPreparation
 

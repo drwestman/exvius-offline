@@ -13,7 +13,8 @@ AUTHORED / UNRESOLVED
   and item triples are credited through the authoritative inventory projection.
 * YAML friends initially count as accepted, matching ffbe_friends. Offline peers
   are represented by local relationships, with no remote user/save to modify.
-  Capacity 100 is authored; pending requests never auto-accept. Removed friends
+  Capacity 100 is authored; legacy pending requests never auto-accept. iOS
+  revival's simulated crowd accepts immediately. Removed friends
   become suggestion candidates. Favorite is local to this player.
 
 Two supporting read handlers project the stored relationships on FriendList and
@@ -296,6 +297,11 @@ def clsm_end(spec, req):
 
 
 def _friends():
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_friends import catalogue, state_view
+        catalog = catalogue(State.player.data)
+        return catalog, state_view(State.player.data, catalog)
     catalog = {str(f["friend_id"]): f for f in load_friends()}
     saved = State.player.data.get("exvius_friends")
     state = copy.deepcopy(saved) if saved is not None else {
@@ -339,9 +345,22 @@ def _friend_target(req):
 
 
 def _friend_change(spec, req, action):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_friend_commands import execute
+        return execute(spec, req, action, _apply_friend_change)
+    return _apply_friend_change(spec, req, action)
+
+
+def _apply_friend_change(spec, req, action):
+    from engine_profile import current_profile
+    immediate = current_profile().replay is not None
     catalog, state = _friends()
     target = _friend_target(req)
-    if target not in catalog or target == str(State.player.data["identity"]["user_id"]):
+    own = {str(State.player.data['identity']['user_id'])}
+    if immediate:
+        own.add(State.player.friend_id())
+    if target not in catalog or target in own:
         return _refuse(spec, "unknown offline friend or self relationship")
     if not _writable():
         return _refuse(spec, "frozen friend state")
@@ -349,20 +368,24 @@ def _friend_change(spec, req, action):
     category = relation["type"]
     accepted = sum(r["type"] == 1 for r in state["relations"].values())
     if action == "agree":
-        if category not in (1, 3) or (category == 3 and accepted >= AUTHORED_FRIEND_CAPACITY):
+        allowed = (0, 1, 3) if immediate else (1, 3)
+        if category not in allowed or (category != 1 and accepted >= AUTHORED_FRIEND_CAPACITY):
             return _refuse(spec, "only incoming requests can be accepted; capacity must be available")
         relation["type"] = 1
     elif action == "request":
-        if category not in (0, 2) or (category == 0 and accepted >= AUTHORED_FRIEND_CAPACITY):
+        allowed = (0, 1, 2) if immediate else (0, 2)
+        needs_space = category != 1 if immediate else category == 0
+        if category not in allowed or (needs_space and accepted >= AUTHORED_FRIEND_CAPACITY):
             return _refuse(spec, "friend already accepted/incoming, or capacity reached")
-        relation["type"] = 2
+        relation["type"] = 1 if immediate else 2
     elif action == "favorite":
         flag = _int((_node(req, "I53AVzSo") or {}).get("8zE6w9RP"))
         if category != 1 or flag not in (0, 1):
             return _refuse(spec, "favorite requires an accepted friend and flag 0/1")
         relation["favorite"] = flag
     elif action in ("delete", "refuse"):
-        if category not in ((0, 1) if action == "delete" else (0, 2, 3)):
+        allowed = (0, 1) if action == 'delete' else (0, 2, 3)
+        if category not in ((0, 1, 2, 3) if immediate else allowed):
             return _refuse(spec, "delete requires accepted friendship; refuse requires pending request")
         # Keep an explicit tombstone, so YAML defaults do not resurrect the friend.
         relation = {"type": 0, "favorite": 0}
@@ -425,10 +448,18 @@ def friend_detail(spec, req):
 
 def friend_suggest(spec, req):
     catalog, state = _friends()
+    return _friend_reply(spec, 'f6yGgCj2', _suggestions(catalog, state))
+
+
+def _suggestions(catalog, state):
     own = str(State.player.data["identity"]["user_id"])
-    rows = [(friend, _friend_row(friend, {}, 5)) for fid, friend in catalog.items()
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_friends import suggestion_ids
+        ids = suggestion_ids(State.player.data)
+        catalog = {fid: catalog[fid] for fid in ids if fid in catalog}
+    return [(friend, _friend_row(friend, {}, 5)) for fid, friend in catalog.items()
             if fid != own and state["relations"].get(fid, {}).get("type", 0) == 0]
-    return _friend_reply(spec, "f6yGgCj2", rows)
 
 
 def friend_list(spec, req):
@@ -439,7 +470,10 @@ def friend_list(spec, req):
         rows = [(friend, _friend_row(friend, state["relations"][fid]))
                 for fid, friend in catalog.items() if state["relations"].get(fid, {}).get("type") == category]
         out = _friend_reply(out, tag, rows)
-    if _writable() and "exvius_friends" not in State.player.data:
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        out = _friend_reply(out, 'f6yGgCj2', _suggestions(catalog, state))
+    elif _writable() and "exvius_friends" not in State.player.data:
         _save_friends(state)
     return _ope(_refresh(out))
 

@@ -143,7 +143,8 @@ class IosServerBehavior(unittest.TestCase):
         for name in set(re.findall(r'F_[A-Z0-9_]+\.ndjson', source)):
             (masters / name).write_text('')
         (masters / 'F_UNIT_MST.ndjson').write_text('\n'.join(json.dumps(
-            {'3HriTp6B': mid, 'aU3o2D4t': 100}) for mid in ('100000102', '100000202')))
+            {'3HriTp6B': mid, 'aU3o2D4t': 100,
+             'em5hx4FX': '10,100,0,0'}) for mid in ('100000102', '100000202')))
         (masters / 'F_EQUIP_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({'J1YX9kmM': mid})
             for mid in ('302000100', '404000200', '406000100', '409000100', '403046900')))
         (masters / 'F_DEFINE_MST.ndjson').write_text(json.dumps(
