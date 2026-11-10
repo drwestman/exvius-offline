@@ -212,7 +212,7 @@ class NativeLabelPreparation(unittest.TestCase):
         self.fixture(); self.core_snapshot(); old=prep.load_prepared(self.config)
         self.assertEqual(len(old.files),7); self.assertFalse(prep.verify_data(self.config)['ok'])
         report=prep.prepare_data(self.config); new=prep.load_prepared(self.config)
-        self.assertEqual((report['generation'],report['tables']),(2,35))
+        self.assertEqual((report['generation'],report['tables']),(2,364))
         for name,row in old.manifest['tables'].items():
             self.assertGreater(new.manifest['tables'][name]['version'],row['version'])
             self.assertEqual((old.directory/row['path']).read_bytes(),old.files[row['path']])

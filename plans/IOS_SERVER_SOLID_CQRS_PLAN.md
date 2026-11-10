@@ -767,3 +767,74 @@ gameplay asset/API routing. Results now report `scope: native-tables` and
 `gameplay_ready: false`. Prepared bytes remain offline; the live service still
 serves the accepted connection check. Physical-iPhone gameplay acceptance and
 the earlier Android fixture/tooling limitations remain pending.
+
+## Complete registered tables and version delivery checkpoint — November 10, 2026
+
+Preparation now publishes every table in the supported Global-1167 native corpus:
+**364 files: 219 JSON masters and 145 English localized tables**. The packaged
+registry records names, filename tokens, keys, cipher modes and the originating
+native-library SHA-256. Mappings were corroborated against all available encrypted
+sources and positive client preference registrations. JSON masters comprise
+**157 CBC and 62 ECB tables**; English files use ECB. Passthrough tables preserve
+their encrypted records with LF outer lines; the prior core, label and economy
+transformations remain in place.
+
+Source collection rejects missing/unknown positive registrations, duplicate or
+malformed preference entries, unmapped source tokens, missing sources, and English
+index/checksum disagreements before publication. Five index names have positive
+English metadata without registered mappings/files: `F_TEXT_CRAFT`,
+`F_TEXT_DESCRIPTION_FORMAT`, `F_TEXT_EXCHANGE_SHOP`, `F_TEXT_TITLE` and `F_TEXT_URL`.
+Their original rows remain untouched and are reported as unregistered; no table
+files or advertised prepared versions are invented for them.
+
+Schema-3 manifests record complete registry provenance and per-table version
+floors. Published versions exceed both original source and persisted registration
+versions. Generation selection advances all prior published versions even if a
+source/registration floor decreases. Valid schema-1/2 seven- and 35-table snapshots
+remain inspectable and upgrade atomically while retaining their original bytes.
+Failures preserve the active generation.
+
+Added an explicit `Engine(config, prepared=True)` consumer. While holding the
+private runtime lock, it requires a current complete snapshot and the selected
+campaign's recorded economy policy before importing engine state. Missing,
+partial, corrupt, stale or provisional preparation fails without implicit
+preparation or campaign initialization; failure releases the lock. Initialize the
+campaign, prepare its data, and construct the prepared consumer in a fresh process.
+
+The bound snapshot projects exactly **364 unique table identities** after canonical
+version/forced-version handling. GET/HEAD returns their exact bytes and lengths;
+HEAD omits the body. Owned master/English paths with unknown or stale versions
+return 404 without stock/token fallback. Existing traversal validation precedes
+lookup. Reads create no files/caches, download nothing, and change no campaign
+facts. Closing the adapter clears its snapshot binding. Default construction,
+legacy routing, unrelated assets and the live hello service keep their contracts.
+
+Validation: **16 new BDD scenarios; 280 iOS engine/preparation checks, 27 native
+connectivity checks, 186 legacy gameplay/event checks and six client-decoder checks
+passed.** Coverage includes mixed CBC/ECB padding, passthrough preservation,
+registration/source failures, version floors and decreases, overflow refusal,
+old-snapshot upgrades, recorded-policy freshness, pre-import startup refusal and
+lock release, exact encrypted initialization versions, GET/HEAD, stale refusal,
+traversal and write-free queries. Python syntax and CRLF-aware whitespace checks
+passed.
+
+A guarded disposable real-data upgrade retained the old 35-table generation and
+published **367,946,588 bytes across 364 files**. All 329 passthrough outputs kept
+their encrypted source records, all 145 English index references verified, and
+all five unregistered index rows stayed unchanged. Encrypted initialization
+advertised the complete inventory; **728 GET/HEAD checks** returned exact snapshot
+bytes and **364 old source-version paths** returned 404. Repeated preparation was
+idempotent. The guards rejected networking, writes outside the disposable runtime,
+and all verification/delivery writes. Shared source/metadata hashes remained
+unchanged. Only an isolated disposable campaign was initialized.
+
+Strict OpenSpec validation against an isolated HEAD baseline retains **417 existing
+errors and three warnings**, with no added findings. The generated-spec structure
+issues remain unresolved; repository-wide strict validation does not pass.
+Updated the iOS/server/battle contracts and ADR-0008 for this checkpoint.
+
+**Next are native banner/art packs and sound/story compatibility**, followed by
+managed-pack installation, full gameplay hosting and physical-iPhone acceptance.
+Results retain `scope: native-tables` and `gameplay_ready: false`; the live native
+service remains the accepted connection check. The known Android fixture/tooling
+limitations remain pending.

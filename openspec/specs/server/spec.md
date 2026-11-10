@@ -202,6 +202,22 @@ materials, and gacha summon tickets.
 
 ## Requirements
 
+### Requirement: ServeExactPreparedIosTables
+
+The handler SHALL validate paths before exact prepared iOS table GET/HEAD lookup,
+return 404 for unpublished versions without fallback, and omit HEAD bodies.
+Delivery SHALL perform no writes, downloads or campaign changes.
+
+- **Implementation**: `Handler::source/server/capture_server.py`
+- **Implementation**: `serve::source/ios_server/table_delivery.py`
+
+#### Scenario: Refuse an old native version
+
+- **GIVEN** A prepared iOS engine and a stock file with the requested older token/version
+- **WHEN** The client requests that unpublished table path
+- **THEN** It receives 404 instead of stock bytes
+- **AND** Exact published GET/HEAD requests retain their verified body and headers.
+
 ### Requirement: VisionCardValidation
 
 The system SHALL validate VisionCard according to these rules:

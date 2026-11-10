@@ -1557,6 +1557,10 @@ def serve_version_table(spec):
                   f"(not in {VERSION_TABLE_XML}) -- the row is inert")
     spec = dict(spec)  # never rewrite the loaded payload -- else the note below drifts on the 2nd request
     spec["c1qYg84Q"] = rows
+    from engine_profile import current_profile
+    prepared = getattr(State, 'native_tables', None)
+    if current_profile().name == 'ios-revival' and prepared is not None:
+        spec = prepared.project_versions(spec)
     _note(f"version table: {len(authored)} authored + {len(added)} from {VERSION_TABLE_XML} "
           f"= {len(rows)} rows" + (f"; forced {forced}" if forced else ""))
     return spec

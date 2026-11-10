@@ -49,7 +49,7 @@ class PreparedTables:
         return self.files.get(relative)
 
     def project_versions(self, spec):
-        """Use after canonical version projection when native gameplay hosting is added."""
+        """Overlay verified versions after the canonical response projection."""
         if not isinstance(spec, dict) or not isinstance(spec.get('c1qYg84Q'), list):
             return spec
         out = copy.deepcopy(spec)
@@ -60,6 +60,13 @@ class PreparedTables:
                 row['wM9AfX6I'] = versions[row['a4hXTIm0']]
                 seen.add(row['a4hXTIm0'])
         out['c1qYg84Q'].extend({'a4hXTIm0': name, 'wM9AfX6I': versions[name]} for name in sorted(versions.keys() - seen))
+        if self.manifest['version'] == 3:
+            # Complete delivery advertises only exact, published identities.
+            unique = {}
+            for row in out['c1qYg84Q']:
+                if isinstance(row, dict) and row.get('a4hXTIm0') in versions:
+                    unique.setdefault(row['a4hXTIm0'], row)
+            out['c1qYg84Q'] = list(unique.values())
         return out
 
     def describe(self):
@@ -67,7 +74,7 @@ class PreparedTables:
                 'directory': str(self.directory), 'tables': len(self.manifest['tables']),
                 'changed_rows': {name: row['changed_rows'] for name, row in self.manifest['tables'].items()},
                 'gameplay_ready': False, **({'preparation': copy.deepcopy(self.manifest['preparation'])}
-                                           if self.manifest['version'] == 2 else {})}
+                                           if self.manifest['version'] >= 2 else {})}
 
 
 def load_prepared(config):
@@ -88,12 +95,12 @@ def load_prepared(config):
             raise ValueError('manifest checksum mismatch')
         manifest = json.loads(manifest_raw)
         version = manifest['version']
-        if type(version) is not int or version not in (1, 2):
+        if type(version) is not int or version not in (1, 2, 3):
             raise ValueError('unsupported manifest version')
-        tables = rules.CORE_TABLES if version == 1 else rules.TABLES
+        tables = rules.CORE_TABLES if version == 1 else rules.LABEL_TABLES if version == 2 else rules.TABLES
         registry = {table.name: table for table in tables}
         keys = {'version', 'scope', 'reference_commit', 'source_root', 'pipeline_version',
-                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version == 2 else set())
+                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version >= 2 else set())
         if (set(manifest) != keys or manifest['scope'] != ('core-native-tables' if version == 1 else SCOPE)
                 or manifest['reference_commit'] != REVIVAL_COMMIT
                 or type(manifest['generation']) is not int or not 1 <= manifest['generation'] <= 99999999
@@ -107,24 +114,37 @@ def load_prepared(config):
             if set(manifest['sources']) != registry.keys():
                 raise ValueError('invalid core source inventory')
         else:
-            if (set(manifest['sources']) != {'tables', 'documents'}
-                    or set(manifest['sources']['tables']) != {table.name for table in rules.INPUT_TABLES}):
+            if (set(manifest['sources']) != ({'tables', 'documents'} if version == 2 else {'tables', 'documents', 'registry'})
+                    or set(manifest['sources']['tables']) != {table.name for table in
+                        (rules.LABEL_INPUT_TABLES if version == 2 else rules.INPUT_TABLES)}):
                 raise ValueError('invalid expanded source inventory')
             from revival_economy import settings
             context = manifest['preparation']
             policy = context['economy']
-            if (set(context) != {'economy', 'labels'} or set(policy) != {'source', 'slot', 'settings'}
+            if (set(context) != ({'economy', 'labels'} if version == 2 else {'economy', 'labels', 'coverage'})
+                    or set(policy) != {'source', 'slot', 'settings'}
                     or policy['source'] not in ('provisional', 'campaign')
                     or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
                 raise ValueError('invalid preparation policy')
             settings({'ios_economy': {'version': 1, 'settings': policy['settings']}})
+            if version == 3:
+                registration = manifest['sources']['registry']
+                if (set(registration) != {'versions', 'sha256', 'definition_sha256'}
+                        or registration['definition_sha256'] != rules.REGISTRY_SHA256
+                        or set(registration['versions']) != registry.keys()
+                        or any(type(value) is not int or value < 1 for value in registration['versions'].values())):
+                    raise ValueError('invalid complete registry provenance')
         outputs, versions, files = {}, {}, {}
         for name, entry in manifest['tables'].items():
             table = registry[name]
             version, base = entry['version'], entry['source_version']
-            if (set(entry) != {'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'changed_rows'}
+            floor = entry['version_floor'] if manifest['version'] == 3 else base
+            if (set(entry) != ({'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'changed_rows'}
+                              | ({'version_floor'} if manifest['version'] == 3 else set()))
                     or type(version) is not int or type(base) is not int or base < 1 or version > 2147483647
-                    or version != base + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP
+                    or type(floor) is not int or floor < base
+                    or manifest['version'] == 3 and floor != max(base, manifest['sources']['registry']['versions'][name])
+                    or version != floor + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP
                     or entry['path'] != table.path(version) or type(entry['size']) is not int or entry['size'] < 1
                     or type(entry['changed_rows']) is not int or entry['changed_rows'] < 0):
                 raise ValueError('invalid table identity: ' + name)
@@ -157,6 +177,21 @@ def verify_data(config):
         return {**snapshot.describe(), 'prepared': True}
     except (OSError, ValueError) as exc:
         return {'ok': False, 'scope': SCOPE, 'error': str(exc), 'gameplay_ready': False}
+
+
+def open_prepared(config):
+    """Explicit consumer gate; require a current complete snapshot and recorded policy."""
+    snapshot = load_prepared(config)
+    if snapshot is None or snapshot.manifest['version'] != 3:
+        raise ValueError('Complete native tables are missing. Run prepare-data.')
+    _, records, fingerprint, context, _ = _inputs(config)
+    if (snapshot.manifest['fingerprint'] != fingerprint or snapshot.manifest['sources'] != records
+            or snapshot.manifest['preparation'] != context or snapshot.manifest['source_root'] != str(config.data)
+            or snapshot.manifest['pipeline_version'] != rules.PIPELINE_VERSION):
+        raise ValueError('Native tables are stale. Run prepare-data for this slot.')
+    if context['economy']['source'] != 'campaign':
+        raise ValueError('Initialize this campaign, then run prepare-data before prepared engine delivery.')
+    return snapshot
 
 
 def _publish(config, manifest, outputs):
@@ -217,8 +252,14 @@ def prepare_data(config):
                 raise ValueError('Invalid native table snapshot provenance.')
             return {**current.describe(), 'prepared': True, 'prepared_now': False}
         generation = current.manifest['generation'] + 1 if current else 1
-        outputs, versions, changes = rules.build(sources, generation, labels=labels, economy=context['economy']['settings'])
-        manifest = {'version': 2, 'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
+        floors = records['registry']['versions']
+        if current is not None:
+            for name, entry in current.manifest['tables'].items():
+                floor = max(sources[name][0], floors[name])
+                generation = max(generation, (entry['version'] - floor - rules.VERSION_OFFSET) // rules.VERSION_STEP + 1)
+        outputs, versions, changes = rules.build(sources, generation, labels=labels,
+            economy=context['economy']['settings'], floors=floors)
+        manifest = {'version': 3, 'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
                     'source_root': str(config.data), 'pipeline_version': rules.PIPELINE_VERSION,
                     'generation': generation, 'fingerprint': fingerprint, 'sources': records, 'preparation': context, 'tables': {}}
         for table in rules.TABLES:
@@ -226,6 +267,7 @@ def prepare_data(config):
             manifest['tables'][table.name] = {'path': table.path(versions[table.name]),
                 'version': versions[table.name], 'source_version': sources[table.name][0], 'size': len(raw),
                 'sha256': _sha(raw), 'md5': hashlib.md5(raw).hexdigest(), 'changed_rows': changes[table.name]}
+            manifest['tables'][table.name]['version_floor'] = max(sources[table.name][0], floors[table.name])
         destination = _publish(config, manifest, outputs)
         snapshot = PreparedTables(destination, manifest, {manifest['tables'][name]['path']: raw for name, raw in outputs.items()})
         return {**snapshot.describe(), 'prepared': True, 'prepared_now': True}

@@ -1,13 +1,14 @@
-"""Core native iOS table preparation rules; no filesystem or engine state access."""
+"""Native iOS table preparation rules; no filesystem or engine state access."""
 from dataclasses import dataclass
 import hashlib
 
-from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines
+from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines, normalize_master
+from ios_server.native_registry import definitions
 from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
 import revival_economy
 
-PIPELINE_VERSION = 2
+PIPELINE_VERSION = 3
 VERSION_OFFSET = 200000
 VERSION_STEP = 10000
 EARLY_PACKS = frozenset(('resources_common.cpk', 'resources.cpk'))
@@ -20,6 +21,7 @@ class Table:
     token: str
     key: str
     localized: bool = False
+    cipher: str = 'cbc'
 
     def path(self, version):
         folder = 'localized_texts/en' if self.localized else 'mst'
@@ -51,9 +53,12 @@ SUPPLEMENTS = (
     Table('F_TEXT_VISION_CARD_NAME', 'jDYeUTZA', 'PJu2EYP8', True),
     Table('F_TEXT_RECIPE_BOOK_NAME', 'tFnHkR8G', 'lEWsm9iI', True),
 )
-TABLES = CORE_TABLES[:5] + TEXT_TABLES + ECONOMY_TABLES
+LABEL_TABLES = CORE_TABLES[:5] + TEXT_TABLES + ECONOMY_TABLES
+LABEL_INPUT_TABLES = LABEL_TABLES + SUPPLEMENTS
+CLIENT_REGISTRY, REGISTRY_SHA256 = definitions()
+TABLES = tuple(Table(name, **entry) for name, entry in CLIENT_REGISTRY['tables'].items())
 BY_NAME = {table.name: table for table in TABLES}
-INPUT_TABLES = TABLES + SUPPLEMENTS
+INPUT_TABLES = TABLES
 
 
 def additions():
@@ -76,18 +81,19 @@ def english_versions(raw, *, tables=TEXT_TABLES):
     return result
 
 
-def build(sources, generation, *, labels=None, economy=None, tables=TABLES):
+def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None):
     """Sources are {table name: (native source version, raw bytes)}."""
     if type(generation) is not int or generation < 1:
         raise ValueError('Native table version generation is out of range.')
-    versions = {table.name: sources[table.name][0] + VERSION_OFFSET + generation * VERSION_STEP for table in tables}
+    versions = {table.name: max(sources[table.name][0], (floors or {}).get(table.name, 0))
+                + VERSION_OFFSET + generation * VERSION_STEP for table in tables}
     if any(v > 2147483647 for v in versions.values()):
         raise ValueError('Native table version generation is out of range.')
     outputs, changes = {}, {}
     labels = additions() if labels is None else labels
     for table in tables:
         if table.localized:
-            outputs[table.name], changes[table.name] = patch_text(sources[table.name][1], table.key, labels[table.name])
+            outputs[table.name], changes[table.name] = patch_text(sources[table.name][1], table.key, labels.get(table.name, {}))
     unversioned = {str(r.get('9ZCEWn0z')) for _, r, _ in master_rows(sources[VERSIONS.name][1], VERSIONS.key)
                    if str(r.get('OzT5lSz3') or '0') == '0' and str(r.get('86SWOBTb') or '0') == '0'}
     found = set()
@@ -121,7 +127,7 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES):
 
     def index(row):
         name = row.get('a4hXTIm0')
-        if name in outputs:
+        if name in outputs and name in {table.name for table in tables if table.localized}:
             raw = outputs[name]
             row.update({'00zAYGYS': str(versions[name]), 'zptmZGqa': hashlib.md5(raw).hexdigest(),
                         'MLOSu5E0': str(len(raw))})
@@ -130,12 +136,15 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES):
     for table, transform in ((RESOURCE, resource), (VERSIONS, lambda r: r), (QUEST, quest), (URL, url), (INDEX, index)):
         outputs[table.name], changes[table.name] = patch_master(sources[table.name][1], table.key, transform)
     for table in tables:
-        if table in ECONOMY_TABLES:
+        if table.name in {entry.name for entry in ECONOMY_TABLES}:
             if economy is None:
                 raise ValueError('Native economy preparation requires explicit settings.')
             data = {'ios_economy': {'version': 1, 'settings': economy}}
             outputs[table.name], changes[table.name] = patch_master(sources[table.name][1], table.key,
-                lambda row: revival_economy.transform_master(data, table.name, [row])[0])
+                lambda row: revival_economy.transform_master(data, table.name, [row])[0], mode=table.cipher)
+        elif not table.localized and table.name not in outputs:
+            outputs[table.name] = normalize_master(sources[table.name][1], table.key, mode=table.cipher)
+            changes[table.name] = 0
     if not EARLY_PACKS | {'GACHA_RATE_URL'} <= found:
         raise ValueError('Required tutorial resources or Drop Rates URL are missing.')
     validate(outputs, versions, tables=tables)
@@ -151,7 +160,7 @@ def validate(outputs, versions, *, tables=TABLES):
         if table.localized:
             text_lines(raw, table.key)
         else:
-            master_rows(raw, table.key)
+            master_rows(raw, table.key, mode=table.cipher)
     actual = english_versions(outputs[INDEX.name], tables=tables)
     for _, row, _ in master_rows(outputs[INDEX.name], INDEX.key):
         name = row.get('a4hXTIm0')

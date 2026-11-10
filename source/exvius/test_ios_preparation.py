@@ -23,9 +23,18 @@ from ios_server.runtime import InstanceLock
 from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines
 
 
-def master(key, rows):
-    return ('\r\n'.join(cbc_encrypt(key16(key), json.dumps(row).encode(), double_pad=bool(i%2))
-                       for i,row in enumerate(rows)) + '\r\n').encode()
+def master(key, rows, *, mode='cbc'):
+    lines=[]
+    for i,row in enumerate(rows):
+        plain=json.dumps(row).encode()
+        if mode=='cbc':
+            lines.append(cbc_encrypt(key16(key),plain,double_pad=bool(i%2)))
+        else:
+            for _ in range(2 if i%2 else 1):
+                n=16-len(plain)%16; plain+=bytes([n])*n
+            op=Cipher(algorithms.AES(key16(key)),modes.ECB()).encryptor()
+            lines.append(base64.b64encode(op.update(plain)+op.finalize()).decode())
+    return ('\r\n'.join(lines)+'\r\n').encode()
 
 
 def text(key, records, layers=2):
@@ -90,18 +99,21 @@ class NativePreparation(unittest.TestCase):
                             {'gu8McTA6':'OTHER','en':'unchanged'}],
             rules.INDEX.name:[{'a4hXTIm0':t.name,'00zAYGYS':'10','zptmZGqa':'old','MLOSu5E0':'1',
                                '7aj3QkBT':'99'} for t in rules.INPUT_TABLES if t.localized] +
-                             [{'a4hXTIm0':'F_TEXT_OTHER','00zAYGYS':'10','zptmZGqa':'other','MLOSu5E0':'5'}]}
+                             [{'a4hXTIm0':'F_TEXT_CRAFT','00zAYGYS':'2','zptmZGqa':'other','MLOSu5E0':'5'}]}
         for table in rules.INPUT_TABLES:
             path=native/table.path(10); path.parent.mkdir(parents=True,exist_ok=True)
             fallback=[{'id':'1','dX6cor8j':'50:1:20:100:1,20:1:3:100:1',
                        'dJ1g6p8h':'50:1:20','6Emk0agT':'50:1:2'}]
-            raw=text(table.key,['original^Keep^Keep']) if table.localized else master(table.key,rows.get(table.name,fallback))
+            raw=text(table.key,['original^Keep^Keep']) if table.localized else master(table.key,rows.get(table.name,fallback),mode=table.cipher)
             path.write_bytes(raw)
         for row in rows[rules.INDEX.name][:-1]:
             table=next(table for table in rules.INPUT_TABLES if table.name==row['a4hXTIm0'])
             raw=(native/table.path(10)).read_bytes()
             row['zptmZGqa']=hashlib.md5(raw).hexdigest(); row['MLOSu5E0']=str(len(raw))
         (native/rules.INDEX.path(10)).write_bytes(master(rules.INDEX.key,rows[rules.INDEX.name]))
+        version_path=static/'client/shared_prefs/gamedata.xml'
+        version_path.parent.mkdir(parents=True,exist_ok=True)
+        version_path.write_text('<map>'+''.join('<string name="key'+table.name+'">10</string>' for table in rules.TABLES)+'</map>')
         self.native=native
         self.shared={str(p.relative_to(self.config.data)):p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()}
         return native
@@ -123,7 +135,7 @@ class NativePreparation(unittest.TestCase):
                     self.assertTrue(prep.verify_data(self.config)['ok'])
                 snapshot=prep.load_prepared(self.config)
                 self.assertTrue(report['prepared_now']); self.assertFalse(report['gameplay_ready'])
-                self.assertEqual(report['tables'],35)
+                self.assertEqual(report['tables'],364)
                 self.assertFalse(self.config.state_file.exists())
                 resource=[r for _,r,_ in master_rows(snapshot.lookup(rules.RESOURCE.path(210010)),rules.RESOURCE.key)]
                 self.assertEqual({r['9ZCEWn0z'] for r in resource},{'1','2'})
@@ -134,7 +146,7 @@ class NativePreparation(unittest.TestCase):
                 self.assertEqual(urls[0]['en'],rules.RATE_URL); self.assertEqual(urls[1]['en'],'unchanged')
                 self.assertEqual(urls[0]['G4L0YIB2'],'original'); self.assertEqual(urls[0]['empty'],'')
                 index=[r for _,r,_ in master_rows(snapshot.lookup(rules.INDEX.path(210010)),rules.INDEX.key)]
-                self.assertEqual(index[-1],{'a4hXTIm0':'F_TEXT_OTHER','00zAYGYS':'10','zptmZGqa':'other','MLOSu5E0':'5'})
+                self.assertEqual(index[-1],{'a4hXTIm0':'F_TEXT_CRAFT','00zAYGYS':'2','zptmZGqa':'other','MLOSu5E0':'5'})
                 for table in (rules.DAILY_NAME,rules.DAILY_DETAIL):
                     raw=snapshot.lookup(table.path(210010))
                     keys={r.split('^')[0] for _,rows,_ in text_lines(raw,table.key) for r in rows}
@@ -169,7 +181,7 @@ class NativePreparation(unittest.TestCase):
         spec={'c1qYg84Q':[{'a4hXTIm0':rules.INDEX.name,'wM9AfX6I':'1'},{'a4hXTIm0':'OTHER','wM9AfX6I':'7'}]}
         original=copy.deepcopy(spec); out=pack.project_versions(spec)
         self.assertEqual(spec,original)
-        self.assertEqual(out['c1qYg84Q'][1],original['c1qYg84Q'][1])
+        self.assertEqual({row['a4hXTIm0'] for row in out['c1qYg84Q']},rules.BY_NAME.keys())
         for row in out['c1qYg84Q']:
             if row['a4hXTIm0'] in rules.BY_NAME:
                 table=rules.BY_NAME[row['a4hXTIm0']]

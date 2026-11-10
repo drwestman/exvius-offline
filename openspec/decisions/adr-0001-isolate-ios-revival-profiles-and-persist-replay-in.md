@@ -23,6 +23,12 @@ state loader, initialize/backfill campaigns, or modify shared source rewards.
 Gameplay retains canonical unit lookup and purchase transactions through pure
 helper adapters. See [ADR-0007](adr-0007-prepare-native-labels-and-economy-displays.md).
 
+Reviewed again for complete table delivery: the prepared consumer requires current
+recorded policy before state imports, keeps the private lock for its lifetime,
+and binds its snapshot only in the iOS profile. Legacy routing and canonical
+campaign saves retain their contracts. See
+[ADR-0008](adr-0008-deliver-complete-registered-native-tables.md).
+
 
 > Recorded by openlore decisions on 2026-11-09
 > Decision ID: 381df222

@@ -3,7 +3,7 @@
 The iPhone-to-Mac connection checkpoint of
 [the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md) is available. It serves a
 setup page, a certificate profile, and an HTTPS hello page over the home network.
-It does not load the game engine or a campaign. Offline core table preparation is
+It does not load the game engine or a campaign. Complete registered-table preparation is
 also available. Gameplay hosting and full native asset installation remain pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -247,9 +247,10 @@ and retries preserve inventory and saved result echoes. Older pending attempts
 without a receipt gain no retroactive bonus. Diagnostics validate saved facts
 without repair. Legacy loot and field behavior are unchanged.
 
-Native preparation now covers the pinned English label families and converted
-challenge/Arena reward displays. Full table coverage, art/audio/story packs, and
-native gameplay asset routing still need preparation and device acceptance.
+Native preparation now covers all 364 registered tables in the supported client
+corpus, including the pinned English labels and converted challenge/Arena displays.
+An opt-in engine consumer delivers their exact versions. Art/audio/story packs,
+full gameplay hosting and physical-device acceptance remain pending.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -282,10 +283,19 @@ environment and emit one JSON document. Neither starts services, downloads packs
 loads the engine/player aggregate, or changes the shared content tree. Managed `static/native`
 data layouts are also supported.
 
-Snapshots now contain 35 native files: resource definitions/versions, quest rewards,
-WebView URLs, the localized-text index, all 25 pinned English label families, and
-five challenge/Arena economy masters. Four additional native inputs provide
-exchange stock and original unit/card/recipe names.
+Snapshots contain all 364 registered native files for the supported Global-1167
+corpus: 219 JSON masters (157 CBC and 62 ECB) and 145 English ECB localized tables.
+The packaged client registry records corroborated names, filename tokens, keys,
+cipher modes and native-library SHA-256. Missing/unknown positive preference
+registrations, unmapped source tokens, missing files or bad English checksums fail
+before publication. Five known English index entries have no registered mappings
+or files: `F_TEXT_CRAFT`, `F_TEXT_DESCRIPTION_FORMAT`, `F_TEXT_EXCHANGE_SHOP`,
+`F_TEXT_TITLE` and `F_TEXT_URL`. They remain unchanged and appear under
+`preparation.coverage.unregistered_localized`; no files or advertised versions are
+invented for them. Passthrough tables retain encrypted records with outer LF lines.
+
+Transforms still cover resource definitions/versions, quest rewards, WebView URLs,
+the localized-text index, all 25 pinned English label families and five economy masters.
 It moves `resources_common.cpk` and `resources.cpk` into the tutorial download,
 removes resource rows without a base or English file version, reveals quest
 rewards with their original quantities, and sets the Drop Rates URL to the v910
@@ -310,18 +320,37 @@ unit metadata, purchases, balances and reward receipts remain unchanged.
 
 Files are staged under the private `assets/tables/` directory. An atomic
 `current.json` pointer selects one validated generation. Identical inputs reuse
-it; changed source files or preparation revisions publish higher versions and
+it; changed source files, registrations or preparation revisions publish higher versions and
 retain the previous files. Failed publication leaves the active pointer intact.
-Existing seven-table snapshots validate and upgrade atomically to the expanded
+Each version exceeds both the native source and persisted registration version.
+If either floor decreases, generation selection still advances every prior version.
+Existing seven- and 35-table snapshots validate and upgrade atomically to schema 3,
 schema, keeping their old files and versions. Missing new inputs leave the old
 snapshot available.
 Malformed sources or corrupt published snapshots fail visibly without repair.
 `verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
 
 New results explicitly report `scope: native-tables` and `gameplay_ready: false`.
-These files are prepared for the future gameplay host; the current hello service
-does not serve them. Full table coverage, managed-pack downloading/installing, banners/art, sound/story
-compatibility, gameplay routes, and physical iPhone acceptance remain pending.
+The current hello service does not serve these files. Managed-pack downloading/
+installation, banners/art, sound/story compatibility, full gameplay hosting and
+physical iPhone acceptance remain pending.
+
+### Prepared engine consumer
+
+Development consumers can explicitly construct `Engine(config, prepared=True)` in
+a fresh Python 3.12 process after running `init-campaign`, `prepare-data` and
+`verify-data` for the same root, data and slot. The adapter holds the runtime lock
+and validates complete, current preparation with recorded campaign settings before
+loading engine state. Missing, old partial, corrupt, stale or provisional snapshots
+fail without automatic preparation or campaign initialization. Default engine
+construction retains its existing behavior; `serve` remains the connection check.
+
+The prepared engine projects exactly 364 unique published versions after canonical
+version handling. Table GET/HEAD requests return exact snapshot bytes and lengths;
+HEAD has no body. Unknown or old versions under `mst/` and `localized_texts/en/`
+return 404 without falling back to stock files. Path validation runs before lookup.
+Reads do not write caches, refresh inputs, download or change the campaign. Closing
+the engine unbinds its snapshot. This adapter is ready for the later gameplay host.
 
 ## Replay notices
 
@@ -368,8 +397,8 @@ Shared inputs can use either layout:
 
 The version registry is `client/shared_prefs/gamedata.xml` under the prepared
 root, or under `static/` for managed packs. Presence checks do not verify pack
-hashes or establish gameplay completeness; the planned `verify-data` command
-will perform content verification.
+hashes or establish gameplay completeness; `verify-data` checks the prepared native
+table snapshot and its input freshness, rather than all resource packs.
 
 The default private root is
 `~/Library/Application Support/Exvius Offline/iOS`. Campaigns use
@@ -421,6 +450,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_trust.py
 .venv-ios/bin/python -B source/exvius/test_ios_notices.py
 .venv-ios/bin/python -B source/exvius/test_ios_authored_content.py
+.venv-ios/bin/python -B source/exvius/test_ios_full_tables.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

@@ -291,6 +291,23 @@ Master data and associated remote file metadata representing a character Limit B
 
 ## Requirements
 
+### Requirement: ProjectPreparedIosTableVersions
+
+The version response SHALL apply a bound verified native snapshot after canonical
+authored, preference and forced versions in the iOS profile. Complete snapshots
+SHALL advertise exactly their 364 published table identities once. Legacy and
+unprepared consumers SHALL retain canonical version behavior. Projection SHALL
+not mutate the captured response or write files.
+
+- **Implementation**: `source/server/ffbe_battle.py`
+
+#### Scenario: Initialize with complete prepared tables
+
+- **GIVEN** An opt-in iOS engine with a verified schema-3 snapshot
+- **WHEN** The encrypted initialization response is projected
+- **THEN** Every advertised table version matches an exact published file
+- **AND** Unknown and duplicate identities are omitted without changing the campaign.
+
 ### Requirement: MissionValidation
 
 The system SHALL validate Mission according to these rules:

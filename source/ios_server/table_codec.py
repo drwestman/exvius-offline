@@ -1,4 +1,4 @@
-"""Pure native table codecs: CBC JSON masters and ECB localized text records.
+"""Pure native table codecs: CBC/ECB JSON masters and ECB localized text records.
 
 Wire facts follow the pinned revival ios_tables/ios_texts implementations.
 Preserve each source line's padding shape and emit LF between encrypted lines.
@@ -11,13 +11,22 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from ffbe_crypto import cbc_decrypt, cbc_encrypt, key16
 
 
-def master_rows(raw, key):
+def master_rows(raw, key, *, mode='cbc'):
+    if mode not in ('cbc', 'ecb'):
+        raise ValueError('Unsupported native master cipher.')
     rows = []
     for line in raw.decode('ascii').splitlines():
         if not line.strip():
             continue
         base64.b64decode(line.strip(), validate=True)
-        plain = cbc_decrypt(key16(key), line.strip())
+        if mode == 'cbc':
+            plain = cbc_decrypt(key16(key), line.strip())
+        else:
+            plain = _ecb(key, base64.b64decode(line.strip(), validate=True))
+            pad = plain[-1] if plain else 0
+            if not 1 <= pad <= 16 or plain[-pad:] != bytes([pad]) * pad:
+                raise ValueError('Invalid native master padding.')
+            plain = plain[:-pad]
         pad = plain[-1] if plain else 0
         double = 1 <= pad <= 16 and plain[-pad:] == bytes([pad]) * pad
         row = json.loads(plain[:-pad] if double else plain)
@@ -29,18 +38,24 @@ def master_rows(raw, key):
     return rows
 
 
-def patch_master(raw, key, transform):
+def patch_master(raw, key, transform, *, mode='cbc'):
     out, changed = [], 0
-    for line, row, double in master_rows(raw, key):
+    for line, row, double in master_rows(raw, key, mode=mode):
         result = transform(copy.deepcopy(row))
         if result != row:
             changed += 1
             if result is None:
                 continue
-            line = cbc_encrypt(key16(key), json.dumps(result, ensure_ascii=False,
-                separators=(',', ':')).encode(), double_pad=double)
+            plain = json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode()
+            line = (cbc_encrypt(key16(key), plain, double_pad=double) if mode == 'cbc' else
+                    base64.b64encode(_ecb(key, _pad(plain, 2 if double else 1), True)).decode())
         out.append(line)
     return ('\n'.join(out) + '\n').encode('ascii'), changed
+
+
+def normalize_master(raw, key, *, mode='cbc'):
+    """Validate a passthrough table and normalize outer lines without copying rows."""
+    return ('\n'.join(line for line, _, _ in master_rows(raw, key, mode=mode)) + '\n').encode('ascii')
 
 
 def _ecb(key, data, encrypt=False):

@@ -12,11 +12,15 @@ from ios_server.runtime import InstanceLock
 
 
 class Engine:
-    def __init__(self, config, *, import_module=importlib.import_module):
+    def __init__(self, config, *, prepared=False, import_module=importlib.import_module):
+        if type(prepared) is not bool:
+            raise ValueError('Prepared engine delivery must be explicitly enabled or disabled.')
         self.config = config
         self.import_module = import_module
         self.server = None
         self._lock = None
+        self.prepared = prepared
+        self.tables = None
 
     def initialize(self):
         if self.server is not None:
@@ -33,6 +37,9 @@ class Engine:
         self._lock = InstanceLock(self.config.root)
         self._lock.__enter__()
         try:
+            if self.prepared:
+                from ios_server.preparation import open_prepared
+                self.tables = open_prepared(self.config)
             os.environ.update(env)
             # These catalogue defaults are already supported by the canonical engine.
             # Later ports add revival families behind the immutable iOS profile.
@@ -48,6 +55,8 @@ class Engine:
             if result != 0:
                 raise RuntimeError(f'Game engine initialization failed ({result}).')
             self.server = server
+            if self.tables is not None:
+                server.State.native_tables = self.tables
             return server
         except BaseException:
             self.close()
@@ -61,6 +70,9 @@ class Engine:
 
     def close(self):
         """Release resources; the bound engine still requires a fresh process to reconfigure."""
+        if self.server is not None and self.tables is not None:
+            self.server.State.native_tables = None
+        self.tables = None
         if self._lock is not None:
             self._lock.__exit__()
             self._lock = None

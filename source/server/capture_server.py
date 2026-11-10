@@ -528,6 +528,10 @@ class Handler(BaseHTTPRequestHandler):
                 any(part in ("", ".", "..") for part in rel.split("/"))):
             self.send_error(400, "Invalid content path")
             return
+        if data_paths.PROFILE.name == 'ios-revival':
+            from ios_server.table_delivery import serve
+            if serve(self, getattr(State, 'native_tables', None), rel):
+                return
         def safe_join(base, relative):
             candidate = os.path.realpath(os.path.join(base, relative))
             boundary = os.path.realpath(base)

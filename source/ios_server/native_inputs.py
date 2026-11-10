@@ -13,6 +13,7 @@ from revival_summons import catalogue, HERE
 from ios_server import native_tables as rules
 from ios_server.native_text import plan
 from ios_server.queries import _saved
+from ios_server.native_registry import registered
 
 DOCUMENTS = ('content/revival_bundles.json', 'content/exbonus_text.json', 'battle_names.json', 'colosseum_names.json',
              'content/ios_text_items.json', 'event_archive.json', 'content/permanent_shops.json',
@@ -27,6 +28,19 @@ def collect(config):
     env = config.engine_environment()
     roots = list(dict.fromkeys(Path(env[key]) for key in ('CDN_OVERLAY', 'CDN_ROOT')))
     sources, records = {}, {}
+    version_raw = Path(env['VERSION_TABLE_XML']).read_bytes()
+    registrations = registered(version_raw, rules.BY_NAME)
+    expected = {'mst': {table.token for table in rules.TABLES if not table.localized},
+                'localized_texts/en': {table.token for table in rules.TABLES if table.localized}}
+    for root in roots:
+        for relative, tokens in expected.items():
+            folder = root / relative
+            if not folder.resolve().is_relative_to(config.data):
+                raise ValueError('Native table folder escapes shared data: ' + str(folder))
+            for path in folder.glob('Ver*_*.dat'):
+                match = re.fullmatch(r'Ver[0-9]+_([A-Za-z0-9]{8})\.dat', path.name)
+                if match is None or match[1] not in tokens:
+                    raise ValueError('Unmapped native table source: ' + str(path))
 
     def read(table, version=None):
         for root in roots:
@@ -66,6 +80,13 @@ def collect(config):
             raw = sources[name][1]
             if str(row.get('MLOSu5E0')) != str(len(raw)) or str(row.get('zptmZGqa')).lower() != hashlib.md5(raw).hexdigest():
                 raise ValueError('English source checksum disagrees with localized index: ' + name)
+    unregistered = []
+    for _, row, _ in rules.master_rows(sources[rules.INDEX.name][1], rules.INDEX.key):
+        name = row.get('a4hXTIm0')
+        if int(row.get('00zAYGYS') or 0) > 0 and name not in rules.BY_NAME:
+            if name not in rules.CLIENT_REGISTRY['unregistered_localized']:
+                raise ValueError('Unmapped localized index entry: ' + str(name))
+            unregistered.append(name)
     documents, document_records = {}, {}
     for name in DOCUMENTS:
         path = HERE / name
@@ -96,8 +117,11 @@ def collect(config):
     saved = revival_economy.settings(data)
     policy = {'source': 'campaign' if saved is not None else 'provisional', 'slot': config.slot,
               'settings': saved if saved is not None else revival_economy.defaults()}
-    context = {'economy': policy, 'labels': coverage}
-    provenance = {'tables': records, 'documents': document_records}
+    context = {'economy': policy, 'labels': coverage, 'coverage': {
+        'registered': len(registrations), 'masters': sum(not t.localized for t in rules.TABLES),
+        'english': len(localized), 'unregistered_localized': sorted(unregistered)}}
+    provenance = {'tables': records, 'documents': document_records, 'registry': {
+        'versions': registrations, 'sha256': _sha(version_raw), 'definition_sha256': rules.REGISTRY_SHA256}}
     raw = json.dumps({'pipeline': rules.PIPELINE_VERSION, 'reference': REVIVAL_COMMIT,
                      'source_root': str(config.data), 'sources': provenance, 'labels': labels, 'preparation': context},
                     sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()

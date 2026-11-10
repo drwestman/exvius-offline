@@ -5,7 +5,7 @@
 This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
 pinned exploration encounters and rare quest loot,
-offline native-table and label preparation, and hello-only native connectivity of
+complete registered native-table preparation and opt-in engine delivery, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -816,15 +816,17 @@ Legacy callers SHALL retain their existing cache behavior.
 The prepare-data command SHALL reuse prepared or managed static/native inputs
 read-only, without loading an engine/campaign or starting services/downloads.
 It SHALL acquire the private runtime's exclusive instance lock and publish a
-35-table snapshot: resource definitions and versions, quest rewards, WebView URLs,
-the localized-text index, all 25 pinned English label families, and five economy
-masters. Four additional native inputs SHALL supply exchange stock and original
-unit/card/recipe names. Earlier seven-table snapshots SHALL remain valid for
-inspection and atomic upgrade; incomplete new inputs SHALL preserve them.
+364-table snapshot for the supported Global-1167 corpus: 219 JSON masters and
+145 English localized tables. The packaged registry SHALL record corroborated
+names, filename tokens, keys and cipher modes. Positive native preference
+registrations SHALL match this complete inventory. Missing/unknown registrations,
+unmapped source tokens or missing sources SHALL fail before publication.
+Earlier seven- and 35-table snapshots SHALL remain valid for inspection and
+atomic upgrade; incomplete new inputs SHALL preserve them.
 
-Preparation SHALL use the pinned CBC master and ECB localized-text formats,
+Preparation SHALL use each registered CBC/ECB master or ECB localized-text format,
 preserve source padding layers and text columns, and emit LF between encrypted
-lines. Invalid encryption, unsupported row shapes, missing required tables, or
+lines. Passthrough tables SHALL retain their encrypted records. Invalid encryption, unsupported row shapes, missing required tables, or
 English source checksum/size mismatches SHALL fail before publication. Existing
 shipped text records, including duplicate keys, SHALL remain unless explicitly
 replaced by a declared native label rule.
@@ -841,6 +843,8 @@ The command SHALL validate staged outputs, persist checksums/provenance, and
 atomically replace one active-generation pointer. Files SHALL remain inside the
 private runtime. Identical inputs SHALL reuse the current generation; changed
 inputs or transformation revisions SHALL advance versions monotonically.
+Each version SHALL exceed its source and persisted registration floor. If a floor
+decreases, generation selection SHALL still exceed the prior published versions.
 Interrupted writes SHALL leave the previous generation available; retries MAY
 reuse a matching complete unpublished generation. Corrupt published facts SHALL
 fail visibly without repair. No source data, real save, or active service SHALL
@@ -853,6 +857,13 @@ be changed by preparation.
 - Then the old generation remains available with its original versions and bytes
 - And a retry can publish the new generation without rewriting the old one.
 
+#### Scenario: Preserve unregistered localized metadata
+
+- Given the five declared English index names without registered client mappings or files
+- When the complete snapshot is prepared
+- Then those original index rows remain unchanged and are reported as unregistered
+- And they acquire no invented table files or advertised prepared versions.
+
 ### Requirement: VerifyNativeTableBytesReadOnly
 
 The verify-data query SHALL validate the active pointer/manifest, exact table
@@ -862,9 +873,11 @@ without rewriting files, creating directories/caches, or initializing campaigns.
 Missing and corrupt preparation SHALL be reported distinctly.
 
 Verified snapshots SHALL provide exact published-path lookup and a private
-version-response projection; unrelated version rows SHALL remain unchanged.
+version-response projection. Complete snapshots SHALL advertise each published
+identity once and omit unknown identities; older partial snapshots SHALL retain
+their existing overlay behavior.
 New preparation and verification SHALL report scope native-tables and
-gameplay_ready false. Native gameplay/asset routing, full-table coverage,
+gameplay_ready false. Full native gameplay hosting,
 art/audio/story packs and device acceptance are pending.
 
 #### Scenario: Inspect prepared native files
@@ -873,6 +886,28 @@ art/audio/story packs and device acceptance are pending.
 - When verify-data runs and its versions are projected for an asset consumer
 - Then every advertised snapshot version resolves to its validated bytes
 - And text MD5s/sizes agree with the localized index without filesystem writes.
+
+### Requirement: DeliverPreparedNativeTablesExplicitly
+
+An explicit Engine(config, prepared=True) consumer SHALL require a current complete
+snapshot and the selected campaign's recorded economy policy before importing
+the state loader. Missing, partial, corrupt, stale or provisional preparation SHALL
+fail and release the runtime lock without initializing a campaign. The running
+hello service and default engine adapter SHALL retain their existing behavior.
+
+Only the iOS profile with the bound verified snapshot SHALL project its complete
+versions after canonical forced-version handling. GET/HEAD under mst/ and
+localized_texts/en/ SHALL return exact published bytes and sizes. An absent version
+SHALL return 404 without a stock/token fallback. HEAD SHALL omit the body. Path
+validation SHALL precede lookup. Delivery SHALL not write files, refresh sources,
+download assets or change campaign facts. Closing the engine SHALL unbind it.
+
+#### Scenario: Deliver every encrypted initialization version
+
+- Given an initialized campaign and current schema-3 preparation
+- When the opt-in engine answers encrypted initialization and table GET/HEAD requests
+- Then all 364 unique advertised versions resolve to the snapshot bytes
+- And stale/unknown paths return 404 and traversal returns 400 without query writes.
 
 ### Requirement: PreparePinnedEnglishLabels
 
