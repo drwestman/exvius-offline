@@ -326,7 +326,7 @@ retain the previous files. Failed publication leaves the active pointer intact.
 Each version exceeds both the native source and persisted registration version.
 If either floor decreases, generation selection still advances every prior version.
 Existing seven- and 35-table snapshots validate and upgrade atomically to schema 3,
-schema, keeping their old files and versions. Missing new inputs leave the old
+keeping their old files and versions. Missing new inputs leave the old
 snapshot available.
 Malformed sources or corrupt published snapshots fail visibly without repair.
 `verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
@@ -369,8 +369,57 @@ validates published bytes and resource-table agreement without rebuilding a pack
 
 The prepared engine serves exact Vortex GET/HEAD bytes and returns 404 for old pack
 versions without falling back to stock files. Both prepared and managed data
-layouts are supported. Physical-iPhone mounting/visual acceptance, summon-banner
-fitting, other artwork, and sound/story compatibility remain separate checkpoints.
+layouts are supported. Physical-iPhone mounting/visual acceptance, missing artwork
+and sound/story compatibility remain separate checkpoints.
+
+### Summon detail fitting
+
+Update the dedicated runtime dependencies with `setup`, then prepare available
+summon detail images explicitly:
+
+```sh
+python3 source/exvius/macos_ios_server.py setup
+python3 source/exvius/macos_ios_server.py prepare-banners --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-banners --data source/out/browser-data
+```
+
+This uses checksum-locked [Pillow 13.0.0](https://pypi.org/project/pillow/13.0.0/).
+Both prepared-host and managed static/native layouts are supported. Use the same
+`--root` and `--data` as the prepared engine. Artwork uses the private runtime lock;
+stop its service before preparation. Verification is read-only. Stdout is one
+JSON document; diagnostics use stderr. No command downloads missing artwork or
+initializes a campaign.
+
+For each available source PNG, prepare both paid/step-up (640:183) and layout-0/base
+(640:392) frame variants. The pinned fitting policy keeps the source at native
+scale, centered over a blurred/darkened copy; art already within six percent of
+the frame ratio retains its exact bytes. Bare list images stay unchanged.
+Each fitted filename contains its output's full SHA-256, so changed bytes get a
+new native cache identity. The current corpus has 487 available sources and 307
+missing detail names. Missing names appear in the report and remain unrenamed;
+supplying them and preparing again clears their gaps.
+
+An independent atomic pointer under private `assets/banners/` selects the artwork
+generation. Image changes do not rebuild native tables or the Vortex CPK. Repeated
+inputs reuse a generation; failed rendering/writes/pointer replacement preserve
+the active one, and old generations remain intact. Source bytes, current catalogue
+documents and renderer policy/version determine freshness, including same-size
+edits. Corrupt PNGs, unsafe paths and damaged published facts fail without repair.
+`verify-banners` checks hashes, content filenames, PNGs, dimensions and freshness
+without fitting images or writing files.
+
+The prepared engine binds a current artwork snapshot if present and rejects stale
+or corrupt artwork before loading campaign state. Native entry, step/result and
+box refreshes share the same detail/carousel projection and select the frame from
+actual wire layouts. GET/HEAD returns verified PNG bytes for the content name,
+including the supported native language/path prefixes. Unknown fitted names get
+404 without source fallback. Reads do not resize, download, write asset caches or
+change campaigns. Canonical POST request recording retains its existing path.
+Restart the prepared engine after publishing a new artwork generation.
+
+The default/legacy adapters and hello service retain their behavior. Local native-
+size review and parity checks cover the prepared outputs; actual iPhone visual
+acceptance, missing art and sound/story compatibility remain pending.
 
 ### Prepared engine consumer
 
@@ -381,6 +430,7 @@ and validates complete, current preparation with recorded campaign settings befo
 loading engine state. Missing, old partial, corrupt, stale or provisional snapshots
 fail without automatic preparation or campaign initialization. Default engine
 construction retains its existing behavior; `serve` remains the connection check.
+Use `prepare-banners` and `verify-banners` to include optional summon detail fitting.
 
 The prepared engine projects exactly 364 unique published table versions after canonical
 version handling. Table GET/HEAD requests return exact snapshot bytes and lengths;
@@ -490,6 +540,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_authored_content.py
 .venv-ios/bin/python -B source/exvius/test_ios_full_tables.py
 .venv-ios/bin/python -B source/exvius/test_ios_vortex_art.py
+.venv-ios/bin/python -B source/exvius/test_ios_banner_fitting.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

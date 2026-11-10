@@ -21,6 +21,7 @@ class Engine:
         self._lock = None
         self.prepared = prepared
         self.tables = None
+        self.banners = None
 
     def initialize(self):
         if self.server is not None:
@@ -40,6 +41,8 @@ class Engine:
             if self.prepared:
                 from ios_server.preparation import open_prepared
                 self.tables = open_prepared(self.config)
+                from ios_server.banner_snapshots import current
+                self.banners = current(self.config)
             os.environ.update(env)
             # These catalogue defaults are already supported by the canonical engine.
             # Later ports add revival families behind the immutable iOS profile.
@@ -57,6 +60,7 @@ class Engine:
             self.server = server
             if self.tables is not None:
                 server.State.native_tables = self.tables
+                server.State.native_banners = self.banners
             return server
         except BaseException:
             self.close()
@@ -72,7 +76,9 @@ class Engine:
         """Release resources; the bound engine still requires a fresh process to reconfigure."""
         if self.server is not None and self.tables is not None:
             self.server.State.native_tables = None
+            self.server.State.native_banners = None
         self.tables = None
+        self.banners = None
         if self._lock is not None:
             self._lock.__exit__()
             self._lock = None

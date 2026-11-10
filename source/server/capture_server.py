@@ -529,6 +529,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(400, "Invalid content path")
             return
         if data_paths.PROFILE.name == 'ios-revival':
+            from ios_server.banner_delivery import serve as serve_banners
+            if serve_banners(self, getattr(State, 'native_banners', None), rel):
+                return
             from ios_server.table_delivery import serve
             if serve(self, getattr(State, 'native_tables', None), rel):
                 return

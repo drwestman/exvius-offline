@@ -909,3 +909,79 @@ mounting, artwork review and full gameplay acceptance remain pending. Results
 retain `scope: native-tables` and `gameplay_ready: false`; the live native service
 remains the accepted connection check. Earlier Android fixture/tooling limitations
 remain pending.
+
+## Summon detail fitting checkpoint — November 10, 2026
+
+Added explicit `prepare-banners` and read-only `verify-banners`. Separate immutable
+artwork generations under private `assets/banners/` reuse the exclusive runtime
+lock and atomic publisher. Their content-addressed URLs do not require rebuilding
+the 364 native tables or Vortex CPK. Both prepared-host and managed static/native
+layouts are supported. No source data or campaign is changed by these commands;
+missing art is not downloaded or invented.
+
+The pinned blur2 fitting policy prepares both **640:183 paid/step-up** and
+**640:392 layout-0/base** variants. Each source remains at native scale, centered
+over blurred/darkened padding. Images within six percent of the target ratio keep
+their exact bytes. Output filenames include their full SHA-256, giving changed
+pixels new native cache identities. Source PNG structure, path containment,
+catalogue override order, locale variants and step extras are validated. Exact
+native URL sources precede extracted/community basename fallbacks. Hash source
+bytes and six current catalogue documents, plus renderer policy/version; same-size
+edits invalidate freshness. Pillow 13.0.0 and wheel hashes are pinned in the
+isolated iOS environment and the locked sync was exercised.
+
+Before adding the projection, extracted the existing gacha master/layout and
+detail/offer blocks. Each extraction passed an **88-test** gate. All **1,053
+catalogue banners and 1,708 detail rows**, including box groups, matched the
+captured baseline. Structural risk dropped from **81 to 67** before the feature.
+The shared builder remains the projection point for entry, step/result and box
+refreshes; signatures, costs, rewards, counters, layouts and offer shapes retain
+their contracts. Legacy and unprepared paths do not acquire fitted names.
+
+The explicitly prepared engine binds current artwork if available and refuses
+stale/corrupt artwork before state imports, releasing its lock on failure. It
+selects variants from actual wire layout facts and renames only known detail and
+carousel fields. Bare list names and missing image names remain unchanged.
+Closing clears the binding. GET/HEAD uses only the verified snapshot; supported
+native path prefixes share the same content identity. Unknown fitted names return
+404 without stock fallback and traversal is rejected first. Queries do not fit
+images, download, write artwork caches or change campaign facts. Canonical POST
+request recording remains controller telemetry and retains its existing behavior.
+
+Artwork validation checks the pointer, manifest, complete two-frame inventory,
+PNG bytes, dimensions, names and hashes without rendering. Identical inputs reuse
+the generation. Invalid renders, image writes, pointer failures, damaged snapshots
+and unsafe paths preserve the active generation without repair. Old files remain
+intact; retries can reuse complete unpublished outputs. Table and artwork pointers
+remain independent.
+
+Validation: **19 new BDD scenarios; 318 iOS engine/preparation checks, 27 native
+connectivity checks, 186 legacy gameplay/event checks and six decoder checks
+passed.** Coverage includes frame/tolerance behavior and native source pixels,
+locale/override precedence, both layouts, same-size changes and image arrival,
+source/render failures, locks, unsafe paths, corruption, publication failure/retry,
+private-copy/idempotent projections, native aliases and GET/HEAD, CLI JSON,
+encrypted entry, step/box refreshes, stale startup and lock release.
+
+A guarded real-data preparation produced **974 variants from 487 available
+sources**, stored as **972 unique PNGs totaling 203,750,954 bytes**. All 974 outputs
+matched the pinned renderer **byte-for-byte**. Full catalogue projection renamed
+**2,166 detail/carousel references**. **307 missing names** remain explicit gaps
+and stay unrenamed. All **1,944 image GET/HEAD checks** returned matching bytes,
+lengths and PNG type; unknown names returned 404 and traversal returned 400.
+Representative paid/base outputs passed local native-size visual review. Shared
+source/metadata hashes, gameplay RNG and campaign facts stayed unchanged. Audit
+guards rejected network use and asset/campaign writes during reads; canonical POST
+request records were allowed. Only a disposable campaign was initialized.
+
+Strict OpenSpec validation against an isolated HEAD baseline retains **417
+existing errors and three warnings**, with no new findings. Syntax and CRLF-aware
+whitespace checks passed. Updated the iOS/server contracts and ADR-0010; structural
+drift reports no spec gaps. Existing generated-spec structure issues remain
+unresolved, so repository-wide strict validation does not pass.
+
+**Next are sound/story compatibility and remaining missing artwork**, followed by
+managed-pack installation and full gameplay hosting. Physical-iPhone visual and
+gameplay acceptance remain pending. Results retain `gameplay_ready: false`; the
+live native service remains the accepted connection check. Earlier Android
+fixture/tooling limitations remain pending.

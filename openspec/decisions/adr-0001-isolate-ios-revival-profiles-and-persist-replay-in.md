@@ -29,6 +29,11 @@ and binds its snapshot only in the iOS profile. Legacy routing and canonical
 campaign saves retain their contracts. See
 [ADR-0008](adr-0008-deliver-complete-registered-native-tables.md).
 
+Reviewed for summon fitting: optional artwork is verified before state imports
+and bound only to the prepared iOS engine. Legacy wire output and campaign
+transactions remain canonical. See
+[ADR-0010](adr-0010-prepare-summon-detail-artwork.md).
+
 
 > Recorded by openlore decisions on 2026-11-09
 > Decision ID: 381df222

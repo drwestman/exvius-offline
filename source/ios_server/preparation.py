@@ -219,15 +219,16 @@ def open_prepared(config):
     return snapshot
 
 
-def _publish(config, manifest, outputs):
-    pointer = private_path(config.root, POINTER)
+def _publish(config, manifest, outputs, *, pointer_name=POINTER, entries=None):
+    """Atomically publish an immutable generation of already validated artifacts."""
+    pointer = private_path(config.root, pointer_name)
     parent = pointer.parent
     parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     identity = f"{manifest['generation']:08d}-{manifest['fingerprint']}"
-    destination = private_path(config.root, 'assets/tables/' + identity)
+    destination = private_path(config.root, parent.relative_to(config.root) / identity)
     stage = Path(tempfile.mkdtemp(prefix='.building-', dir=parent))
     temp_pointer = None
-    entries = _entries(manifest)
+    entries = _entries(manifest) if entries is None else entries
     try:
         for name, raw in outputs.items():
             path = stage / entries[name]['path']

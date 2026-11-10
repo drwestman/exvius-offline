@@ -981,6 +981,96 @@ fallback. Hello-only hosting, unrelated assets and legacy behavior SHALL remain.
 - Then it receives 404 rather than stock bytes
 - And exact GET/HEAD requests match the snapshot without filesystem or campaign writes.
 
+### Requirement: PrepareSummonDetailArtworkExplicitly
+
+The prepare-banners command SHALL use the private runtime lock and publish a
+separate immutable artwork generation without changing native table/CPK versions.
+It SHALL collect current catalogue overrides, locale variants and step extras
+without engine imports, downloads or campaign writes. Exact native URLs SHALL
+precede contained extracted/community basename sources. Missing art SHALL be
+reported and remain unrenamed; corrupt or escaping sources SHALL fail visibly.
+
+- **Implementation**: `collect::source/ios_server/banner_inputs.py`
+- **Implementation**: `prepare::source/ios_server/banner_snapshots.py`
+
+#### Scenario: Supply an unavailable banner image
+
+- Given a detail image is missing and listed in the preparation report
+- When that image arrives and prepare-banners runs
+- Then both frame variants are published and its gap clears
+- And unrelated content filenames and prior generations remain intact.
+
+### Requirement: FitSummonImagesToNativeFrames
+
+Fitting SHALL use the pinned blur2 policy, preserving native source scale on a
+centered blurred/darkened canvas. Paid/layout-1/2 frames SHALL use 640:183;
+layout-0/base frames SHALL use 640:392. Images within six percent of the target
+ratio SHALL retain their exact input bytes. Both variants SHALL be prepared for
+each available source PNG. Output names SHALL contain the complete output SHA-256;
+list artwork SHALL remain unchanged.
+
+- **Implementation**: `render::source/ios_server/banner_fit.py`
+
+#### Scenario: Keep lettering at native scale
+
+- Given a 640 by 392 detail image for a paid summon
+- When it is prepared
+- Then the image is centered without scaling in a 1371 by 392 canvas
+- And its base-frame variant retains the original bytes.
+
+### Requirement: VerifySummonSnapshotsWithoutRendering
+
+Artwork verification SHALL validate the pointer, manifest, complete variant
+inventory, output content names, PNGs, dimensions and hashes without rendering or
+writing. Source bytes, catalogue documents, pipeline and renderer version SHALL
+participate in freshness. Corrupt facts SHALL not be repaired. Failed preparation
+or pointer publication SHALL preserve the active generation and support retry.
+
+- **Implementation**: `load::source/ios_server/banner_snapshots.py`
+- **Implementation**: `verify::source/ios_server/banner_snapshots.py`
+
+#### Scenario: Detect a same-size source edit
+
+- Given a valid artwork generation
+- When a source PNG changes without changing its byte size
+- Then verification reports staleness without changing files
+- And explicit preparation publishes new content names only for changed outputs.
+
+### Requirement: DeliverPreparedSummonNamesReadOnly
+
+An opt-in prepared engine SHALL bind current artwork if present and refuse stale
+or corrupt artwork before state imports, releasing its lock on failure. Summon
+entry, step/result and box refreshes SHALL use actual wire layouts to rename only
+prepared detail/carousel references. Missing names and bare list fields SHALL
+remain unchanged. Closing SHALL clear the binding. Legacy and unprepared paths
+SHALL retain their wire and gameplay behavior.
+
+- **Implementation**: `Banners::source/ios_server/banner_snapshots.py`
+
+#### Scenario: Use the same image on different summon layouts
+
+- Given a source image is used by both a base and a paid summon
+- When their native groups are projected
+- Then each detail references the correct prepared frame variant
+- And costs, rewards, counters, layouts and list images remain unchanged.
+
+### Requirement: ServeFittedImagesWithoutPreparation
+
+Prepared artwork GET/HEAD SHALL use only the bound snapshot bytes for its
+content-addressed filenames and supported native URL prefixes. HEAD SHALL omit
+the body; unknown prepared names SHALL return 404 without stock fallback. Path
+validation SHALL run first. Reads SHALL not fit images, download, write caches or
+change campaigns. Canonical API request recording SHALL retain its existing path.
+
+- **Implementation**: `serve::source/ios_server/banner_delivery.py`
+
+#### Scenario: Request an unknown fitted image
+
+- Given a prepared engine with verified artwork
+- When a client requests an unpublished fitted filename
+- Then it receives 404 without fallback or source lookup
+- And valid GET/HEAD requests match the published bytes, length and PNG type.
+
 ### Requirement: PreparePinnedEnglishLabels
 
 Preparation SHALL apply the pinned English text rules to all 25 localized label
