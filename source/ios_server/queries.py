@@ -34,6 +34,8 @@ def _saved(config):
     from revival_loot import settings as loot_settings, fixed_receipt
     loot_settings(data)
     fixed_receipt(data)
+    from revival_marquee import settings as marquee_settings
+    marquee_settings(data)
     return data
 
 

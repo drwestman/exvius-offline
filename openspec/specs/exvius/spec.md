@@ -14,7 +14,7 @@ preparation commands through the dedicated Python runtime.
 ### Requirement: DispatchNativePreparationThroughIsolatedRuntime
 
 The native iOS launcher SHALL reuse the prepared .venv-ios interpreter for
-prepare-banners, verify-banners, prepare-sounds and verify-sounds, including when
+summon/home artwork and sound preparation or verification, including when
 invoked from a different Python installation. It SHALL forward arguments and
 delegate command handling to the iOS CLI without installing dependencies or
 initializing a campaign. CLI commands SHALL emit one JSON result document.

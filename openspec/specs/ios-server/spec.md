@@ -58,6 +58,8 @@ The first InitializeRequest, or the explicit init-campaign command, SHALL persis
 the replay anchor, immutable settings, and starting simulated friendships in one
 canonical player-save operation. Reward-mail settings SHALL be recorded in that
 candidate; mail delivery SHALL use a separate explicit synchronization command.
+Home-carousel settings SHALL be recorded or backfilled in that same transaction
+without changing an existing replay anchor.
 It SHALL publish candidate state only after a successful save. Projections SHALL
 read recorded facts without creating an anchor. Frozen or disabled persistence
 SHALL not initialize a campaign.
@@ -1205,6 +1207,79 @@ campaign facts. The live hello service and legacy behavior SHALL remain.
 - When a bound file changes or escapes its generation before GET or HEAD
 - Then delivery fails visibly with an empty 500 response
 - And no source fallback, conversion or filesystem mutation occurs.
+
+### Requirement: PrepareReplayHomeArtworkExplicitly
+
+prepare-home-banners SHALL read event-art/history mappings and available exact
+native PNGs, preserve every image byte, and publish a private immutable generation
+through assets/home-banners/current.json. It SHALL validate names, identities,
+containment and PNGs, deduplicate identical files, report missing sources, reuse
+identical inputs and preserve the active pointer on publication failure.
+
+- **Implementation**: `prepare::source/ios_server/home_banners.py`
+
+#### Scenario: Supply previously missing event art
+
+- Given a home artwork snapshot reports a missing source PNG
+- When the PNG becomes available and preparation runs again
+- Then a new immutable generation includes its original bytes and clears the gap
+- And no campaign or shared source file changes.
+
+### Requirement: SelectReplayHomeRowsFromRecordedPolicy
+
+The home carousel SHALL use recorded enabled/limit/tap policy and prepared art.
+Defaults SHALL be enabled, six images and eligible taps; limits SHALL be 1 to 52.
+Historical selection SHALL use active replay events, descending release/area,
+filename deduplication and available art. Disabled, unprepared, unanchored or
+finished replay SHALL use era fallback; an active week without art SHALL yield
+no replay rows. Queries SHALL not initialize policy or mutate campaign facts.
+
+- **Implementation**: `entries::source/server/revival_marquee.py`
+- **Implementation**: `rows::source/server/revival_marquee.py`
+
+#### Scenario: Roll the replay week forward
+
+- Given recorded policy and immutable prepared images
+- When the campaign enters another replay week
+- Then rows reflect the active event policy without a retained week-selection cache
+- And missing images and duplicate filenames consume no extra slots.
+
+### Requirement: PreserveNativeHomeCacheAndTapContracts
+
+Rows SHALL use banner ID 7000000 plus area and the snapshot generation as cache
+version, local content-addressed URLs ending in HomeBanner_<id>.png, and a rebased
+UTC display window. Eligible taps SHALL use the pinned type-6 stage-list link;
+native modes or disabled taps SHALL retain the Vortex link. Both reply carriers
+SHALL share selection and explicit MARQUEE_FLAG controls. Legacy behavior SHALL
+remain unchanged.
+
+- **Implementation**: `event_link::source/server/revival_marquee.py`
+- **Implementation**: `marquee_rows::source/server/ffbe_banner.py`
+
+#### Scenario: Return the home flag and carousel rows
+
+- Given a prepared iOS engine with active available replay art
+- When native GameSetting and home-marquee replies are projected
+- Then the enable flag and rows agree and every image URL resolves to bound bytes
+- And an explicit MARQUEE_FLAG override retains its effect.
+
+### Requirement: VerifyAndDeliverHomeArtworkWithoutPreparation
+
+verify-home-banners SHALL validate recorded PNGs, hashes, lengths, dimensions,
+paths and input freshness without writes or engine imports. The prepared engine
+SHALL bind current home and optional summon art before state imports. GET/HEAD
+SHALL deliver exact bound PNGs, omit HEAD bodies and return 404 for unknown
+prepared URLs, without downloads, resizing, input refresh or cache writes.
+
+- **Implementation**: `current::source/ios_server/home_banners.py`
+- **Implementation**: `serve::source/ios_server/banner_delivery.py`
+
+#### Scenario: Change artwork after publication
+
+- Given a valid home snapshot and changed same-size source bytes or metadata
+- When verification runs or a prepared engine starts
+- Then stale inputs fail visibly without automatic preparation or save changes
+- And an existing bound engine retains its verified image generation.
 
 ### Requirement: PreparePinnedEnglishLabels
 

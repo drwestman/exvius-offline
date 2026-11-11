@@ -494,6 +494,50 @@ The live service still hosts only the connection check. The pinned story-text CP
 rewrite remains disabled because the reference iPhone rejected its rebuilt packs;
 original scene packs remain in use. Physical-iPhone playback acceptance is pending.
 
+### Replay home banners
+
+Prepare the home carousel's original event PNGs explicitly:
+
+```sh
+python3 source/exvius/macos_ios_server.py prepare-home-banners --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-home-banners --data source/out/browser-data
+```
+
+Both commands accept the normal private `--root` and either content layout.
+Preparation reads event-art/history metadata and exact native overlay/source
+PNGs, validates their bytes and containment, and publishes an independent
+generation under `assets/home-banners/`. It preserves source pixels and deduplicates
+identical files. The current inventory has 766 area mappings, 692 available image
+names, 628 unique files and nine missing source PNGs. Missing art stays reported
+and is omitted from the replay carousel. Adding it and preparing again clears
+the gap; no download or replacement artwork is generated.
+
+An explicitly prepared engine binds current home artwork before loading state.
+The carousel then follows the campaign's active historical events, newest first,
+deduplicates filenames and shows up to six images by default. Eligible taps open
+the event stage list; native modes retain the Vortex link. Disabled, unanchored,
+unprepared or finished replay selection uses the existing era path. An active
+replay week without available art yields no replay rows.
+
+`init-campaign` or the normal first gameplay initialization records
+`EXVIUS_REPLAY_MARQUEE=1`, `EXVIUS_REPLAY_MARQUEE_MAX=6` and
+`EXVIUS_REPLAY_MARQUEE_TAP=1` once. The limit accepts 1 through 52. Later environment
+changes do not alter recorded policy. Older anchored saves backfill settings
+through that command without moving the anchor; failed saves preserve prior facts.
+Views and diagnostics never initialize or repair these settings.
+
+The iOS adapter defaults `MARQUEE_FLAG` to 1 when prepared home art is bound and
+honors an explicit override, including 0 to suppress the strip. The canonical
+legacy default remains unchanged. The native flag and carousel reply carriers
+share the selection policy.
+
+URLs retain `HomeBanner_<id>.png` under a content-addressed `ios-home-<sha>` path;
+the snapshot generation supplies the native cache version. Exact GET/HEAD returns
+the bound PNG and length, HEAD has no body, and unknown prepared paths return 404.
+Queries do not resize images, refresh inputs, download or write caches. Source or
+metadata changes require explicit preparation and a prepared-engine restart.
+Physical-iPhone carousel display and tap acceptance remain pending.
+
 ### Prepared engine consumer
 
 Development consumers can explicitly construct `Engine(config, prepared=True)` in
@@ -504,6 +548,7 @@ loading engine state. Missing, old partial, corrupt, stale or provisional snapsh
 fail without automatic preparation or campaign initialization. Default engine
 construction retains its existing behavior; `serve` remains the connection check.
 Use `prepare-banners` and `verify-banners` to include optional summon detail fitting.
+Use `prepare-home-banners` and `verify-home-banners` for optional replay home art.
 Use `prepare-sounds`, then `prepare-data --sounds`, to include coordinated sound
 delivery. Refresh the table binding after preparing changed sound inputs.
 
@@ -542,8 +587,8 @@ The canonical engine content adapter serves `/exvius/notices/<week>.html` for
 elapsed weeks, including those outside the News list. Future/disabled pages
 return 404. Pages escape text and reference local prepared artwork; missing art
 leaves readable text. No remote sprite fallback, download, or cache creation runs
-on a page read. Missing-art preparation and replay home banners remain part of
-the later asset/hosting stage. The running native service still serves only the
+on a page read. Replay home banners now have explicit preparation and verified
+delivery as described above; missing source art stays reported. The running native service still serves only the
 accepted connection check.
 
 ## Profiles and storage
@@ -620,6 +665,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_banner_fitting.py
 .venv-ios/bin/python -B source/exvius/test_ios_sounds.py
 .venv-ios/bin/python -B source/exvius/test_ios_sound_delivery.py
+.venv-ios/bin/python -B source/exvius/test_ios_home_banners.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

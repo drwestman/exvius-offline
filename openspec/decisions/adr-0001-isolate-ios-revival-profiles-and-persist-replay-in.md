@@ -34,6 +34,13 @@ and bound only to the prepared iOS engine. Legacy wire output and campaign
 transactions remain canonical. See
 [ADR-0010](adr-0010-prepare-summon-detail-artwork.md).
 
+Reviewed for replay home banners: optional home images join the verified artwork
+binding before state imports. Carousel policy is recorded or backfilled only in
+the atomic campaign initialization command, preserving an existing replay anchor
+and failed-save behavior. The prepared iOS adapter supplies its carousel flag
+default while preserving explicit overrides and legacy defaults. See
+[ADR-0013](adr-0013-prepare-replay-home-banners.md).
+
 
 > Recorded by openlore decisions on 2026-11-09
 > Decision ID: 381df222

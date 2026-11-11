@@ -43,6 +43,10 @@ class Engine:
                 self.tables = open_prepared(self.config)
                 from ios_server.banner_snapshots import current
                 self.banners = current(self.config)
+                from ios_server.home_banners import current as current_home, bind
+                self.banners = bind(self.banners, current_home(self.config))
+                if getattr(self.banners, 'home', None) is not None:
+                    os.environ.setdefault('MARQUEE_FLAG', '1')
             os.environ.update(env)
             # These catalogue defaults are already supported by the canonical engine.
             # Later ports add revival families behind the immutable iOS profile.

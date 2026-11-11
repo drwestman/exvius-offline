@@ -1123,3 +1123,80 @@ whitespace checks passed.
 by full gameplay hosting and physical-iPhone acceptance. The pinned story-text
 rewrite remains disabled; any future repair needs a validated native scene-pack
 builder. Actual iPhone audio playback is still unverified.
+
+## Replay home-banner checkpoint — November 10, 2026
+
+Implemented the remaining replay home-carousel port before managed-pack
+installation. The pinned fork selects current historical event art and eligible
+stage-list tap links; the destination had still used legacy era selection.
+
+Added explicit `prepare-home-banners` and read-only `verify-home-banners` for both
+content layouts. Preparation reads event-art/history mappings, prefers exact
+native overlay PNGs, validates containment and image content, and preserves every
+source byte. An independent atomic pointer under private `assets/home-banners/`
+selects a content-addressed generation. Identical inputs reuse it; source/metadata
+changes advance its identity; failed publication preserves the active snapshot.
+Missing images remain reported gaps, and no replacement art or downloads occur.
+
+Campaign initialization now records `ios_marquee` settings: enabled, six images,
+and eligible taps by default. Environment defaults are read once; limits accept
+1 through 52. Older anchored campaigns backfill the settings through the same
+atomic candidate-save command without moving their anchor. Failed saves preserve
+the previous player and file. Diagnostics and views validate without backfilling.
+
+The prepared engine binds current home and optional summon artwork before state
+imports. The narrow image binding preserves the existing summon projection and
+uses the existing PNG GET/HEAD adapter. The iOS adapter enables MARQUEE_FLAG by
+default when home art is bound, while retaining explicit overrides and the legacy
+profile's existing default. The native flag and carousel reply carriers share
+the same selection logic.
+
+Home rows use the active iOS replay event policy, descending release/area order,
+filename deduplication and the saved limit. Missing art is omitted. Eligible taps
+use the pinned type-6 area/dungeon/mission link; native modes keep the normal
+Vortex link. Disabled, unanchored, unprepared or finished replay uses era fallback.
+An active historical week without usable art returns no replay rows.
+
+Native IDs remain 7000000 plus area. The generation is the cache version, and
+local content-addressed URLs retain `HomeBanner_<id>.png` as their basename.
+Exact GET/HEAD returns bound PNG bytes and length; HEAD omits its body and unknown
+prepared paths return 404. Reads do not fit images, refresh inputs, download,
+write indexes/caches, initialize settings or change campaign facts. No native
+table/pack version changes are needed for home-art preparation.
+
+The real inventory maps **766 areas** to **701 source names**. **692 PNG names**
+are available and publish as **628 unique files**; **nine sources** remain missing:
+event_703, event_711, event_712, event_746, event_747, event_749, event_797,
+event_919 and event_921, all with .png suffixes.
+
+Validation: **425 iOS checks passed**, including **26 new home-banner checks**
+and the 27 connectivity checks. **203 legacy/decoder checks passed**, and the
+canonical marquee self-check passed **32 cases with MARQUEE_FLAG=1**. Its default-off
+invocation retains the same four feature-enabled assertion failures at HEAD and
+current; legacy defaults were preserved. New BDD covers saved-policy defaults,
+backfill/failure atomicity, replay rollover, sort/deduplication/limits, fallback,
+native cache/tap fields, missing and invalid art, both layouts, overlay precedence,
+publication retry, source freshness, PNG GET/HEAD, explicit flags, CLI dispatch
+and query write/import guards.
+
+A guarded disposable real-data run kept all **692 available images byte-identical**
+and compared selection with the pinned algorithm across **201 replay weeks**:
+**846 selected rows** and **32 era-fallback weeks** matched. Native GameSetting and
+home-marquee encrypted replies agreed on the feature flag; the first replay week
+served one home row. All **1,514 GET/HEAD checks** for available area mappings
+matched their bound PNGs and lengths. Unknown/traversal paths were refused.
+Shared sources and campaign bytes stayed unchanged during audited reads; guards
+rejected network and asset/campaign writes while allowing canonical POST request
+records. The disposable runtime was removed after validation.
+
+Strict OpenSpec validation adds no findings to the existing **417 errors and
+three warnings**. Updated the iOS/server/launcher contracts, command documentation,
+ADR-0013 and the ADR-0001 boundary review. Static drift and CRLF-aware whitespace
+checks complete this checkpoint; new untracked modules have explicit anchors and
+BDD coverage, while Git-based drift will include them after check-in.
+
+**Next is explicit managed-pack installation**, with resumable downloads,
+checksums, ordered extraction and atomic installation records. Remaining source
+art gaps, story repair if needed, full gameplay hosting and physical-iPhone
+visual/tap/audio acceptance remain pending. The live service remains the accepted
+connection check.

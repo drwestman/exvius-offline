@@ -3,7 +3,10 @@ from ios_server.banner_snapshots import owned_name
 
 
 def serve(handler, snapshot, relative):
-    if snapshot is None or handler.command not in ('GET', 'HEAD') or owned_name(relative) is None:
+    if snapshot is None or handler.command not in ('GET', 'HEAD'):
+        return False
+    from ios_server.home_banners import owns
+    if owned_name(relative) is None and not (getattr(snapshot, 'home', None) is not None and owns(relative)):
         return False
     raw = snapshot.lookup(relative)
     handler.send_response(200 if raw is not None else 404)

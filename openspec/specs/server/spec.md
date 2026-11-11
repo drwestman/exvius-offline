@@ -11125,6 +11125,10 @@ The system SHALL the service shall select the active banner campaign and return 
 ### Requirement: GetMarqueeRows
 
 The system SHALL the service shall return wire-format marquee rows for the active selection and return an empty list when the feature is off.
+Prepared iOS consumers SHALL select historical replay home art from recorded
+policy and immutable images, with era fallback when replay selection is inactive.
+
+- **Implementation**: `marquee_rows::source/server/ffbe_banner.py`
 
 #### Scenario: FeatureEnabled
 - **GIVEN** The home marquee feature is enabled and an active selection exists
