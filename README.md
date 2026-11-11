@@ -115,6 +115,17 @@ existing AVD is left untouched. The launcher waits up to five minutes for Androi
 and uses cold boots with persistent userdata, avoiding large Quick Boot snapshots.
 Intel Macs and importing existing phone saves are outside this helper's scope.
 
+## Play the stock iPhone client from this Mac
+
+The native iOS server supports the installed Global FFBE client over home Wi-Fi,
+with a separate fresh iOS campaign. It runs directly on the Mac and uses manual
+iPhone Wi-Fi DNS plus a dedicated certificate profile. Explicit commands install
+and prepare assets; `serve` checks connectivity and `start` hosts prepared gameplay.
+
+Follow [native iOS setup and gameplay instructions](source/ios_server/README.md).
+Physical-iPhone gameplay acceptance remains pending; the existing Android and
+browser saves stay separate.
+
 ## Play through a browser on your home network
 
 The Mac can stream its existing Android game to Chrome/Edge or Safari, including

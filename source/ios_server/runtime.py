@@ -89,7 +89,7 @@ def read_service(root, *, stop=False):
         if response.status != 200:
             raise ValueError('Unexpected response from the private iOS control socket.')
         return json.loads(response.read(65536))
-    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError,
+    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError, TimeoutError,
             BrokenPipeError, http.client.RemoteDisconnected):
         return None
     finally:

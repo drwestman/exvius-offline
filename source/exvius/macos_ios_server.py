@@ -16,7 +16,7 @@ if __name__ == '__main__':
             runtime = environment(source.parent)
             env = dict(os.environ, EXVIUS_IOS_BOOTSTRAPPED='1')
             os.execve(str(runtime), [str(runtime), '-B', str(Path(__file__).resolve()), *sys.argv[1:]], env)
-        elif command in ('serve', 'init-campaign', 'doctor', 'status', 'rotation', 'stop', 'prepare-data', 'verify-data',
+        elif command in ('serve', 'start', 'init-campaign', 'doctor', 'status', 'rotation', 'stop', 'prepare-data', 'verify-data',
                          'prepare-banners', 'verify-banners', 'prepare-sounds', 'verify-sounds',
                          'prepare-home-banners', 'verify-home-banners', 'plan-data', 'fetch-data', 'verify-packs') and runtime.is_file() and Path(sys.executable) != runtime:
             os.execv(str(runtime), [str(runtime), '-B', str(Path(__file__).resolve()), *sys.argv[1:]])

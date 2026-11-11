@@ -11,6 +11,9 @@ def pages(snapshot, secure):
     https = snapshot['hello_url']
     if secure:
         title = 'Secure connection successful'
+        gameplay = snapshot.get('mode') == 'gameplay'
+        readiness = ('Gameplay hosting is ready. You can open the game.' if gameplay else
+                     'Your iPhone-to-Mac connection is ready. Gameplay is still being integrated.')
         content = f'''<span class="badge success">HTTPS · Connected</span>
 <h1>{title}</h1>
 <p>HTTPS reached your Mac.</p>
@@ -18,7 +21,7 @@ def pages(snapshot, secure):
 trust check is complete.</p>
 <dl><dt>Connection</dt><dd>Encrypted HTTPS</dd>
 <dt>Mac address</dt><dd>{snapshot['lan_address']}</dd></dl>
-<p>Your iPhone-to-Mac connection is ready. Gameplay is still being integrated.</p>
+<p>{readiness}</p>
 <p><a href="{http}">Review the setup instructions</a></p>'''
     else:
         title = 'Set up your iPhone connection'
@@ -53,7 +56,7 @@ class Server(ThreadingHTTPServer):
 
     def get_request(self):
         peer, address = super().get_request()
-        peer.settimeout(3)
+        peer.settimeout(getattr(self, 'request_timeout', 3))
         try:
             # Defer the handshake to the request thread so a slow client cannot block accepts.
             if self.tls_context is not None:
@@ -127,7 +130,7 @@ class ControlHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == '/stop':
-            self.respond({'stopping': True})
             self.server.stop_event.set()
+            self.respond({'stopping': True})
         else:
             self.send_error(404)

@@ -1271,3 +1271,87 @@ with the accepted home-network listeners. Physical-iPhone gameplay, visual/tap/a
 acceptance and full bulk-install verification remain pending. Nine home/Vortex
 source-art gaps and 307 summon-detail gaps remain reported; the unvalidated pinned
 story rewrite stays disabled. The live service remains the connection check.
+
+
+## Prepared native gameplay hosting checkpoint — November 11, 2026
+
+Implemented foreground `start` and `Play Exvius on iPhone.command` for the stock
+native client. `serve` and the accepted connection-check launcher retain their
+independent hello-only behavior. The new entrypoint reuses .venv-ios and keeps
+readiness as one JSON document; engine and request diagnostics go to stderr.
+
+Before integration, extracted cohesive lifecycle/preparation command groups and
+certificate/log/resolver startup preparation. CLI risk fell from 99 to 49 and
+startup risk from 76 to 60; all three extractions passed their 82-test gates.
+The hosting integration keeps the canonical handler, state lock, wire fields,
+transactions, replay policies and private-save contract.
+
+Gameplay requires explicit campaign initialization, current complete schema-5
+native tables with coordinated Vortex and sound artifacts, and current prepared
+summon/home snapshots. Missing source artwork remains reported. Startup performs
+no downloads, conversion, preparation or campaign initialization/backfill.
+Prepared host and managed static/native layouts work; installed content retains
+its pinned physical generation and logical containment boundary.
+
+Transport binds DNS TCP/UDP, HTTP, HTTPS and private control before loading the
+prepared application. It supplies the one held runtime lease to Engine instead
+of reacquiring it. Only successful activation starts listener threads and reports
+readiness. Missing prerequisites, engine failure or listener conflicts close
+acquired resources and preserve isolation. Repeated starts reuse only matching
+mode, logical/physical data, slot, address and port configuration.
+
+The narrow HTTP wrapper preserves public setup/profile/hello GET/HEAD while
+routing canonical encrypted gameplay, contained assets and WebViews. It excludes
+engine debug/new-game routes. Prepared tables, Vortex, sound and images retain
+exact version/hash/length behavior; HEAD has no body, unpublished versions return
+404, and damaged bound sound returns an empty 500. POST framing requires one
+nonnegative Content-Length up to 4 MiB and excludes transfer encoding, including
+Expect handling. Existing loopback/home-subnet restrictions remain in force.
+
+Shutdown stops accepts and drains non-daemon gameplay requests before unbinding
+assets, closing the engine and releasing its lease. Game I/O uses a 30-second
+timeout and stop waits up to 40 seconds for lock/socket release. Explicit startup
+and maintenance prune recognized request records older than three days and then
+oldest-first above 300 MiB under the state lock, excluding other files and links.
+
+The real-data run exposed a timing gap: the control socket can be bound while
+large input validation is still pending. Probes now report no ready service on
+timeout while the lease remains held; a queued stop records intent even when its
+client has disconnected. BDD reproduces slow activation and both probe paths.
+macOS also rejected the first validation runtime's 110-byte Unix-socket path;
+validation moved to a shorter /private/tmp root. Default user runtime paths fit.
+
+Validation: **473 iOS checks passed**, including **17 new hosting checks** and the
+27 connection checks. **203 legacy/decoder checks and 12 Mac emulator checks
+passed**. New BDD covers real HTTP/TLS encrypted initialization, all 364 advertised
+tables, coordinated packs/sound/images, both data layouts, damaged audio, public
+routes, request limits, delayed activation, startup failures, configuration reuse,
+exclusive lease, request drainage, retention, system-Python dispatch, CLI argument
+isolation, one-document readiness and campaign replay persistence across restarts.
+
+A guarded disposable run against the actual prepared host corpus initialized a
+fresh campaign and explicitly prepared **735 sound banks (2,202,569,152 bytes)**,
+**974 fitted images (972 unique files)**, **692 home-image sources (628 unique
+files)**, the Vortex pack and all **364 native tables**. The actual native listeners
+accepted encrypted HTTPS initialization and passed **736 GET/HEAD checks** across
+every table, Vortex, sampled sound and artwork, including HTTPS sound and hello.
+Campaign bytes remained unchanged during asset reads; source writes were blocked.
+The private runtime and its temporary CA/assets were removed after clean shutdown.
+This proves loopback native hosting, not physical-iPhone gameplay acceptance or a
+complete 18-pack bulk installation.
+
+Updated runtime/launcher documentation, iOS/exvius contracts, ADR-0015 and the
+ADR-0001 boundary review. Strict OpenSpec retains the existing **417 errors and
+three warnings**, with no added findings against HEAD. Refreshed mapping has no
+stale anchors; static drift has no tracked code/spec gaps or uncovered files.
+Four informational decision-freshness notices remain. Git-based drift excludes
+new untracked files until check-in; new modules have explicit implementation
+anchors and BDD coverage. Python syntax, launcher syntax/help dispatch and
+CRLF-aware whitespace checks add no findings, including untracked files.
+
+**Next is physical-iPhone gameplay acceptance**: record installed build, prepare
+the selected persistent private runtime, verify the actual Wi-Fi game connection,
+initial downloads and documented first-login relaunch, tutorial battle, audio,
+summons, shops, friends, Arena and restart persistence. Full bulk-install validation,
+nine home/Vortex source-art gaps and 307 summon-detail gaps remain open. The
+unvalidated pinned story rewrite remains disabled; original scene packs stay in use.

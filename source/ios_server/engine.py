@@ -23,7 +23,7 @@ class Engine:
         self.tables = None
         self.banners = None
 
-    def initialize(self):
+    def initialize(self, *, lease=None):
         if self.server is not None:
             return self.server
         if sys.version_info[:2] != (3, 12):
@@ -35,8 +35,12 @@ class Engine:
             raise RuntimeError('The engine paths are already bound; initialize iOS in a fresh process.')
         select_profile('ios-revival')
         env = self.config.engine_environment()
-        self._lock = InstanceLock(self.config.root)
-        self._lock.__enter__()
+        if lease is None:
+            self._lock = InstanceLock(self.config.root)
+            self._lock.__enter__()
+        elif (not isinstance(lease, InstanceLock) or lease.root != self.config.root
+              or lease.stream is None or lease.stream.closed):
+            raise ValueError('The hosting runtime lease must be held for this iOS root.')
         try:
             if self.prepared:
                 from ios_server.preparation import open_prepared

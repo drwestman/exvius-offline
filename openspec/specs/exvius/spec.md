@@ -15,7 +15,8 @@ preparation commands through the dedicated Python runtime.
 
 The native iOS launcher SHALL reuse the prepared .venv-ios interpreter for
 summon/home artwork and sound preparation or verification, and plan-data,
-fetch-data and verify-packs, including from a different Python installation. It SHALL forward arguments and
+fetch-data, verify-packs and foreground gameplay start, including from a different
+Python installation. It SHALL forward arguments and
 delegate command handling to the iOS CLI without installing dependencies or
 initializing a campaign. CLI commands SHALL emit one JSON result document.
 
@@ -34,6 +35,13 @@ initializing a campaign. CLI commands SHALL emit one JSON result document.
 - When the base interpreter invokes plan-data, fetch-data or verify-packs
 - Then the dedicated runtime handles the command and emits one JSON result
 - And supplied manifest, archive, data and private runtime paths are preserved.
+
+#### Scenario: Start gameplay from system Python
+
+- Given the dedicated iOS environment and a different system Python
+- When the native entrypoint receives start with invalid listener ports
+- Then the dedicated runtime emits the CLI port-validation error as one JSON document
+- And it neither initializes a campaign nor starts listeners.
 
 > `source/exvius/android_build.py`
 

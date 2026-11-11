@@ -1,11 +1,10 @@
-# Native iOS connection check
+# Native iOS revival server
 
-The iPhone-to-Mac connection checkpoint of
-[the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md) is available. It serves a
-setup page, a certificate profile, and an HTTPS hello page over the home network.
-It does not load the game engine or a campaign. Explicit native table, artwork
-and sound preparation, plus explicit managed-pack installation, are also available.
-The running listener remains the connection check; gameplay hosting is pending.
+Native iPhone gameplay hosting from [the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md)
+is available through `start`, using an initialized private campaign and explicitly
+prepared assets. `serve` retains the accepted connection check: setup, certificate
+profile and HTTPS hello pages without loading the engine. Physical-iPhone gameplay
+acceptance and full bulk-pack installation validation remain pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
@@ -61,8 +60,9 @@ python3 source/exvius/macos_ios_server.py stop
 
 Doctor, status, and rotation print JSON without initializing the engine, creating
 a save, downloading data, writing caches, or starting services. Status reads the
-private control socket when a service is running. It reports `mode: connectivity-check`,
-`hosting: running` and `ready: true`, or `hosting: stopped`. Doctor reports whether
+private control socket when a service is running. It reports `mode: connectivity-check`
+or `mode: gameplay`, with `hosting: running` and `ready: true`, or `hosting: stopped`.
+Doctor reports whether
 Python, dependencies and certificates are prepared. `missing_data`/`game_data_ok`
 are informational for the later gameplay milestone and do not prevent hello hosting.
 
@@ -88,7 +88,9 @@ are informational for the later gameplay milestone and do not prevent hello host
 The service answers `gumi.sg`, `exvius.com`, and their subdomains locally and
 forwards ordinary queries to the Mac’s upstream resolver. Game-domain AAAA
 queries return no IPv6 answer. Upstream failures return SERVFAIL and are logged.
-Only the public CA/profile and hello pages are served; game POSTs return 503.
+In `serve` mode only public CA/profile and hello pages are served; game POSTs return
+503. In `start` mode the same listeners also serve the prepared canonical game API,
+assets and local WebViews. The secure hello page then says you can open the game.
 
 When finished, stop the server and restore Configure DNS to **Automatic** on
 the iPhone. Manual DNS applies to this Wi-Fi network, not cellular service.
@@ -162,8 +164,8 @@ metadata are now included for iOS, with 118 original missions. They retain the
 same historical and holiday entry guards. No art is downloaded by previews or
 gameplay projections; new images use the shipped native fallback until prepared.
 
-This is engine integration; the running native service still serves the connection
-check. Full iPhone gameplay hosting and the remaining revival ports are pending.
+These engine integrations are available through prepared gameplay hosting below.
+Physical-iPhone gameplay acceptance remains pending.
 
 The iOS economy now records its settings with the campaign. Earned Lapis defaults
 to **5×**; purchases, refunds, and direct balance edits retain their original
@@ -251,8 +253,8 @@ without repair. Legacy loot and field behavior are unchanged.
 Native preparation now covers all 364 registered tables in the supported client
 corpus, including the pinned English labels and converted challenge/Arena displays.
 An opt-in engine consumer delivers their exact versions and an explicitly prepared
-Vortex banner pack. Remaining art/audio/story compatibility, full gameplay hosting
-and physical-device acceptance remain pending.
+Vortex banner pack. Prepared hosting is available below; remaining source-art gaps,
+story compatibility if needed and physical-device acceptance remain pending.
 
 An explicit development command can initialize a campaign using already prepared
 data. Setup prepares its Python 3.12 dependencies. Stop the connection service
@@ -267,6 +269,72 @@ Use `--root /path/to/private-ios-runtime` to select an alternate private root an
 the existing canonical engine without listeners, and persists the calendar once.
 Engine diagnostics go to stderr; stdout remains one JSON document. A failed
 initialization releases the lock. Use a fresh process to reconfigure engine paths.
+
+## Prepared gameplay hosting
+
+Stop the connection service before preparing or starting its private runtime.
+After `setup`, initialize and prepare the same data/root/slot explicitly. This
+example reuses the existing host corpus read-only:
+
+```sh
+python3 source/exvius/macos_ios_server.py stop
+python3 source/exvius/macos_ios_server.py init-campaign --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py prepare-sounds --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py prepare-banners --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py prepare-home-banners --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py prepare-data --vortex-art --sounds --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-data --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py start --data source/out/browser-data
+```
+
+For installed packs, substitute the same managed `--data` directory on every
+command. Supply the same `--root` and `--slot` consistently when using alternatives.
+Use a short private root path: macOS Unix control sockets reject paths over 103 bytes.
+`start` runs in the foreground; leave its terminal open and keep the Mac awake.
+Use the already accepted iPhone Wi-Fi DNS and certificate trust configuration.
+The printed secure hello URL confirms that gameplay hosting is running. Open the
+stock Global build-1167 client; initial download, first-login relaunch, tutorial,
+audio, gameplay and restart persistence still require physical-device acceptance.
+
+`start` requires current complete schema-5 tables with coordinated Vortex and
+sound artifacts, plus prepared summon and home-banner snapshots. Missing artwork
+remains a reported gap; preparation does not invent replacements. Startup does
+not initialize/backfill a campaign, download packs or prepare assets. Missing,
+stale, provisional or corrupt prerequisites fail visibly. After a content or
+policy change, stop, run the corresponding explicit preparation, and start again.
+
+The gameplay host binds DNS, HTTP, HTTPS and private control before initializing
+the prepared engine, then starts listeners and reports readiness. Engine failure
+closes every acquired listener and releases the runtime lock. It uses one private
+runtime lease throughout. Identical starts report the current service; changing
+mode, data generation, slot, network or ports requires stopping it first. `serve`
+and `start` cannot share a runtime concurrently.
+
+The canonical encrypted handler retains its state lock, transactions and wire
+fields. Exact prepared tables, Vortex packs, sound and artwork use the existing
+contained GET/HEAD paths. HEAD omits bodies. Unpublished versions return 404 and
+damaged bound sound returns an empty 500. Public setup/profile/hello routes stay
+available. Engine debug/new-game routes are not exposed by the native host.
+POSTs require a single nonnegative Content-Length, a body of at most 4 MiB, and no
+transfer encoding. Each connection closes after its response. Only loopback and
+the selected home subnet can connect, as with the connection check.
+
+Ctrl+C, SIGTERM and `stop` stop accepts and drain active gameplay requests before
+unbinding assets or releasing the runtime lock. Game sockets have a 30-second
+I/O timeout; `stop` waits up to 40 seconds for shutdown and reports a busy runtime
+if it has not completed. Never start another engine against a held runtime.
+Readiness is one JSON document on stdout; engine/request diagnostics use stderr.
+
+Explicit startup and periodic maintenance prune owned canonical request records
+older than three days and then oldest-first above 300 MiB. Other files and
+symlinks are excluded. Maintenance runs under the engine state lock. Existing
+bounded transport logs and stable certificate renewal remain in effect.
+
+[Play Exvius on iPhone.command](../../Play%20Exvius%20on%20iPhone.command) starts
+foreground gameplay using the checkout's managed `data/` directory by default.
+For another prepared path, run `./"Play Exvius on iPhone.command" --data /path/to/data`
+or set `FFBE_IOS_DATA` in its environment. The existing connection-check launcher
+continues to run `serve` independently of game data.
 
 ## Managed-pack installation
 
@@ -393,10 +461,10 @@ Malformed sources or corrupt published snapshots fail visibly without repair.
 `verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
 
 New results explicitly report `scope: native-tables` and `gameplay_ready: false`.
-The current hello service does not serve these files. Managed-pack installation
-is available through the explicit commands above. Remaining source-art gaps,
-story compatibility if needed, full gameplay hosting and physical iPhone
-acceptance remain pending.
+The hello-only `serve` service does not serve these files; `start` binds them for
+gameplay. Managed-pack installation is available through the explicit commands
+above. Remaining source-art gaps, story compatibility if needed and physical
+iPhone acceptance remain pending.
 
 ### Native Vortex artwork
 
@@ -551,7 +619,7 @@ stock fallback. Damaged or missing bound files return an empty 500 response.
 Requests do not convert, refresh inputs, download, repair or write caches.
 Sound preparation alone does not activate delivery.
 
-The live service still hosts only the connection check. The pinned story-text CPK
+Gameplay hosting uses these prepared sound bindings. The pinned story-text CPK
 rewrite remains disabled because the reference iPhone rejected its rebuilt packs;
 original scene packs remain in use. Physical-iPhone playback acceptance is pending.
 
@@ -621,7 +689,8 @@ exact-version rule to the prepared Vortex pack. Path validation runs before look
 Schema-5 sound bindings apply it to the iOS sound namespace using file-backed
 artifacts, with integrity checked before each response.
 Reads do not write caches, refresh inputs, download or change the campaign. Closing
-the engine unbinds its snapshot. This adapter is ready for the later gameplay host.
+the engine unbinds its snapshot. The `start` command composes this adapter with
+the native listeners and waits for active requests before unbinding it.
 
 ## Replay notices
 
@@ -649,8 +718,8 @@ elapsed weeks, including those outside the News list. Future/disabled pages
 return 404. Pages escape text and reference local prepared artwork; missing art
 leaves readable text. No remote sprite fallback, download, or cache creation runs
 on a page read. Replay home banners now have explicit preparation and verified
-delivery as described above; missing source art stays reported. The running native service still serves only the
-accepted connection check.
+delivery as described above; missing source art stays reported. Use `start` for
+prepared gameplay and `serve` for the independent connection check.
 
 ## Profiles and storage
 
@@ -731,6 +800,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_sound_delivery.py
 .venv-ios/bin/python -B source/exvius/test_ios_home_banners.py
 .venv-ios/bin/python -B source/exvius/test_ios_pack_install.py
+.venv-ios/bin/python -B source/exvius/test_ios_hosting.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

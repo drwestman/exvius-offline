@@ -76,7 +76,7 @@ def doctor(config) -> dict:
         result['certificates'] = {'ok': False, 'action': 'Run macos_ios_server.py setup.'}
     result['ok'] = (result['python_supported'] and not result['missing_dependencies']
                     and result['certificates']['ok'] and 'error' not in result)
-    result['scope'] = 'native-connectivity-check; gameplay hosting and iPhone acceptance pending'
+    result['scope'] = 'native-ios; doctor checks connectivity prerequisites; use start for prepared gameplay; iPhone acceptance pending'
     return result
 
 

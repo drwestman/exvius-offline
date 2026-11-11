@@ -12,8 +12,8 @@ from ios_server.queries import doctor, rotation, status
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description='Exvius iPhone connection check and offline table preparation. Gameplay hosting is pending.')
-    parser.add_argument('command', choices=('setup', 'serve', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
+    parser = argparse.ArgumentParser(description='Exvius iPhone connection check, prepared gameplay hosting, and offline content commands.')
+    parser.add_argument('command', choices=('setup', 'serve', 'start', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
                                            'prepare-data', 'verify-data', 'prepare-banners', 'verify-banners',
                                            'prepare-sounds', 'verify-sounds', 'prepare-home-banners', 'verify-home-banners',
                                            'plan-data', 'fetch-data', 'verify-packs'))
@@ -46,43 +46,14 @@ def main(argv=None) -> int:
             manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
             result = (pack_install.fetch(config, manifest, archive_dir=args.archive_dir) if args.command == 'fetch-data' else
                       pack_install.verify(config, manifest) if args.command == 'verify-packs' else pack_install.plan(config, manifest))
-        elif args.command == 'setup':
-            from ios_server.certificates import CertificateStore
-            from ios_server.runtime import InstanceLock
-            with InstanceLock(config.root):
-                result = {'root': str(config.root), 'mode': 'connectivity-check',
-                          'certificates': CertificateStore(config.root).prepare(), 'next_command': 'serve'}
-        elif args.command == 'serve':
+        elif args.command in ('setup', 'stop', 'init-campaign'):
+            from ios_server.commands import lifecycle
+            result = lifecycle(config, args)
+        elif args.command in ('serve', 'start'):
             return serve(config, args)
-        elif args.command == 'stop':
-            from ios_server.runtime import instance_busy, read_service
-            result = read_service(config.root, stop=True) or {'stopping': False, 'hosting': 'stopped'}
-            deadline = time.monotonic() + 5
-            while read_service(config.root) is not None or instance_busy(config.root):
-                if time.monotonic() >= deadline:
-                    raise RuntimeError('The iOS runtime is still busy. Check its foreground terminal before restarting.')
-                time.sleep(.05)
-        elif args.command == 'init-campaign':
-            from ios_server.engine import Engine
-            engine = Engine(config)
-            try:
-                with redirect_stdout(sys.stderr):
-                    initialized = engine.initialize_campaign()
-                result = {**status(config), 'initialized_now': initialized}
-            finally:
-                engine.close()
-        elif args.command in ('prepare-data', 'verify-data'):
-            from ios_server.preparation import prepare_data, verify_data
-            result = prepare_data(config, vortex_art=args.vortex_art, sounds=args.sounds) if args.command == 'prepare-data' else verify_data(config)
-        elif args.command in ('prepare-banners', 'verify-banners'):
-            from ios_server.banner_snapshots import prepare, verify
-            result = prepare(config) if args.command == 'prepare-banners' else verify(config)
-        elif args.command in ('prepare-sounds', 'verify-sounds'):
-            from ios_server.sound_snapshots import prepare, verify
-            result = prepare(config) if args.command == 'prepare-sounds' else verify(config)
-        elif args.command in ('prepare-home-banners', 'verify-home-banners'):
-            from ios_server.home_banners import prepare, verify
-            result = prepare(config) if args.command == 'prepare-home-banners' else verify(config)
+        elif args.command.startswith(('prepare-', 'verify-')):
+            from ios_server.commands import prepare
+            result = prepare(config, args)
         elif args.command == 'rotation':
             result = rotation(config, weeks=args.weeks)
         else:
@@ -105,28 +76,34 @@ def serve(config, args):
             raise ValueError('Choose listener ports between 1 and 65535.')
     network = discover(address=args.lan_address, upstream=args.upstream_dns,
                        dns_port=args.dns_port, http_port=args.http_port, https_port=args.https_port)
+    application = None
+    if args.command == 'start':
+        from ios_server.hosting import Gameplay
+        application = Gameplay(config)
+    service = Service(config.root, network, application=application)
     current = read_service(config.root)
     if current:
-        if json.dumps(current['configuration'], sort_keys=True) != json.dumps(network.configuration(), sort_keys=True):
-            raise RuntimeError('Another iOS configuration is already running. Stop it before changing addresses or ports.')
+        if json.dumps(current['configuration'], sort_keys=True) != json.dumps(service.configuration(), sort_keys=True):
+            raise RuntimeError('Another iOS configuration is already running. Stop it before changing mode, data, slot, addresses or ports.')
         print(json.dumps(current, indent=2), flush=True)
         return 0
-    service = Service(config.root, network)
-    previous = {}
-    try:
-        for name in (signal.SIGINT, signal.SIGTERM):
-            previous[name] = signal.signal(name, lambda *_: service.stop_event.set())
-        print(json.dumps(service.start(), indent=2), flush=True)
-        check_at = time.monotonic() + 60
-        while not service.stop_event.wait(.25):
-            if not service.snapshot()['ready']:
-                raise RuntimeError('A required connectivity listener stopped unexpectedly.')
-            if time.monotonic() >= check_at:
-                discover(address=network.address, upstream=network.upstream)
-                service.maintain()
-                check_at = time.monotonic() + 60
-        return 0
-    finally:
-        service.close()
-        for name, handler in previous.items():
-            signal.signal(name, handler)
+    previous, output = {}, sys.stdout
+    # Canonical request diagnostics also go to stderr, including in worker threads.
+    with redirect_stdout(sys.stderr):
+        try:
+            for name in (signal.SIGINT, signal.SIGTERM):
+                previous[name] = signal.signal(name, lambda *_: service.stop_event.set())
+            print(json.dumps(service.start(), indent=2), file=output, flush=True)
+            check_at = time.monotonic() + 60
+            while not service.stop_event.wait(.25):
+                if not service.snapshot()['ready']:
+                    raise RuntimeError('A required iOS listener stopped unexpectedly.')
+                if time.monotonic() >= check_at:
+                    discover(address=network.address, upstream=network.upstream)
+                    service.maintain()
+                    check_at = time.monotonic() + 60
+            return 0
+        finally:
+            service.close()
+            for name, previous_handler in previous.items():
+                signal.signal(name, previous_handler)

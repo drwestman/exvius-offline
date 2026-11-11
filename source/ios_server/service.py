@@ -24,9 +24,13 @@ class Listener:
                                        kwargs={'poll_interval': .05}, name='ios-' + self.name, daemon=True)
         self.thread.start()
 
-    def close(self):
+    def stop(self):
         if self.thread is not None and self.thread.is_alive():
             self.server.shutdown()
+            self.thread.join(timeout=2)
+
+    def close(self):
+        self.stop()
         self.server.server_close()
         if self.thread is not None:
             self.thread.join(timeout=2)
@@ -45,8 +49,11 @@ class ControlServer(socketserver.ThreadingUnixStreamServer):
 
 
 class Service:
-    def __init__(self, root, network, *, forward=None):
+    def __init__(self, root, network, *, forward=None, application=None):
         self.root, self.network = Path(root).resolve(), network
+        if application is not None and application.config.root != self.root:
+            raise ValueError('Gameplay and transport must share the same private runtime.')
+        self.application = application
         self.store = CertificateStore(self.root)
         self.stop_event = threading.Event()
         self.listeners = []
@@ -90,6 +97,9 @@ class Service:
                 server.profile = self.profile
                 server.ca_der = self.ca_der
                 server.log = self.log
+                if self.application is not None:
+                    server.daemon_threads = False  # server_close drains game requests before the lease is released
+                    server.request_timeout = 30
                 self.ports[name.lower()] = server.server_address[1]
             else:
                 path = private_path(self.root, 'control.sock')
@@ -108,26 +118,29 @@ class Service:
                 server.server_close()
             raise
 
+    def _prepare(self):
+        certificates = self.store.inspect()
+        if not certificates['ok']:
+            raise ValueError('iOS certificates are missing or invalid. Run macos_ios_server.py setup first.')
+        self.context = self._context()
+        self.profile = self.store.profile.read_bytes()
+        self.ca_der = self.store.path('ca.crt').read_bytes()
+        folder = private_path(self.root, 'logs')
+        folder.mkdir(exist_ok=True, mode=0o700)
+        log_file = private_path(self.root, 'logs/connectivity.log')
+        self.logger = logging.Logger('exvius-ios-connectivity')
+        self.log_handler = RotatingFileHandler(log_file, maxBytes=1024 * 1024, backupCount=2)
+        self.log_handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+        self.logger.addHandler(self.log_handler)
+        self.resolver = Resolver(self.network, forward=self.forward, log=self.log)
+
     def start(self):
         if self.ready:
             return self.snapshot()
         self.lock = InstanceLock(self.root)
         self.lock.__enter__()
         try:
-            certificates = self.store.inspect()
-            if not certificates['ok']:
-                raise ValueError('iOS certificates are missing or invalid. Run macos_ios_server.py setup first.')
-            self.context = self._context()
-            self.profile = self.store.profile.read_bytes()
-            self.ca_der = self.store.path('ca.crt').read_bytes()
-            folder = private_path(self.root, 'logs')
-            folder.mkdir(exist_ok=True, mode=0o700)
-            log_file = private_path(self.root, 'logs/connectivity.log')
-            self.logger = logging.Logger('exvius-ios-connectivity')
-            self.log_handler = RotatingFileHandler(log_file, maxBytes=1024 * 1024, backupCount=2)
-            self.log_handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
-            self.logger.addHandler(self.log_handler)
-            self.resolver = Resolver(self.network, forward=self.forward, log=self.log)
+            self._prepare()
             # Constructors bind synchronously. No readiness announcement until all succeed.
             for name in ('DNS TCP', 'DNS UDP', 'HTTP', 'HTTPS', 'control'):
                 try:
@@ -135,6 +148,11 @@ class Service:
                 except OSError as exc:
                     raise OSError(f'{name} listener could not bind: {exc}. Stop the conflicting service or choose another port.') from exc
                 self.listeners.append(listener)
+            if self.application is not None:
+                handler = self.application.start(self.lock)
+                for listener in self.listeners:
+                    if listener.name in ('HTTP', 'HTTPS'):
+                        listener.server.RequestHandlerClass = handler
             for listener in self.listeners:
                 listener.start()
             self.ready = True
@@ -147,16 +165,24 @@ class Service:
         ready = self.ready and all(listener.thread and listener.thread.is_alive() for listener in self.listeners)
         http_port, https_port = self.ports.get('http', self.network.http_port), self.ports.get('https', self.network.https_port)
         http_suffix, https_suffix = ('' if http_port == 80 else f':{http_port}'), ('' if https_port == 443 else f':{https_port}')
-        return {'mode': 'connectivity-check', 'ready': bool(ready), 'hosting': 'running' if ready else 'stopped',
+        return {'mode': 'gameplay' if self.application is not None else 'connectivity-check',
+                'ready': bool(ready), 'hosting': 'running' if ready else 'stopped',
                 'lan_address': self.network.address, 'lan_subnet': self.network.subnet,
                 'upstream_dns': self.network.upstream, 'ports': dict(self.ports),
-                'configuration': self.network.configuration(),
+                'configuration': self.configuration(),
                 'setup_url': f'http://{self.network.address}{http_suffix}/',
                 'hello_url': f'https://{HELLO_HOST}{https_suffix}/__exvius/hello',
                 'dns_failures': self.resolver.failures if self.resolver else 0,
-                'certificates': self.store.inspect()}
+                'certificates': self.store.inspect(),
+                **({'gameplay': self.application.describe()} if self.application is not None else {})}
+
+    def configuration(self):
+        return {**self.network.configuration(),
+                **({'gameplay': self.application.configuration()} if self.application is not None else {})}
 
     def maintain(self, *, now=None):
+        if self.application is not None:
+            self.application.maintain()
         info = self.store.inspect(now=now)
         if not info['ok'] or info.get('renewal_due'):
             self.store.prepare(now=now)
@@ -171,6 +197,9 @@ class Service:
 
     def close(self):
         self.ready = False
+        # Stop every accept loop before any server_close waits for game responses.
+        for listener in reversed(self.listeners):
+            listener.stop()
         for listener in reversed(self.listeners):
             try:
                 listener.close()
@@ -184,6 +213,8 @@ class Service:
             self.log_handler.close()
             self.logger.removeHandler(self.log_handler)
             self.log_handler = None
+        if self.application is not None:
+            self.application.close()
         if self.lock:
             self.lock.__exit__()
             self.lock = None

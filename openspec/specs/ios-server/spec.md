@@ -6,9 +6,9 @@ This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
 pinned exploration encounters and rare quest loot,
 complete registered native-table preparation, managed-pack installation,
-opt-in engine delivery, and hello-only native connectivity of
+opt-in engine delivery, native gameplay hosting and independent hello-only connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
-Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
+Physical iPhone gameplay acceptance remains pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
 ## Requirements
@@ -1377,7 +1377,9 @@ paths. A private, user-owned control socket SHALL provide status and stop.
 ### Requirement: BindBeforeReady
 
 The service SHALL bind TCP/UDP DNS, HTTP, HTTPS and control before announcing
-readiness. Failure SHALL close acquired listeners and release the instance lock.
+readiness. Gameplay mode SHALL initialize the prepared engine only after binding
+and before starting listeners. Failure SHALL close acquired resources and release
+the instance lock.
 Matching startup commands SHALL reuse the instance; conflicts SHALL fail.
 SIGINT, SIGTERM and explicit stop SHALL close listeners and the control socket.
 Explicit stop SHALL wait for the runtime lock to be released before reporting
@@ -1525,3 +1527,139 @@ Successful raw installation SHALL continue reporting gameplay_ready false.
 - When verify-packs runs
 - Then it reports failure
 - And neither the installation nor the campaign is repaired or replaced.
+
+
+### Requirement: StartPreparedNativeGameplayExplicitly
+
+start SHALL require an initialized private campaign, current complete schema-5
+tables with Vortex and sound bindings, and current summon/home snapshots before
+state imports. It SHALL perform no download, preparation or campaign initialization.
+serve SHALL retain its independent connection-only behavior.
+
+- **Implementation**: `Gameplay::source/ios_server/hosting.py`
+
+#### Scenario: Refuse missing prepared artwork
+
+- Given a campaign and coordinated tables but no home snapshot
+- When gameplay preflight runs
+- Then it reports the explicit preparation command without importing engine state
+- And no source, campaign or preparation record changes.
+
+### Requirement: ShareHostingRuntimeLease
+
+The prepared engine SHALL accept only a held InstanceLock for its own private
+root when hosting supplies a lease. It SHALL retain standalone lock ownership
+otherwise. Hosting SHALL keep that lease through active request drainage and
+engine shutdown, avoiding a second lock acquisition.
+
+- **Implementation**: `Engine::source/ios_server/engine.py`, `Service::source/ios_server/service.py`
+
+#### Scenario: Share the transport lease
+
+- Given bound native listeners and one held private runtime lease
+- When the prepared engine initializes under hosting
+- Then initialization succeeds without reacquiring the lock
+- And a competing instance remains refused until all requests and engine resources close.
+
+### Requirement: ComposeNativeGameplayTransport
+
+Gameplay mode SHALL preserve canonical encrypted API, transaction and prepared
+asset handling behind the existing restricted HTTP/HTTPS listeners. Public setup,
+profile and hello GET/HEAD SHALL remain available. Native hosting SHALL refuse
+engine debug/status/new-game routes. HEAD SHALL omit bodies.
+
+- **Implementation**: `handler::source/ios_server/game_http.py`
+
+#### Scenario: Initialize over TLS and fetch native content
+
+- Given a prepared host or managed corpus and a trusted local certificate
+- When encrypted InitializeRequest runs over HTTPS
+- Then its 364 native versions name the exact published table bytes
+- And GET/HEAD delivers tables, Vortex, sound and artwork with correct lengths.
+
+#### Scenario: Damage a bound sound after startup
+
+- Given a running prepared host whose sound bank bytes change
+- When GET or HEAD requests that bank through HTTPS
+- Then it receives an empty 500 without stock fallback
+- And the private campaign remains unchanged.
+
+### Requirement: BoundNativePostFraming
+
+Native gameplay POST SHALL require one nonnegative decimal Content-Length no
+larger than 4 MiB and reject transfer encoding before canonical dispatch. The
+same check SHALL guard Expect: 100-continue. Connections SHALL close after their
+response and game sockets SHALL have a bounded I/O timeout.
+
+- **Implementation**: `handler::source/ios_server/game_http.py`, `Server::source/ios_server/http.py`
+
+#### Scenario: Reject oversized or ambiguous framing
+
+- Given missing, duplicate, negative or oversized Content-Length, or transfer encoding
+- When a native gameplay POST arrives
+- Then it receives 400 or 413 without canonical action dispatch or a campaign mutation.
+
+### Requirement: ReuseOnlyMatchingHostingConfiguration
+
+Repeated starts SHALL reuse only the same mode, logical data root, pinned content
+generation, slot and network configuration. Changing those inputs SHALL require
+explicit stop. status SHALL read actual service mode without loading the engine.
+Foreground readiness SHALL remain one JSON document; request diagnostics SHALL use stderr.
+
+- **Implementation**: `serve::source/ios_server/cli.py`, `Service::source/ios_server/service.py`
+
+#### Scenario: Change mode or campaign while running
+
+- Given active gameplay hosting
+- When serve or a start with another data root or slot is requested
+- Then it reports a configuration conflict
+- And a matching start reports the current instance without another engine.
+
+### Requirement: DrainNativeGameplayBeforeUnlocking
+
+Shutdown SHALL stop accepts and wait for active game requests before unbinding
+engine assets or releasing its runtime lease. Startup failure SHALL close bound
+listeners and the application. Signal and control shutdown SHALL use this same
+lifecycle; stop SHALL wait for socket and lock release before success.
+
+- **Implementation**: `Service::source/ios_server/service.py`, `lifecycle::source/ios_server/commands.py`
+
+#### Scenario: Stop during a response
+
+- Given an active game request is still running
+- When shutdown begins
+- Then the application and runtime lease remain held until the response completes
+- And the control socket and lease are released before a new instance can start.
+
+### Requirement: BoundOwnedPrivateRequestRecords
+
+Explicit gameplay startup and maintenance SHALL prune recognized canonical request
+JSON records older than three days, then oldest-first above 300 MiB, under the
+engine state lock. Other names and symlinks SHALL be excluded. Missing directories
+SHALL remain absent. Queries SHALL not perform retention writes.
+
+- **Implementation**: `prune::source/ios_server/request_retention.py`, `Gameplay::source/ios_server/hosting.py`
+
+#### Scenario: Retain unrelated files
+
+- Given old and oversized canonical records alongside unrelated files and links
+- When maintenance runs
+- Then only eligible owned records are removed to meet the limits
+- And unrelated files and link targets retain their bytes.
+
+
+### Requirement: InspectBoundStartupWithoutFalseReadiness
+
+A control probe that times out while engine activation is pending SHALL report no
+ready service and leave the held lease intact. A queued explicit stop SHALL set
+shutdown intent even if its client disconnects before the response is written.
+Neither condition SHALL permit a competing runtime instance.
+
+- **Implementation**: `read_service::source/ios_server/runtime.py`, `ControlHandler::source/ios_server/http.py`
+
+#### Scenario: Poll and stop during slow activation
+
+- Given the control socket is bound while engine activation waits
+- When status and stop probes time out before listeners start
+- Then readiness remains false and the runtime stays exclusively locked
+- And the queued stop is honored after activation even though its client disconnected.

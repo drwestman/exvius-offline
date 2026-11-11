@@ -52,3 +52,9 @@ initialize campaigns. Configuration pins a physical content generation while
 retaining the logical data root as its containment boundary. Old prepared inputs
 and all shared saves remain read-only. Native preparation remains explicit after
 activation. See [ADR-0014](adr-0014-install-immutable-managed-packs.md).
+
+Reviewed for gameplay hosting: start requires recorded campaign policy and current
+prepared assets before state imports. Transport and engine share one held runtime
+lease; shutdown drains native requests before asset unbinding and lease release.
+The canonical handler, wire fields and campaign transactions remain unchanged.
+See [ADR-0015](adr-0015-compose-prepared-native-gameplay-hosting.md).
