@@ -1,5 +1,5 @@
 """Read-only path configuration, independent of engine imports and legacy env overrides."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import re
 
@@ -17,6 +17,7 @@ class Configuration:
     root: Path
     data: Path
     slot: str = 'campaign'
+    content_root: Path = field(init=False)
 
     def __post_init__(self):
         object.__setattr__(self, 'root', Path(self.root).expanduser().resolve())
@@ -25,6 +26,12 @@ class Configuration:
             raise ValueError('Private iOS runtime and shared game data must use separate directory trees.')
         if not re.fullmatch(r'[A-Za-z0-9_-]+', self.slot):
             raise ValueError('Invalid iOS save slot; use letters, numbers, underscores or hyphens.')
+        from ios_server.managed_content import resolve
+        object.__setattr__(self, 'content_root', resolve(self.data))
+
+    @property
+    def data_root(self) -> Path:
+        return self.data
 
     @property
     def state_file(self) -> Path:
@@ -35,12 +42,12 @@ class Configuration:
 
     @property
     def managed(self) -> bool:
-        return (self.data / 'static').is_dir()
+        return (self.content_root / 'static').is_dir()
 
     def engine_environment(self) -> dict[str, str]:
         """Resolve either supported content layout; creating directories is a command's job."""
-        static = self.data / 'static' if self.managed else self.data
-        native = self.data / 'native' if self.managed else static / 'client/files'
+        static = self.content_root / 'static' if self.managed else self.content_root
+        native = self.content_root / 'native' if self.managed else static / 'client/files'
         paths = {
             'MST_DIR': static / 'mst_decoded', 'TEXT_DIR': static / 'text_decoded',
             'ART_ROOT': static / 'cpk_extract', 'COMMUNITY_ART_ROOT': static / 'gacha_community/art',
@@ -55,7 +62,7 @@ class Configuration:
         for path in private.values():
             if not path.resolve().is_relative_to(self.root):
                 raise ValueError(f'Private iOS path escapes the runtime root: {path}')
-        return {'FFBE_DATA': str(self.root), 'FFBE_IOS_CONTENT_ROOT': str(self.data),
+        return {'FFBE_DATA': str(self.root), 'FFBE_IOS_CONTENT_ROOT': str(self.content_root),
                 **{k: str(v) for k, v in paths.items()},
                 **{k: str(v) for k, v in private.items()}}
 

@@ -1200,3 +1200,74 @@ checksums, ordered extraction and atomic installation records. Remaining source
 art gaps, story repair if needed, full gameplay hosting and physical-iPhone
 visual/tap/audio acceptance remain pending. The live service remains the accepted
 connection check.
+
+
+## Managed-pack installation checkpoint — November 10, 2026
+
+Implemented explicit managed-pack installation through plan-data, fetch-data and
+verify-packs. The base interpreter dispatches all three through .venv-ios. Queries
+report one JSON result without engine imports, downloads, directory creation or
+campaign initialization; fetch progress goes to stderr. Local --manifest and
+read-only --archive-dir inputs support controlled releases and existing ZIPs.
+
+The default destination manifest remains byte-identical, including its Android
+app metadata. Only client-assets is skipped: the selected 18 packs total
+**14,575,874,619 compressed bytes** and **14,876,694,385 expanded bytes**. The
+installer does not install an APK. Existing prepared/flat data is supported for
+reads but refused as an installation destination; a separate managed tree keeps
+Android/browser inputs and campaigns unchanged.
+
+Transfers use bounded reads, HTTP range resume, exact length and SHA-256 checks.
+ZIP validation enforces permitted destinations, entry types, expanded lengths,
+duplicates and Mac case/Unicode/path-parent collision rules. Content-addressed
+immutable unpacked layers retain completed work after a later failure. Existing
+archives can be located by digest, pack ID or published ZIP basename without
+modifying them. Owned downloaded ZIPs are removed only after layer publication.
+
+Each generation rebuilds the entire ordered overlay with hard links to verified
+layers. Unchanged layers require neither extraction nor transfer. Removed or
+reordered overrides correctly reveal earlier files instead of leaving stale
+content in an incrementally patched final tree. The final registry is projected
+into a sanitized gamedata.xml without changing archived layers or old generations,
+matching Android's post-extraction version update.
+
+The complete file inventory, hashes and native layout are verified before the
+atomic ios-current.json activation. Private-runtime and shared-install locks
+prevent overlapping commands; disk preflight reserves new layers and the largest
+missing ZIP. Failed activation preserves the old pointer, with reusable completed
+layers/generations for retry. Previous content is retained without automatic
+cleanup. Corrupt installed data reports a visible failure without repair.
+
+Configuration retains the logical --data root for isolation and pins the active
+physical generation once. Existing configurations retain their old paths. Fresh
+consumers select the active generation; native asset provenance becomes stale
+until the corresponding explicit preparation runs. A synthetic complete managed
+installation initialized the real isolated engine, prepared all 364 registered
+native tables and refreshed successfully after a metadata-only manifest update.
+
+Validation: **456 iOS checks passed**, including **31 new installation checks**
+and the existing connectivity suite. **203 legacy/decoder checks passed**. New
+BDD covers wire-level HTTP ranges, ignored/invalid ranges, incomplete bodies,
+size/hash failures, local archives, source/save preservation, ordered changes,
+registry projection, unsafe/corrupt content, read-only diagnostics, locks, free
+space, activation retries, isolated CLI dispatch and native preparation integration.
+
+Two actual published patch ZIPs passed download, SHA-256 and safe extraction
+(**7,430 compressed bytes total**), using disposable storage. A disposable real-data
+registry audit covered **364 registered tables** and corrected **three stale XML
+versions** while preserving the original sources. The full 14.58 GB corpus was
+not downloaded or installed; bulk integration remains unverified.
+
+Updated command/storage documentation, iOS/server/launcher contracts, ADR-0014
+and the ADR-0001 boundary review. Strict OpenSpec retains **417 errors and three
+warnings**, with no added findings against HEAD. Refreshed mappings have no stale
+anchors. Static drift reports no tracked code/spec gaps, stale anchors or
+uncovered files; three informational decision-freshness notices remain. Git-based
+drift excludes new untracked files until check-in; they have explicit anchors and
+BDD coverage. Changed Python syntax and CRLF-aware whitespace checks passed.
+
+**Next is full native gameplay hosting**, composing the prepared engine/assets
+with the accepted home-network listeners. Physical-iPhone gameplay, visual/tap/audio
+acceptance and full bulk-install verification remain pending. Nine home/Vortex
+source-art gaps and 307 summon-detail gaps remain reported; the unvalidated pinned
+story rewrite stays disabled. The live service remains the connection check.

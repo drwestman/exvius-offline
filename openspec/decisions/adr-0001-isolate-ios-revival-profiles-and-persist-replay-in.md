@@ -46,3 +46,9 @@ default while preserving explicit overrides and legacy defaults. See
 > Decision ID: 381df222
 
 
+
+Reviewed for managed-pack installation: commands do not import the engine or
+initialize campaigns. Configuration pins a physical content generation while
+retaining the logical data root as its containment boundary. Old prepared inputs
+and all shared saves remain read-only. Native preparation remains explicit after
+activation. See [ADR-0014](adr-0014-install-immutable-managed-packs.md).

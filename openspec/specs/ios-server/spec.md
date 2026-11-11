@@ -5,7 +5,8 @@
 This specification covers the profile/calendar foundation, replay-aware summons,
 events, exchanges, friends, arena, reward mail, daily economy, quest trust, replay notices,
 pinned exploration encounters and rare quest loot,
-complete registered native-table preparation and opt-in engine delivery, and hello-only native connectivity of
+complete registered native-table preparation, managed-pack installation,
+opt-in engine delivery, and hello-only native connectivity of
 [plans/IOS_SERVER_SOLID_CQRS_PLAN.md](../../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md).
 Full revival gameplay hosting and physical iPhone acceptance remain pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
@@ -41,8 +42,9 @@ Initialization failure SHALL release the lock.
 
 ### Requirement: KeepDiagnosticsReadOnly
 
-Doctor, status, rotation, and verify-data SHALL neither import the engine state loader nor
-create files, initialize campaigns, download assets, or start services. Malformed
+Doctor, status, rotation, verify-data, plan-data and verify-packs SHALL neither
+import the engine state loader nor create files, initialize campaigns, download
+assets, or start services. Malformed
 saved data SHALL be reported without repair, quarantine, or replacement.
 
 #### Scenario: Inspect an unconfigured installation
@@ -1198,7 +1200,7 @@ missing or escaping bound files SHALL return an empty 500 response. Delivery
 SHALL not convert, refresh sources, repair, download, write caches or change
 campaign facts. The live hello service and legacy behavior SHALL remain.
 
-- **Implementation**: `read::source/ios_server/native_sounds.py`
+- **Implementation**: `Delivery::source/ios_server/native_sounds.py`
 - **Implementation**: `serve::source/ios_server/table_delivery.py`
 
 #### Scenario: Corrupt a bank after binding
@@ -1389,3 +1391,137 @@ atomic files. Repeated setup and leaf renewal SHALL retain the CA and profile
 UUIDs. Root corruption/loss SHALL fail without implicit replacement. Leaf
 renewal SHALL reload TLS without requiring listener restart. Diagnostic queries
 SHALL not generate or repair certificates. Logs SHALL have bounded retention.
+
+
+### Requirement: ReadLocalManagedPackManifest
+
+Managed-pack commands SHALL validate a local schema-1 manifest, preserve its exact
+bytes and Android application metadata, skip only client-assets, and retain pack
+order. plan-data SHALL report missing-layer sizes without transfer or writes.
+
+- **Implementation**: `read::source/ios_server/pack_manifest.py`, `plan::source/ios_server/pack_install.py`
+
+#### Scenario: Preview the bundled release
+
+- Given the bundled manifest and an empty separate data directory
+- When plan-data runs
+- Then it reports 18 selected packs and their compressed and expanded sizes
+- And the manifest, data directory, campaign and runtime remain unchanged.
+
+### Requirement: ResumeVerifiedPackTransfers
+
+Explicit fetch-data SHALL resume partial ZIPs, restart when ranges are ignored,
+and require exact length and SHA-256 before promotion. Invalid ranges, oversized
+responses and unsafe redirects SHALL fail. Interrupted transfers SHALL remain
+available for a later explicit retry.
+
+- **Implementation**: `fetch::source/ios_server/pack_download.py`
+
+#### Scenario: Resume an interrupted transfer
+
+- Given a partial archive and a server supporting HTTP ranges
+- When fetch-data is retried
+- Then the request starts at the saved byte offset
+- And only a complete checksum-verified archive is promoted.
+
+#### Scenario: Use existing archives
+
+- Given archive-dir contains a ZIP named by digest, pack ID or published basename
+- When fetch-data needs that layer
+- Then it validates and extracts the ZIP without modifying it or transferring bytes.
+
+### Requirement: ValidateManagedZipLayers
+
+Extraction SHALL restrict paths to supported content and registry destinations,
+reject traversal, links, special entries, duplicates and case/Unicode collisions,
+and enforce expanded sizes. A complete verified layer SHALL be published by
+archive hash and reused without extraction. Saves and APK resources SHALL be excluded.
+
+- **Implementation**: `members::source/ios_server/pack_layers.py`, `extract::source/ios_server/pack_layers.py`
+
+#### Scenario: Refuse an unsafe later pack
+
+- Given a valid first pack and a later unsafe ZIP
+- When fetch-data runs
+- Then the completed first layer is retained for retry
+- And no incomplete generation becomes active.
+
+### Requirement: RebuildOrderedManagedOverlay
+
+Each managed generation SHALL rebuild the full overlay from verified immutable
+layers in manifest order, with later exact paths winning. Removing or reordering
+a pack SHALL restore the appropriate earlier file and omit removed-only files.
+Unchanged layers SHALL require neither download nor extraction.
+
+- **Implementation**: `merge::source/ios_server/pack_layers.py`
+
+#### Scenario: Remove an override
+
+- Given a patch overrides a base file and adds another file
+- When a replacement manifest removes both patch entries
+- Then the new generation contains the base version and omits the patch-only file
+- And the old generation retains its original bytes.
+
+### Requirement: ProjectFinalNativePackRegistry
+
+The final overlay SHALL project validated registry.json versions into a sanitized
+gamedata.xml before publication, matching the Android bootstrap's post-extraction
+update. Source archives, immutable layer XML and previous generations SHALL retain
+their original bytes.
+
+- **Implementation**: `project_registry::source/ios_server/managed_content.py`
+
+#### Scenario: Apply a later registry update
+
+- Given a base XML version of one and a later registry version of two
+- When the ordered installation is built
+- Then the active native XML reports two
+- And the base layer XML and previous generation still report one.
+
+### Requirement: ActivateManagedInstallationAtomically
+
+fetch-data SHALL hold private-runtime and shared-install locks, reject existing
+prepared or flat managed trees, check free space, and verify the complete staged
+payload before replacing its pointer. Failure SHALL preserve the previous active
+generation. Previous layers and generations SHALL be retained.
+
+- **Implementation**: `fetch::source/ios_server/pack_install.py`
+
+#### Scenario: Retry a failed activation
+
+- Given a complete new generation whose pointer replacement failed
+- When fetch-data runs again
+- Then the old pointer remains authoritative until successful replacement
+- And completed layers and the matching unpublished generation can be reused.
+
+### Requirement: PinManagedContentGeneration
+
+Configuration SHALL resolve a managed pointer once, retain the logical data root
+as its containment boundary, and bind engine paths to that physical generation.
+Prepared host and flat managed inputs SHALL remain supported. New generations
+SHALL invalidate earlier prepared provenance until explicit re-preparation.
+
+- **Implementation**: `resolve::source/ios_server/managed_content.py`, `Configuration::source/ios_server/config.py`
+
+#### Scenario: Update after preparing native assets
+
+- Given an engine configuration pinned to a prepared managed generation
+- When a new manifest becomes active
+- Then the old configuration retains its original content paths
+- And a fresh configuration detects stale assets until prepare-data runs.
+
+### Requirement: VerifyManagedInstallationReadOnly
+
+verify-packs SHALL check pointer, manifest and installation identities, exact file
+inventory, payload lengths, hashes and native layout without engine imports or
+writes. Missing, stale or corrupt installations SHALL fail without repair.
+Successful raw installation SHALL continue reporting gameplay_ready false.
+
+- **Implementation**: `verify::source/ios_server/pack_install.py`, `load::source/ios_server/managed_content.py`
+
+#### Scenario: Detect a damaged payload
+
+- Given an active generation with missing or changed bytes
+- When verify-packs runs
+- Then it reports failure
+- And neither the installation nor the campaign is repaired or replaced.

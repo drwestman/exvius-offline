@@ -14,8 +14,8 @@ preparation commands through the dedicated Python runtime.
 ### Requirement: DispatchNativePreparationThroughIsolatedRuntime
 
 The native iOS launcher SHALL reuse the prepared .venv-ios interpreter for
-summon/home artwork and sound preparation or verification, including when
-invoked from a different Python installation. It SHALL forward arguments and
+summon/home artwork and sound preparation or verification, and plan-data,
+fetch-data and verify-packs, including from a different Python installation. It SHALL forward arguments and
 delegate command handling to the iOS CLI without installing dependencies or
 initializing a campaign. CLI commands SHALL emit one JSON result document.
 
@@ -27,6 +27,13 @@ initializing a campaign. CLI commands SHALL emit one JSON result document.
 - When macos_ios_server.py receives prepare-sounds or verify-sounds
 - Then it runs the selected command through the dedicated runtime
 - And preserves the supplied private root and shared data paths.
+
+#### Scenario: Install packs from the base interpreter
+
+- Given the dedicated runtime and a local manifest with cached ZIPs
+- When the base interpreter invokes plan-data, fetch-data or verify-packs
+- Then the dedicated runtime handles the command and emits one JSON result
+- And supplied manifest, archive, data and private runtime paths are preserved.
 
 > `source/exvius/android_build.py`
 

@@ -4,8 +4,8 @@ The iPhone-to-Mac connection checkpoint of
 [the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md) is available. It serves a
 setup page, a certificate profile, and an HTTPS hello page over the home network.
 It does not load the game engine or a campaign. Explicit native table, artwork
-and sound preparation are also available. Gameplay hosting and full native asset
-installation remain pending.
+and sound preparation, plus explicit managed-pack installation, are also available.
+The running listener remains the connection check; gameplay hosting is pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
@@ -268,6 +268,66 @@ the existing canonical engine without listeners, and persists the calendar once.
 Engine diagnostics go to stderr; stdout remains one JSON document. A failed
 initialization releases the lock. Use a fresh process to reconfigure engine paths.
 
+## Managed-pack installation
+
+Use a separate shared-content directory, alongside the private runtime directory:
+
+```sh
+python3 source/exvius/macos_ios_server.py plan-data --data "$HOME/Library/Application Support/Exvius Offline/iOS Data"
+python3 source/exvius/macos_ios_server.py fetch-data --data "$HOME/Library/Application Support/Exvius Offline/iOS Data"
+python3 source/exvius/macos_ios_server.py verify-packs --data "$HOME/Library/Application Support/Exvius Offline/iOS Data"
+```
+
+`plan-data` is a read-only preview of the local manifest, cached-layer records and
+remaining transfer/expanded sizes. `verify-packs` reads and hashes the full active
+payload and checks its layout and manifest identity. Neither query downloads,
+creates directories or imports the engine. Both report `gameplay_ready: false`.
+The separate `verify-data` command checks prepared native tables and their freshness.
+
+Only `fetch-data` installs packs. It uses the dedicated runtime and holds both the
+private runtime lock and a lock for the selected shared data directory. Stop the
+connection service before installing with its runtime. All three commands emit
+one JSON result on stdout; transfer progress goes to stderr. A local manifest may
+be selected with `--manifest /path/to/latest.json`; the default is this checkout's
+`data/latest.json`. Its exact bytes, including Android application metadata, are
+retained unchanged in the installation. The iOS installer skips only `client-assets`
+and does not install an APK.
+
+The current manifest selects 18 packs: **14.58 GB compressed / 14.88 GB expanded**
+(decimal units). The free-space check reserves new expanded layers plus the largest
+missing ZIP; allow extra space for filesystem overhead, private prepared assets
+and any retained older layers. Generations use hard links to avoid duplicating
+large payloads. This checkpoint has not performed the complete bulk installation.
+
+Transfers resume `.part` files with HTTP ranges. Rerun `fetch-data` after an
+interruption; completed layers are retained. Each ZIP must match its declared
+length and SHA-256 before extraction. ZIP paths, entry types, duplicate names,
+Mac case/Unicode collisions and expanded sizes are checked before publication.
+Only the supported content directories and table-registry metadata are accepted.
+An optional read-only `--archive-dir /path/to/zips` supplies existing archives by
+SHA-256, pack ID, or published ZIP basename; absent archives are downloaded.
+
+Immutable extracted layers live under `.ios-layers/<archive SHA-256>/`. The
+installer rebuilds the complete overlay in manifest order from those layers,
+so removing or reordering an override restores the correct earlier file. It
+projects the final `registry.json` into a sanitized native `gamedata.xml`, matching
+the Android bootstrap's post-extraction version update without modifying a layer.
+A complete `.ios-generations/<generation>/` is verified before atomic replacement
+of `ios-current.json`. Errors leave the previous pointer active. Prior generations
+and layers are retained; corrupt published data fails visibly without repair.
+
+Existing prepared host data and flat `static/native` trees remain supported as
+read-only inputs. `fetch-data` refuses to install over them; select a separate
+managed directory. Neither shared saves nor Android runtime settings are imported.
+
+Each fresh command resolves and pins the selected content generation. After an
+update, stop and restart an engine consumer and rerun `prepare-data` with the same
+`--data`, `--root`, `--slot` and optional `--vortex-art`/`--sounds` choices. Initialize
+a new campaign explicitly with `init-campaign` when needed. Refresh separately
+prepared sounds, summon artwork and home banners with their existing commands;
+queries detect stale provenance without preparing anything. Installation alone
+does not prepare native compatibility assets or enable gameplay hosting.
+
 ## Offline native table preparation
 
 From the repository root, using existing prepared content:
@@ -333,9 +393,10 @@ Malformed sources or corrupt published snapshots fail visibly without repair.
 `verify-data` detects stale inputs as well as damaged output bytes and unsafe paths.
 
 New results explicitly report `scope: native-tables` and `gameplay_ready: false`.
-The current hello service does not serve these files. Managed-pack downloading/
-installation, remaining art, sound/story compatibility, full gameplay hosting and
-physical iPhone acceptance remain pending.
+The current hello service does not serve these files. Managed-pack installation
+is available through the explicit commands above. Remaining source-art gaps,
+story compatibility if needed, full gameplay hosting and physical iPhone
+acceptance remain pending.
 
 ### Native Vortex artwork
 
@@ -608,7 +669,10 @@ Shared inputs can use either layout:
 The version registry is `client/shared_prefs/gamedata.xml` under the prepared
 root, or under `static/` for managed packs. Presence checks do not verify pack
 hashes or establish gameplay completeness; `verify-data` checks the prepared native
-table snapshot and its input freshness, rather than all resource packs.
+table snapshot and its input freshness. `verify-packs` hashes an active managed
+installation. For that layout, these paths are relative to the generation selected
+by `ios-current.json`; each configuration pins it for its lifetime. The logical
+`--data` directory remains the installation root and containment boundary.
 
 The default private root is
 `~/Library/Application Support/Exvius Offline/iOS`. Campaigns use
@@ -666,6 +730,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_sounds.py
 .venv-ios/bin/python -B source/exvius/test_ios_sound_delivery.py
 .venv-ios/bin/python -B source/exvius/test_ios_home_banners.py
+.venv-ios/bin/python -B source/exvius/test_ios_pack_install.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

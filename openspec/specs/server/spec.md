@@ -202,6 +202,22 @@ materials, and gacha summon tickets.
 
 ## Requirements
 
+### Requirement: BindPinnedIosContentPaths
+
+The iOS configuration SHALL pin an installed content generation once while
+retaining the logical shared root for containment. Engine paths SHALL use that
+physical generation; state and policies SHALL remain under the private runtime.
+Prepared host and flat managed layouts SHALL retain their existing path behavior.
+
+- **Implementation**: `Configuration::source/ios_server/config.py`
+
+#### Scenario: Activate a new managed generation
+
+- Given a configuration bound to one generation with separate private state
+- When an installation activates another generation
+- Then the existing configuration keeps its original engine paths
+- And a fresh configuration uses the new generation without importing shared saves.
+
 ### Requirement: ServeExactPreparedIosTables
 
 The handler SHALL validate paths before exact prepared iOS table/pack/sound

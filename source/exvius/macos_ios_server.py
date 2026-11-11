@@ -18,7 +18,7 @@ if __name__ == '__main__':
             os.execve(str(runtime), [str(runtime), '-B', str(Path(__file__).resolve()), *sys.argv[1:]], env)
         elif command in ('serve', 'init-campaign', 'doctor', 'status', 'rotation', 'stop', 'prepare-data', 'verify-data',
                          'prepare-banners', 'verify-banners', 'prepare-sounds', 'verify-sounds',
-                         'prepare-home-banners', 'verify-home-banners') and runtime.is_file() and Path(sys.executable) != runtime:
+                         'prepare-home-banners', 'verify-home-banners', 'plan-data', 'fetch-data', 'verify-packs') and runtime.is_file() and Path(sys.executable) != runtime:
             os.execv(str(runtime), [str(runtime), '-B', str(Path(__file__).resolve()), *sys.argv[1:]])
     except (OSError, RuntimeError) as exc:
         print(str(exc), file=sys.stderr)
