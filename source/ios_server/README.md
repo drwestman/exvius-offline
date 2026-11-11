@@ -3,8 +3,9 @@
 The iPhone-to-Mac connection checkpoint of
 [the iOS plan](../../plans/IOS_SERVER_SOLID_CQRS_PLAN.md) is available. It serves a
 setup page, a certificate profile, and an HTTPS hello page over the home network.
-It does not load the game engine or a campaign. Complete registered-table preparation is
-also available. Gameplay hosting and full native asset installation remain pending.
+It does not load the game engine or a campaign. Explicit native table, artwork
+and sound preparation are also available. Gameplay hosting and full native asset
+installation remain pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
@@ -419,7 +420,50 @@ Restart the prepared engine after publishing a new artwork generation.
 
 The default/legacy adapters and hello service retain their behavior. Local native-
 size review and parity checks cover the prepared outputs; actual iPhone visual
-acceptance, missing art and sound/story compatibility remain pending.
+acceptance, missing art, sound delivery and story compatibility remain pending.
+
+### Offline sound preparation
+
+Sound preparation is available independently of table and artwork generations:
+
+```sh
+python3 source/exvius/macos_ios_server.py prepare-sounds --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-sounds --data source/out/browser-data
+```
+
+Use the same `--root` as the intended iOS runtime. `setup` synchronizes the locked
+dependencies, including fastcrc; subsequent commands use `.venv-ios` without
+installing packages. Both prepared and managed `static/native` layouts work.
+
+`prepare-sounds` reads the original encrypted resource/version/checksum masters
+for both resource families. It resolves exact positive file versions, prefers
+native iOS banks, and converts Android banks using the pinned keyless HCA type-1
+and HCA-MX fixes. Complete UTF/AFS2 bounds and HCA header/frame CRCs validate
+before publication. Supported native banks retain every byte. Keyed ciphers,
+external AWB dependencies, corrupt streams and unsupported encodings fail visibly.
+No audio decoding or re-encoding occurs; byte lengths stay unchanged.
+
+The local corpus has 782 references to 735 banks, totaling 2,202,569,152 bytes.
+The source masters contain zero and stale sizes: the report identifies 49 iOS
+size updates and 48 Android size disagreements. Preparation records those values
+alongside measured bytes; it does not modify the source tables.
+
+Private `assets/sounds/current.json` selects an immutable, content-addressed
+generation. Processing and verification hold one bank at a time rather than the
+whole corpus. Repeated inputs reuse the generation; failed conversion or pointer
+replacement preserves the active one. Source hashes, metadata and pipeline policy
+govern freshness, including same-size edits. A second inventory checks for input
+changes before publishing. Existing generations remain intact.
+
+`verify-sounds` checks recorded paths, hashes, byte lengths, waveform counts,
+structural validity and current source provenance without writes, conversion,
+engine imports or campaign initialization. These commands do not download assets.
+
+Sound delivery is pending: the snapshot reports `delivery_ready: false`.
+Coordinated resource-version/size table publication and exact file-backed GET/HEAD
+delivery are the next checkpoint. The live service still hosts only the connection
+check. The pinned story-text CPK rewrite remains disabled because the reference
+iPhone rejected its rebuilt packs; original scene packs remain in use.
 
 ### Prepared engine consumer
 
@@ -541,6 +585,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_full_tables.py
 .venv-ios/bin/python -B source/exvius/test_ios_vortex_art.py
 .venv-ios/bin/python -B source/exvius/test_ios_banner_fitting.py
+.venv-ios/bin/python -B source/exvius/test_ios_sounds.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

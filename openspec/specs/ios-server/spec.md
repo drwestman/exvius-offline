@@ -1071,6 +1071,79 @@ change campaigns. Canonical API request recording SHALL retain its existing path
 - Then it receives 404 without fallback or source lookup
 - And valid GET/HEAD requests match the published bytes, length and PNG type.
 
+### Requirement: PrepareSoundBanksExplicitly
+
+The system SHALL provide prepare-sounds independently from native table and
+artwork preparation. It SHALL read the original encrypted resource/version/size
+masters for both resource families, require positive exact file versions, prefer
+supported native iOS banks and record all source hashes and identities. Missing
+exact versions SHALL fail without highest-version substitution. Original zero
+or stale size metadata SHALL remain recorded alongside measured bank lengths.
+
+- **Implementation**: `collect::source/ios_server/sound_inputs.py`
+
+#### Scenario: Reuse an exact sound bank
+
+- Given two resource records naming the same exact sound bank
+- When sound preparation resolves them
+- Then it records both resource identities and one source bank
+- And reports size discrepancies without changing shared masters.
+
+### Requirement: ConvertPinnedSoundWithoutReencoding
+
+Android sound preparation SHALL remove keyless HCA type-1 encryption and change
+HCA-MX waveform flags to HCA, preserving byte lengths and unrelated bytes.
+It SHALL validate bounded UTF and AFS2 structures and all HCA header/frame CRCs
+before mutation. Unsupported keyed ciphers, encodings, external AWB dependencies
+or corrupt streams SHALL fail visibly. Supported native iOS banks SHALL remain
+byte-identical. Accelerated CRCs SHALL match an independent bitwise oracle.
+
+- **Implementation**: `prepare::source/ios_server/sound_codec.py`
+
+#### Scenario: Encounter a damaged last frame
+
+- Given a bank with valid earlier streams and a corrupt final frame
+- When sound preparation runs
+- Then it rejects the bank without publishing or mutating the source
+- And a valid bank converts to the pinned fork's exact output bytes.
+
+### Requirement: PublishFileBackedSoundGenerations
+
+Sound commands SHALL process one bank at a time under the exclusive private
+runtime lock and publish immutable files through assets/sounds/current.json.
+All outputs and a second input inventory SHALL validate before pointer replacement.
+Repeated inputs SHALL reuse the generation. Build or publication failure SHALL
+preserve the previous pointer, and complete unpublished generations SHALL support
+retry. Shared data, campaigns, table versions and engine routing SHALL remain.
+
+- **Implementation**: `prepare::source/ios_server/sound_snapshots.py`
+
+#### Scenario: Interrupt sound publication
+
+- Given an existing sound generation and changed source bytes
+- When pointer replacement fails
+- Then the old generation remains authoritative
+- And retry can validate and reuse complete unpublished artifacts.
+
+### Requirement: VerifySoundsWithoutPreparation
+
+verify-sounds SHALL validate recorded paths, hashes, lengths, waveform counts,
+native format checks and current input freshness without conversion, writes,
+locks, downloads, engine imports or campaign initialization. Missing and corrupt
+snapshots SHALL be distinct visible failures. Escaping source/output symlinks
+SHALL be rejected. The sound report SHALL declare delivery_ready false until
+coordinated resource-table publication and exact file-backed delivery exist.
+The pinned disabled story-text rewrite SHALL remain disabled.
+
+- **Implementation**: `verify::source/ios_server/sound_snapshots.py`
+
+#### Scenario: Verify a same-size source edit
+
+- Given a prepared sound generation and changed source bytes of the same length
+- When verification runs
+- Then it reports stale inputs without creating or repairing files
+- And no engine or campaign state is loaded.
+
 ### Requirement: PreparePinnedEnglishLabels
 
 Preparation SHALL apply the pinned English text rules to all 25 localized label

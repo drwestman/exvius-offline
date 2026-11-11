@@ -985,3 +985,69 @@ managed-pack installation and full gameplay hosting. Physical-iPhone visual and
 gameplay acceptance remain pending. Results retain `gameplay_ready: false`; the
 live native service remains the accepted connection check. Earlier Android
 fixture/tooling limitations remain pending.
+
+## Native sound preparation checkpoint — November 10, 2026
+
+Implemented explicit `prepare-sounds` and read-only `verify-sounds`. This checkpoint
+prepares sound artifacts independently; coordinated native resource tables and
+sound delivery are the next slice.
+
+The pinned fork enables keyless HCA type-1 decryption and HCA-MX-to-HCA waveform
+flags by default. Its story-text CPK rewrite is disabled because the actual iPhone
+rejected both rebuilt scene-pack versions with an invalid CRI IFF-header error.
+That rewrite remains disabled here; original story packs remain in use.
+
+Sound preparation now:
+
+- Reads the six original encrypted resource, version and checksum masters for
+  the ordinary and map resource families. Requires positive, exact file versions;
+  native iOS sources take precedence. Missing versions never use stock token or
+  highest-version fallback.
+- Separates read-only source collection, pure bounded UTF/AFS2/HCA codecs, and
+  private snapshot commands. Supports both prepared and managed content layouts.
+  Reuses the validated UTF schema codec and checksum-locks fastcrc in `.venv-ios`.
+- Validates archive offsets, waveform encodings, HCA layouts and every header/frame
+  CRC before converting. Removes cipher type 1, rewrites checksums and reflags
+  HCA-MX without decoding/re-encoding audio or changing file lengths. Supported
+  native iOS sources remain byte-identical. Corrupt or unsupported streams fail
+  visibly, including keyed ciphers and external AWB dependencies.
+- Processes one bank at a time and publishes content-addressed files through an
+  atomic private `assets/sounds/current.json` pointer. Full provenance includes
+  source hashes, resource identities, original platform sizes, measured lengths
+  and transformation counts. A second inventory rejects changes during the build.
+  Repeated inputs reuse the generation; failed builds/publication preserve the
+  active pointer and complete interrupted builds can be reused on retry.
+- Verifies output hashes, formats, lengths, waveform counts and current inputs
+  without conversion, cache writes, locking, engine imports or campaign creation.
+  The launcher dispatches all artwork/sound commands through the isolated runtime.
+
+All **782 resource references** resolve to **735 unique banks**, totaling
+**2,202,569,152 bytes** and **1,727 waveforms**. The source size masters contain
+**49 iOS size discrepancies** and **48 Android size discrepancies**, including
+zero and stale positive values. These are recorded rather than silently patched
+or trusted as an integrity check. Bank structure/CRCs and source SHA-256 provide
+independent validation; the next resource-table integration must use measured
+output lengths.
+
+Validation: **380 iOS checks passed**, including **35 new sound checks** and the
+27 connectivity checks. **203 legacy/decoder checks passed** with disposable
+fixtures where required. An additional legacy event-archive audit was unavailable
+because its decoded memorial-data fixture is absent; no archive code changed.
+The guarded real-data run prepared and verified all 735 banks in a disposable
+runtime, compared every output byte with the unmodified pinned converter, and
+confirmed idempotency. It decrypted **388 streams** and reflagged **816 waveform
+rows**. Source files stayed unchanged; verification made zero writes, with no
+network use or engine imports. Actual iPhone audio playback remains unverified.
+
+Updated the iOS and launcher contracts, command documentation and ADR-0011.
+Strict OpenSpec validation adds no findings to the existing **417 errors and
+three warnings**. Static drift reports no code/spec gaps for tracked changes;
+two informational decision-freshness notices remain. The new sound files have
+explicit implementation anchors and BDD coverage; the drift tool's Git-based
+change scan excludes untracked files until they are checked in.
+
+**Next is coordinated sound resource-version/size table publication and exact
+file-backed GET/HEAD delivery.** The sound manifest reports `delivery_ready: false`;
+this checkpoint does not change native table versions or engine/CDN routing.
+Remaining artwork, a validated story repair if needed, managed pack installation,
+full gameplay hosting, and physical-iPhone acceptance remain pending.

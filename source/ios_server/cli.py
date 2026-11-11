@@ -14,7 +14,8 @@ from ios_server.queries import doctor, rotation, status
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description='Exvius iPhone connection check and offline table preparation. Gameplay hosting is pending.')
     parser.add_argument('command', choices=('setup', 'serve', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
-                                           'prepare-data', 'verify-data', 'prepare-banners', 'verify-banners'))
+                                           'prepare-data', 'verify-data', 'prepare-banners', 'verify-banners',
+                                           'prepare-sounds', 'verify-sounds'))
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
@@ -61,6 +62,9 @@ def main(argv=None) -> int:
         elif args.command in ('prepare-banners', 'verify-banners'):
             from ios_server.banner_snapshots import prepare, verify
             result = prepare(config) if args.command == 'prepare-banners' else verify(config)
+        elif args.command in ('prepare-sounds', 'verify-sounds'):
+            from ios_server.sound_snapshots import prepare, verify
+            result = prepare(config) if args.command == 'prepare-sounds' else verify(config)
         elif args.command == 'rotation':
             result = rotation(config, weeks=args.weeks)
         else:
