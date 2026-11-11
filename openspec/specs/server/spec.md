@@ -204,9 +204,10 @@ materials, and gacha summon tickets.
 
 ### Requirement: ServeExactPreparedIosTables
 
-The handler SHALL validate paths before exact prepared iOS table/pack GET/HEAD lookup,
-return 404 for unpublished versions without fallback, and omit HEAD bodies.
-Delivery SHALL perform no writes, downloads or campaign changes.
+The handler SHALL validate paths before exact prepared iOS table/pack/sound
+GET/HEAD lookup, return 404 for unpublished versions without fallback, and omit
+HEAD bodies. Sound delivery SHALL read one pinned bank at a time and return an
+empty 500 on integrity failure. Delivery SHALL not write, download or change campaigns.
 
 - **Implementation**: `Handler::source/server/capture_server.py`
 - **Implementation**: `serve::source/ios_server/table_delivery.py`
@@ -224,6 +225,13 @@ Delivery SHALL perform no writes, downloads or campaign changes.
 - **WHEN** GET or HEAD requests its published native resource version
 - **THEN** The exact bytes and length agree with the snapshot's resource tables
 - **AND** Old pack versions return 404 without a stock fallback or query writes.
+
+#### Scenario: Deliver coordinated sound banks
+
+- **GIVEN** A schema-5 table snapshot bound to verified immutable sound files
+- **WHEN** GET or HEAD requests an iOS sound resource version
+- **THEN** Exact published bytes and lengths agree with both resource-table families
+- **AND** Old or unknown versions return 404 without fallback or query writes.
 
 #### Scenario: Deliver fitted summon artwork
 

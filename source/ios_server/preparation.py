@@ -38,7 +38,7 @@ def _inputs(config):
         raise ValueError(f'Invalid native preparation metadata: {exc}') from exc
 
 
-def _complete_inputs(config, vortex_art=False):
+def _complete_inputs(config, vortex_art=False, sounds=False):
     sources, records, fingerprint, context, labels = _inputs(config)
     art = None
     if vortex_art:
@@ -50,7 +50,14 @@ def _complete_inputs(config, vortex_art=False):
         records = {**records, 'art': art.provenance}
         context = {**context, 'art': art.coverage}
         fingerprint = _sha(_json({'tables': fingerprint, 'art': art.provenance}))
-    return sources, records, fingerprint, context, labels, art
+    sound = None
+    if sounds:
+        from ios_server.native_sounds import collect
+        sound = collect(config, sources)
+        records = {**records, 'sound': sound.provenance}
+        context = {**context, 'sound': sound.coverage}
+        fingerprint = _sha(_json({'tables': fingerprint, 'sound': sound.provenance}))
+    return sources, records, fingerprint, context, labels, art, sound
 
 
 def _entries(manifest):
@@ -62,6 +69,7 @@ class PreparedTables:
     directory: Path
     manifest: dict
     files: dict
+    sounds: object = None
 
     def lookup(self, relative):
         """Only exact published version paths resolve; no path rewriting or writes."""
@@ -94,7 +102,41 @@ class PreparedTables:
                 'changed_rows': {name: row['changed_rows'] for name, row in self.manifest['tables'].items()},
                 'gameplay_ready': False, **({'preparation': copy.deepcopy(self.manifest['preparation'])}
                                            if self.manifest['version'] >= 2 else {}),
-                **({'packs': len(self.manifest['packs'])} if self.manifest['version'] == 4 else {})}
+                **({'packs': len(self.manifest['packs'])} if 'packs' in self.manifest else {}),
+                **({'sounds': len(self.manifest['sounds']['banks']), 'sound_delivery_ready': True}
+                   if 'sounds' in self.manifest else {})}
+
+
+def _validate_sources(manifest, registry):
+    """Validate recorded source inventories and policy before reading outputs."""
+    version = manifest['version']
+    optional = ({'art'} if 'packs' in manifest else set()) | ({'sound'} if version == 5 else set())
+    if version == 1:
+        if set(manifest['sources']) != registry.keys():
+            raise ValueError('invalid core source inventory')
+        return
+    if (set(manifest['sources']) != ({'tables', 'documents'} if version == 2 else
+            {'tables', 'documents', 'registry'} | optional)
+            or set(manifest['sources']['tables']) != {table.name for table in
+                (rules.LABEL_INPUT_TABLES if version == 2 else rules.INPUT_TABLES)}):
+        raise ValueError('invalid expanded source inventory')
+    from revival_economy import settings
+    context = manifest['preparation']
+    policy = context['economy']
+    if (set(context) != ({'economy', 'labels'} if version == 2 else
+            {'economy', 'labels', 'coverage'} | optional)
+            or set(policy) != {'source', 'slot', 'settings'}
+            or policy['source'] not in ('provisional', 'campaign')
+            or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
+        raise ValueError('invalid preparation policy')
+    settings({'ios_economy': {'version': 1, 'settings': policy['settings']}})
+    if version >= 3:
+        registration = manifest['sources']['registry']
+        if (set(registration) != {'versions', 'sha256', 'definition_sha256'}
+                or registration['definition_sha256'] != rules.REGISTRY_SHA256
+                or set(registration['versions']) != registry.keys()
+                or any(type(value) is not int or value < 1 for value in registration['versions'].values())):
+            raise ValueError('invalid complete registry provenance')
 
 
 def load_prepared(config):
@@ -115,12 +157,14 @@ def load_prepared(config):
             raise ValueError('manifest checksum mismatch')
         manifest = json.loads(manifest_raw)
         version = manifest['version']
-        if type(version) is not int or version not in (1, 2, 3, 4):
+        if type(version) is not int or version not in (1, 2, 3, 4, 5):
             raise ValueError('unsupported manifest version')
         tables = rules.CORE_TABLES if version == 1 else rules.LABEL_TABLES if version == 2 else rules.TABLES
         registry = {table.name: table for table in tables}
         keys = {'version', 'scope', 'reference_commit', 'source_root', 'pipeline_version',
-                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version >= 2 else set()) | ({'packs'} if version == 4 else set())
+                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version >= 2 else set())
+        keys |= ({'packs'} if version == 4 or version == 5 and 'packs' in manifest else set())
+        keys |= ({'sounds'} if version == 5 else set())
         if (set(manifest) != keys or manifest['scope'] != ('core-native-tables' if version == 1 else SCOPE)
                 or manifest['reference_commit'] != REVIVAL_COMMIT
                 or type(manifest['generation']) is not int or not 1 <= manifest['generation'] <= 99999999
@@ -130,32 +174,7 @@ def load_prepared(config):
                 or ref['directory'] != f"{manifest['generation']:08d}-{manifest['fingerprint']}"
                 or set(manifest['tables']) != registry.keys()):
             raise ValueError('unsupported manifest')
-        if version == 1:
-            if set(manifest['sources']) != registry.keys():
-                raise ValueError('invalid core source inventory')
-        else:
-            if (set(manifest['sources']) != ({'tables', 'documents'} if version == 2 else
-                    {'tables', 'documents', 'registry'} | ({'art'} if version == 4 else set()))
-                    or set(manifest['sources']['tables']) != {table.name for table in
-                        (rules.LABEL_INPUT_TABLES if version == 2 else rules.INPUT_TABLES)}):
-                raise ValueError('invalid expanded source inventory')
-            from revival_economy import settings
-            context = manifest['preparation']
-            policy = context['economy']
-            if (set(context) != ({'economy', 'labels'} if version == 2 else
-                    {'economy', 'labels', 'coverage'} | ({'art'} if version == 4 else set()))
-                    or set(policy) != {'source', 'slot', 'settings'}
-                    or policy['source'] not in ('provisional', 'campaign')
-                    or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
-                raise ValueError('invalid preparation policy')
-            settings({'ios_economy': {'version': 1, 'settings': policy['settings']}})
-            if version >= 3:
-                registration = manifest['sources']['registry']
-                if (set(registration) != {'versions', 'sha256', 'definition_sha256'}
-                        or registration['definition_sha256'] != rules.REGISTRY_SHA256
-                        or set(registration['versions']) != registry.keys()
-                        or any(type(value) is not int or value < 1 for value in registration['versions'].values())):
-                    raise ValueError('invalid complete registry provenance')
+        _validate_sources(manifest, registry)
         outputs, versions, files = {}, {}, {}
         for name, entry in manifest['tables'].items():
             table = registry[name]
@@ -178,10 +197,14 @@ def load_prepared(config):
                 raise ValueError('table checksum mismatch: ' + name)
             outputs[name], versions[name], files[entry['path']] = raw, version, raw
         rules.validate(outputs, versions, tables=tables)
-        if manifest['version'] == 4:
+        if 'packs' in manifest:
             from ios_server import vortex_art
             files.update(vortex_art.load(config, directory, manifest, outputs))
-        return PreparedTables(directory, manifest, files)
+        sound = None
+        if manifest['version'] == 5:
+            from ios_server import native_sounds
+            sound = native_sounds.load(config, manifest, outputs)
+        return PreparedTables(directory, manifest, files, sound)
     except (OSError, KeyError, TypeError, AttributeError, ValueError) as exc:
         raise ValueError(f'Invalid native table snapshot: {exc}') from exc
 
@@ -193,7 +216,8 @@ def verify_data(config):
         if snapshot is None:
             return {'ok': False, 'scope': SCOPE, 'prepared': False, 'gameplay_ready': False,
                     'error': 'No native table snapshot. Run prepare-data with the selected --data root.'}
-        _, records, fingerprint, context, _, _ = _complete_inputs(config, snapshot.manifest['version'] == 4)
+        _, records, fingerprint, context, _, _, _ = _complete_inputs(config, 'packs' in snapshot.manifest,
+                                                                   'sounds' in snapshot.manifest)
         if (snapshot.manifest['fingerprint'] != fingerprint or snapshot.manifest['sources'] != records
                 or snapshot.manifest['source_root'] != str(config.data)
                 or snapshot.manifest['pipeline_version'] != rules.PIPELINE_VERSION
@@ -207,9 +231,10 @@ def verify_data(config):
 def open_prepared(config):
     """Explicit consumer gate; require a current complete snapshot and recorded policy."""
     snapshot = load_prepared(config)
-    if snapshot is None or snapshot.manifest['version'] not in (3, 4):
+    if snapshot is None or snapshot.manifest['version'] not in (3, 4, 5):
         raise ValueError('Complete native tables are missing. Run prepare-data.')
-    _, records, fingerprint, context, _, _ = _complete_inputs(config, snapshot.manifest['version'] == 4)
+    _, records, fingerprint, context, _, _, _ = _complete_inputs(config, 'packs' in snapshot.manifest,
+                                                               'sounds' in snapshot.manifest)
     if (snapshot.manifest['fingerprint'] != fingerprint or snapshot.manifest['sources'] != records
             or snapshot.manifest['preparation'] != context or snapshot.manifest['source_root'] != str(config.data)
             or snapshot.manifest['pipeline_version'] != rules.PIPELINE_VERSION):
@@ -267,14 +292,17 @@ def _publish(config, manifest, outputs, *, pointer_name=POINTER, entries=None):
     return destination
 
 
-def prepare_data(config, *, vortex_art=False):
+def prepare_data(config, *, vortex_art=False, sounds=False):
     """Build and validate first, then publish under the exclusive private-runtime lock."""
     if type(vortex_art) is not bool:
         raise ValueError('Vortex preparation must be explicitly enabled or disabled.')
+    if type(sounds) is not bool:
+        raise ValueError('Sound preparation must be explicitly enabled or disabled.')
     with InstanceLock(config.root):
         current = load_prepared(config)
-        vortex_art = vortex_art or current is not None and current.manifest['version'] == 4
-        sources, records, fingerprint, context, labels, art = _complete_inputs(config, vortex_art)
+        vortex_art = vortex_art or current is not None and 'packs' in current.manifest
+        sounds = sounds or current is not None and 'sounds' in current.manifest
+        sources, records, fingerprint, context, labels, art, sound = _complete_inputs(config, vortex_art, sounds)
         if current is not None and current.manifest['fingerprint'] == fingerprint:
             if (current.manifest['sources'] != records or current.manifest['source_root'] != str(config.data)
                     or current.manifest['pipeline_version'] != rules.PIPELINE_VERSION
@@ -290,6 +318,9 @@ def prepare_data(config, *, vortex_art=False):
             if art is not None and current.manifest.get('packs'):
                 previous = next(iter(current.manifest['packs'].values()))['version']
                 generation = max(generation, (previous - art.version - rules.VERSION_OFFSET) // rules.VERSION_STEP + 1)
+        if sound is not None:
+            from ios_server import native_sounds
+            generation = native_sounds.advance(generation, sound, current.manifest.get('sounds') if current else None)
         outputs, versions, changes = rules.build(sources, generation, labels=labels,
             economy=context['economy']['settings'], floors=floors)
         packs = {}
@@ -301,7 +332,14 @@ def prepare_data(config, *, vortex_art=False):
             packs[art_rules.PACK] = entry
             rules.validate(outputs, versions)
             outputs[art_rules.PACK] = raw
-        manifest = {'version': 4 if art is not None else 3, 'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
+        sound_binding = None
+        if sound is not None:
+            sound_binding, converted = native_sounds.prepare(sound, generation, outputs)
+            for name, count in converted.items():
+                changes[name] += count
+            rules.validate(outputs, versions)
+        manifest = {'version': 5 if sound is not None else 4 if art is not None else 3,
+                    'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
                     'source_root': str(config.data), 'pipeline_version': rules.PIPELINE_VERSION,
                     'generation': generation, 'fingerprint': fingerprint, 'sources': records, 'preparation': context, 'tables': {}}
         for table in rules.TABLES:
@@ -312,6 +350,10 @@ def prepare_data(config, *, vortex_art=False):
             manifest['tables'][table.name]['version_floor'] = max(sources[table.name][0], floors[table.name])
         if packs:
             manifest['packs'] = packs
+        if sound_binding is not None:
+            manifest['sounds'] = sound_binding
+            # Validate the binding and both resource families before publishing.
+            native_sounds.load(config, manifest, outputs)
         destination = _publish(config, manifest, outputs)
         snapshot = PreparedTables(destination, manifest, {_entries(manifest)[name]['path']: raw for name, raw in outputs.items()})
         return {**snapshot.describe(), 'prepared': True, 'prepared_now': True}

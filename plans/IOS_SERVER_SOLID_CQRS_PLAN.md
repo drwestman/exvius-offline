@@ -1051,3 +1051,75 @@ file-backed GET/HEAD delivery.** The sound manifest reports `delivery_ready: fal
 this checkpoint does not change native table versions or engine/CDN routing.
 Remaining artwork, a validated story repair if needed, managed pack installation,
 full gameplay hosting, and physical-iPhone acceptance remain pending.
+
+## Coordinated sound delivery checkpoint — November 10, 2026
+
+Implemented `prepare-data --sounds` and exact, file-backed sound delivery through
+the explicitly prepared engine. Sound conversion remains in `prepare-sounds`;
+table preparation requires current, verified sound artifacts and does not build
+or repair them.
+
+Schema 5 now publishes all 364 native tables with a pinned sound-generation
+directory and manifest SHA-256. Both ordinary and map resource families advertise
+new common sound file versions and measured iOS byte sizes. This repairs all
+49 stale/zero iOS size entries in the prepared outputs while preserving Android
+size fields, other languages, unrelated rows and shared source files. Source table
+hashes must agree between native and sound preparation, and every resource/path
+binding is checked before publication and on load.
+
+The table pointer atomically selects the complete version/size/artifact binding.
+Sound banks remain under their immutable content-addressed sound generation;
+they are neither copied into table generations nor retained as a 2.2 GB memory
+cache. Sound and Vortex features stay enabled on later ordinary refreshes. Schema
+5 supports both together, and schemas 1 through 4 remain inspectable and upgradeable.
+Versions advance above prior published identities even when source versions
+fall; signed-32-bit overflow fails before publication. Repeated inputs reuse a
+generation. Interrupted publication preserves the old binding and complete
+unpublished table generations can be reused on retry.
+
+The prepared engine binds the table snapshot's recorded sound generation rather
+than following the mutable sound pointer. Startup requires current preparation
+before importing state and releases the runtime lock on failure. Exact iOS sound
+GET/HEAD reads one pinned bank at a time and rechecks containment, byte length and
+SHA-256 before sending a response. HEAD has no body. Old and unknown sound versions
+return 404 without stock/token fallback; damaged or missing bound files return
+an empty 500 response. Reads do not convert, repair, refresh inputs, download,
+write caches or change campaign facts. Existing engines without a sound binding
+retain their previous behavior.
+
+Artifact-only sound reports still use `delivery_ready: false`; coordinated table
+reports now expose `sound_delivery_ready: true`. The live LAN service remains
+the connection check and does not yet host gameplay.
+
+Validation: **399 iOS checks passed**, including **19 new sound/table/delivery
+checks** and the 27 connectivity checks. **203 legacy/decoder checks passed**.
+BDD covers both content layouts, schema-4/Vortex coexistence, exact source
+provenance, monotonic versions after source decreases, overflow, publication
+failure/retry, immutable bindings after pointer replacement, damaged or escaping
+banks, read-only verification, startup failure cleanup, CLI behavior, and encrypted
+initialization with native delivery.
+
+A guarded real-data run upgraded a complete schema-3 snapshot to schema 5 with
+Vortex and sound enabled. It retained old generations, verified idempotency and
+freshness, advertised all **364 unique table versions** through encrypted
+initialization, and delivered every table plus the Vortex pack. All **735 sound
+GETs and 735 HEADs** matched published hashes and lengths; all **735 stock sound
+URLs** were refused. The **782 sound resource references** bind **2,202,569,152
+bytes**. The disposable campaign's normal first-login daily initialization ran
+in the explicit setup phase. During the subsequent audited queries, guards
+rejected asset/campaign writes and network use; canonical POST request records
+were allowed. Shared sources and campaign bytes stayed unchanged. The disposable
+runtime was removed after validation.
+
+Strict OpenSpec validation retains the existing **417 errors and three warnings**
+with no added findings. Static drift reports no tracked code/spec gaps, stale
+anchors or uncovered files; informational decision-freshness notices remain.
+As before, Git-based drift excludes new untracked files until check-in; the new
+sound-binding module has explicit implementation anchors and BDD coverage.
+Updated the iOS/server contracts, command documentation and ADR-0012. CRLF-aware
+whitespace checks passed.
+
+**Next are remaining artwork/source gaps and managed-pack installation**, followed
+by full gameplay hosting and physical-iPhone acceptance. The pinned story-text
+rewrite remains disabled; any future repair needs a validated native scene-pack
+builder. Actual iPhone audio playback is still unverified.

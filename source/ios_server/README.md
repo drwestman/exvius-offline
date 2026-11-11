@@ -459,11 +459,40 @@ changes before publishing. Existing generations remain intact.
 structural validity and current source provenance without writes, conversion,
 engine imports or campaign initialization. These commands do not download assets.
 
-Sound delivery is pending: the snapshot reports `delivery_ready: false`.
-Coordinated resource-version/size table publication and exact file-backed GET/HEAD
-delivery are the next checkpoint. The live service still hosts only the connection
-check. The pinned story-text CPK rewrite remains disabled because the reference
-iPhone rejected its rebuilt packs; original scene packs remain in use.
+Bind those artifacts to the native tables explicitly:
+
+```sh
+python3 source/exvius/macos_ios_server.py prepare-data --sounds --data source/out/browser-data
+python3 source/exvius/macos_ios_server.py verify-data --data source/out/browser-data
+```
+
+`--sounds` applies only to `prepare-data` and requires current, verified
+`prepare-sounds` artifacts. It does not convert or repair sound. Schema 5 publishes
+all 364 tables with a pinned sound-generation directory and manifest hash. Both
+resource families advertise the published common file versions and exact iOS byte
+sizes; other languages, Android size fields and shared source tables stay intact.
+Later table refreshes retain sound delivery and any enabled `--vortex-art` option.
+Version generation advances above previous published versions even if a source
+version decreases; overflow fails before publication.
+
+The table pointer selects the complete binding atomically. Banks remain under
+their immutable sound generation rather than being copied into the table tree.
+Keep old generations: a bound snapshot uses its pinned files. Identical inputs
+reuse the generation; failed publication preserves the previous binding. Sound
+and native source-table hashes must agree, and verification detects stale sound
+preparation without rebuilding it.
+
+Artifact-only sound reports retain `delivery_ready: false`; coordinated table
+reports expose `sound_delivery_ready: true`. In an explicitly prepared engine,
+exact iOS sound GET/HEAD paths read one pinned bank at a time and check its hash
+and length before responding. Old or unknown iOS sound versions return 404 without
+stock fallback. Damaged or missing bound files return an empty 500 response.
+Requests do not convert, refresh inputs, download, repair or write caches.
+Sound preparation alone does not activate delivery.
+
+The live service still hosts only the connection check. The pinned story-text CPK
+rewrite remains disabled because the reference iPhone rejected its rebuilt packs;
+original scene packs remain in use. Physical-iPhone playback acceptance is pending.
 
 ### Prepared engine consumer
 
@@ -475,12 +504,16 @@ loading engine state. Missing, old partial, corrupt, stale or provisional snapsh
 fail without automatic preparation or campaign initialization. Default engine
 construction retains its existing behavior; `serve` remains the connection check.
 Use `prepare-banners` and `verify-banners` to include optional summon detail fitting.
+Use `prepare-sounds`, then `prepare-data --sounds`, to include coordinated sound
+delivery. Refresh the table binding after preparing changed sound inputs.
 
 The prepared engine projects exactly 364 unique published table versions after canonical
 version handling. Table GET/HEAD requests return exact snapshot bytes and lengths;
 HEAD has no body. Unknown or old versions under `mst/` and `localized_texts/en/`
 return 404 without falling back to stock files. Schema-4 snapshots apply the same
 exact-version rule to the prepared Vortex pack. Path validation runs before lookup.
+Schema-5 sound bindings apply it to the iOS sound namespace using file-backed
+artifacts, with integrity checked before each response.
 Reads do not write caches, refresh inputs, download or change the campaign. Closing
 the engine unbinds its snapshot. This adapter is ready for the later gameplay host.
 
@@ -586,6 +619,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_vortex_art.py
 .venv-ios/bin/python -B source/exvius/test_ios_banner_fitting.py
 .venv-ios/bin/python -B source/exvius/test_ios_sounds.py
+.venv-ios/bin/python -B source/exvius/test_ios_sound_delivery.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

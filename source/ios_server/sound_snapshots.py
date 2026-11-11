@@ -91,15 +91,15 @@ def _bank(config, directory, entry, source):
         raise ValueError('Prepared sound waveform count disagrees')
 
 
-def load(config):
+def load(config, *, reference=None):
     """Verify recorded output facts one bank at a time, without consulting sources."""
-    pointer = private_path(config.root, POINTER)
-    if not pointer.exists():
+    pointer = private_path(config.root, POINTER) if reference is None else None
+    if reference is None and not pointer.exists():
         if pointer.is_symlink():
             raise ValueError('Invalid sound snapshot pointer')
         return None
     try:
-        ref = json.loads(pointer.read_bytes())
+        ref = json.loads(pointer.read_bytes()) if reference is None else reference
         if (set(ref) != {'version', 'directory', 'manifest_sha256'} or type(ref['version']) is not int
                 or ref['version'] != 1 or not re.fullmatch(r'[0-9]{8}-' + SHA, ref['directory'])):
             raise ValueError('Invalid sound pointer')
@@ -131,6 +131,15 @@ def _current(config, snapshot):
             or snapshot.manifest['fingerprint'] != current.fingerprint
             or snapshot.manifest['sources'] != current.sources):
         raise ValueError('Sound inputs changed. Run prepare-sounds.')
+
+
+def current(config):
+    """Require explicitly prepared, current sounds without building or publishing."""
+    snapshot = load(config)
+    if snapshot is None:
+        raise ValueError('No sound snapshot. Run prepare-sounds before prepare-data --sounds.')
+    _current(config, snapshot)
+    return snapshot
 
 
 def verify(config):

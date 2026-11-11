@@ -897,7 +897,7 @@ hello service and default engine adapter SHALL retain their existing behavior.
 
 Only the iOS profile with the bound verified snapshot SHALL project its complete
 versions after canonical forced-version handling. GET/HEAD under mst/ and
-localized_texts/en/, and for a prepared Vortex pack, SHALL return exact published bytes and sizes. An absent version
+localized_texts/en/, for a prepared Vortex pack, and for bound iOS sounds, SHALL return exact published bytes and sizes. An absent version
 SHALL return 404 without a stock/token fallback. HEAD SHALL omit the body. Path
 validation SHALL precede lookup. Delivery SHALL not write files, refresh sources,
 download assets or change campaign facts. Closing the engine SHALL unbind it.
@@ -1131,8 +1131,8 @@ verify-sounds SHALL validate recorded paths, hashes, lengths, waveform counts,
 native format checks and current input freshness without conversion, writes,
 locks, downloads, engine imports or campaign initialization. Missing and corrupt
 snapshots SHALL be distinct visible failures. Escaping source/output symlinks
-SHALL be rejected. The sound report SHALL declare delivery_ready false until
-coordinated resource-table publication and exact file-backed delivery exist.
+SHALL be rejected. The artifact-only sound report SHALL declare delivery_ready
+false; coordinated native table reports SHALL expose sound_delivery_ready true.
 The pinned disabled story-text rewrite SHALL remain disabled.
 
 - **Implementation**: `verify::source/ios_server/sound_snapshots.py`
@@ -1143,6 +1143,68 @@ The pinned disabled story-text rewrite SHALL remain disabled.
 - When verification runs
 - Then it reports stale inputs without creating or repairing files
 - And no engine or campaign state is loaded.
+
+### Requirement: CoordinateSoundVersionsAndSizesAtomically
+
+prepare-data --sounds SHALL require current explicit sound preparation and publish
+schema 5 with all 364 native tables and a pinned sound-generation directory and
+manifest SHA-256. Both resource families SHALL advertise common sound versions and
+measured iOS sizes. Other languages, Android size fields and unrelated rows SHALL
+remain intact. Native/sound source table provenance and every resource/path binding
+SHALL agree. Optional Vortex and sound features SHALL persist on later refreshes.
+Earlier schemas SHALL remain inspectable. Failed publication SHALL retain the
+previous binding, and complete interrupted table generations SHALL support retry.
+
+- **Implementation**: `prepare::source/ios_server/native_sounds.py`
+- **Implementation**: `prepare_data::source/ios_server/preparation.py`
+
+#### Scenario: Decrease a source file version
+
+- Given sound and table versions were already published
+- When sound inputs use a lower source version and are explicitly prepared again
+- Then the new table generation publishes higher sound and table client versions
+- And overflow fails before replacing the active pointer.
+
+### Requirement: BindSoundFilesWithoutCopyingTheCorpus
+
+The coordinated table manifest SHALL reference immutable prepared sound files
+without copying them into table generations or retaining all banks in memory.
+Loading SHALL validate the pinned reference and coordinated resource tables,
+independently from the mutable current sound pointer. Startup freshness SHALL
+still require current sound preparation before state imports. Failure SHALL
+release the runtime lock and preserve campaign facts. A bound engine SHALL keep
+its sound generation for its lifetime. Sound preparation alone SHALL not enable
+delivery in unbound snapshots or default engines.
+
+- **Implementation**: `load::source/ios_server/native_sounds.py`
+- **Implementation**: `open_prepared::source/ios_server/preparation.py`
+
+#### Scenario: Replace the current sound pointer
+
+- Given a coordinated table snapshot pins a valid immutable sound generation
+- When the mutable sound pointer changes or becomes corrupt
+- Then inspection still validates the pinned files and resource tables
+- And freshness verification reports the changed preparation without substitution.
+
+### Requirement: DeliverExactSoundBanksReadOnly
+
+A prepared sound binding SHALL claim the iOS sound namespace and deliver only
+exact published GET/HEAD paths. Reads SHALL check containment, file length and
+SHA-256 before replying, processing one bank at a time. HEAD SHALL omit the body.
+Unknown or old versions SHALL return 404 without stock/token fallback; damaged,
+missing or escaping bound files SHALL return an empty 500 response. Delivery
+SHALL not convert, refresh sources, repair, download, write caches or change
+campaign facts. The live hello service and legacy behavior SHALL remain.
+
+- **Implementation**: `read::source/ios_server/native_sounds.py`
+- **Implementation**: `serve::source/ios_server/table_delivery.py`
+
+#### Scenario: Corrupt a bank after binding
+
+- Given an initialized engine with a verified sound binding
+- When a bound file changes or escapes its generation before GET or HEAD
+- Then delivery fails visibly with an empty 500 response
+- And no source fallback, conversion or filesystem mutation occurs.
 
 ### Requirement: PreparePinnedEnglishLabels
 
