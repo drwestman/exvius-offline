@@ -938,11 +938,16 @@ The pure CPK builder SHALL preserve every original file payload, compression
 metadata, ID and duplicate shipped filename. Additions SHALL not replace names
 already present case-insensitively. Rebuilt archives SHALL use masked native UTF
 tables, sorted TOC names, TOC-relative offsets, eight-byte payload alignment and
-correct file/content sizes. Truncation, directories, unsupported indexes or CRC
+correct file/content sizes. UTF null-string cells SHALL retain the reserved
+string-pool offset zero, including the TOC's constant UserString field. Encoder
+revisions SHALL invalidate artwork provenance so explicit preparation publishes
+a new native pack version even when source images are unchanged.
+Truncation, directories, unsupported indexes or CRC
 layouts SHALL fail visibly before publication.
 
 - **Implementation**: `rebuild::source/ios_server/cpk.py`
 - **Implementation**: `inspect::source/ios_server/cpk.py`
+- **Implementation**: `encode_table::source/ios_server/cpk.py`
 
 #### Scenario: Preserve compressed original entries
 
@@ -950,6 +955,13 @@ layouts SHALL fail visibly before publication.
 - When archive images are appended
 - Then original payload bytes, IDs and extract sizes remain intact
 - And the rebuilt pack has valid masked metadata, sizes and aligned offsets.
+
+#### Scenario: Preserve reserved null-string cells
+
+- Given a native UTF table with constant and per-row null-string cells
+- When the table is encoded
+- Then those cells reference string-pool offset zero
+- And ordinary filenames reference their own nonzero offsets.
 
 ### Requirement: PublishVortexPackWithItsResourceTables
 
@@ -1712,6 +1724,21 @@ published native table identities SHALL receive prepared file versions.
   monster preview immediately when entering detail. Discovered November 11, 2026:
   the crashed session reported missing gacha button textures and Ochu CSV/animation
   data while their intact packs were scheduled only as background downloads.
+
+- cpk.encode_table must reuse string-pool offset zero for the native null
+  sentinel. Comparing decoded text alone cannot distinguish a reserved null cell
+  from an ordinary string containing the same characters. Discovered November
+  11, 2026 while investigating Vortex GateScene's event_1115.png load failure:
+  the original TOC used zero while the prepared TOC used offset 82. The encoding
+  mismatch is reproduced by a binary-cell regression. The device later opened
+  Vortex after a Home wait for background data; the encoding repair's causal
+  contribution to that recovery was not isolated.
+
+- The Drop Rates URL published in F_URL_MST must resolve the stock WebView's
+  own gacha_id form request to the existing replay-aware rates renderer.
+  Testing only an alternate browser/hook URL does not establish that contract.
+  Discovered November 12, 2026: the advertised sg_summons_list.php route returned
+  an empty 404 while the existing banner-specific HTML route returned valid rates.
 <!-- /manual -->
 
 ### Requirement: ReconcileUpfrontIosResourceSizes
@@ -1801,3 +1828,37 @@ without changing source files, summon costs, pools, awards or legacy projections
 - When native tables are prepared
 - Then those three dependencies are advertised for upfront download with exact iOS sizes
 - And an unrelated background pack, source files and campaign remain unchanged.
+
+### Requirement: ServeNativeDropRatesWebView
+
+The iOS gameplay handler SHALL serve the exact published GACHA_RATE_URL path for
+GET, HEAD and URL-encoded POST fields. A numeric gacha_id SHALL select the existing
+rates renderer and its effective replay pool/guarantees; requests without an ID
+SHALL list the current replay catalogue with links to banner-specific rates.
+Form fields SHALL be read afresh for each request, independent of MIME labels,
+bounded to 64 KiB and 128 fields per query/body. Conflicting or invalid IDs SHALL
+return 400, oversized forms 413 and unknown banners 404 with readable content.
+
+Delivery SHALL run under the canonical state lock, return UTF-8 HTML with exact
+Content-Length and no-store caching, and omit the body for HEAD. It SHALL bypass
+encrypted command dispatch and ordinary gameplay request recording, preserve
+campaign/save bytes and RNG state, and log no form bodies or identity fields.
+Existing banner-specific HTML and legacy resource routes SHALL retain behavior.
+
+- **Implementation**: `owns::source/ios_server/rates_delivery.py`, `banner_id::source/ios_server/rates_delivery.py`, `serve::source/ios_server/rates_delivery.py`
+- **Implementation**: `index_page::source/server/gacha_rates.py`
+
+#### Scenario: Open native banner rates
+
+- Given a prepared native Drop Rates URL and a replay-eligible summon
+- When the stock WebView posts its gacha_id and localization fields
+- Then the response matches the existing banner-specific rates HTML
+- And a later request can select another banner without retained form fields
+- And GET/HEAD query requests agree without commands, saves or RNG changes.
+
+#### Scenario: Recover a request without a banner ID
+
+- Given the WebView requests the native rates path without gacha_id
+- When the page is served
+- Then it lists eligible replay summons with local rates links
+- And future summons and unescaped catalogue text are absent.

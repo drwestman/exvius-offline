@@ -81,7 +81,8 @@ def table(raw):
 
 def encode_table(name, columns, rows):
     """Encode the native schema; strings/data are pooled without changing cells."""
-    strings, offsets, blobs = bytearray(b'<NULL>\0'), {}, bytearray()
+    # Offset zero is the native null sentinel, including constant UserString cells.
+    strings, offsets, blobs = bytearray(b'<NULL>\0'), {'<NULL>': 0}, bytearray()
     def string(text):
         if not isinstance(text, str) or '\0' in text:
             raise ValueError('Invalid CPK string')

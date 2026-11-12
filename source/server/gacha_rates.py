@@ -52,6 +52,19 @@ def _table(pool, mixed=False):
     return '<table><thead><tr><th>Reward</th><th>Chance per draw</th></tr></thead><tbody>' + ''.join(rows) + '</tbody></table>'
 
 
+def index_page():
+    """Link the current replay catalogue when the WebView supplies no banner ID."""
+    from ffbe_gacha import all_banners
+    links = ''.join('<li><a href="/exvius/gacha-rates/%s.html">%s</a></li>' % (
+        escape(str(banner['id']), quote=True), escape(str(banner['name'])))
+        for banner in all_banners())
+    return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>Summon Rates</title><style>body{background:#081d43;color:white;font:16px Arial}'
+            'a{color:#ffe398}li{padding:12px}</style></head><body><h1>Summon Rates</h1><ul>'
+            + links + '</ul></body></html>')
+
+
 def page(banner_id):
     from ffbe_gacha import all_banners
     from player_state import expand_pool, summon_subpool, summon_pool, summon_guarantee_pool

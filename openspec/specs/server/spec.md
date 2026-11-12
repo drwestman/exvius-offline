@@ -19640,7 +19640,15 @@ The system SHALL the server shall assign each served banner a tab classification
 
 The system SHALL the service shall assemble a rates page for the requested banner, including its available offers, costs, guarantees, and reward rate tables.
 
+The iOS profile SHALL also expose the published native WebView URL as a bounded,
+read-only form/query adapter. A missing banner ID SHALL render links to the
+current replay catalogue. The adapter SHALL reuse this renderer under the
+canonical state lock without game-command dispatch or persistence. Legacy
+banner-specific HTML routes SHALL retain their existing behavior.
+
 - **Implementation**: `page::source/server/gacha_rates.py`
+- **Implementation**: `index_page::source/server/gacha_rates.py`
+- **Implementation**: `serve::source/ios_server/rates_delivery.py`
 
 #### Scenario: KnownBanner
 - **GIVEN** A banner exists with offers and reward pools
@@ -19651,6 +19659,11 @@ The system SHALL the service shall assemble a rates page for the requested banne
 - **GIVEN** No banner matches the requested identifier
 - **WHEN** A rates page is requested
 - **THEN** The service returns its not-found response
+
+#### Scenario: NativeRatesForm
+- **GIVEN** The iOS client opens the published rates URL with a gacha_id form field
+- **WHEN** The native HTTP handler serves the request
+- **THEN** It returns the same rates HTML as the banner-specific route without a save or draw
 
 ### Requirement: FormatRewardName
 

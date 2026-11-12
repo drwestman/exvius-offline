@@ -65,3 +65,9 @@ pipeline and preserve campaign bytes. The adapter owns private bounded storage;
 scheduling is a pure reply projection. An unbound canonical handler retains its
 legacy behavior. The once-per-launch policy follows upstream 590d4fb, reviewed at
 ae07888; other newer gameplay changes remain separately planned.
+
+Reviewed November 12 for native Drop Rates delivery: an iOS-only adapter binds
+the published WebView form URL to the shared rates renderer under the canonical
+state lock. Its optional catalogue index uses the same replay selection. These
+queries do not dispatch game commands, write campaigns or consume draw RNG;
+legacy resource and banner-specific HTML routing retain their behavior.

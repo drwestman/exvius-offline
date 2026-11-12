@@ -64,3 +64,15 @@ The final host restart preserves campaign bytes and CA identity; it retains
 generation 2 without a data refresh. Physical recovery and actual device-log
 contents remain pending the iPhone retry. The diagnostic invariant is recorded
 in the iOS/server specs, with AP-005 covering repeated bulk telemetry from polling.
+
+## Native WebView contract repair — November 12, 2026
+
+Consulted the native Drop Rates form route and missing-ID catalogue fallback at
+reference revision ae07888. The destination already advertised that URL but had
+only the alternate banner-specific HTML route, producing an empty native 404.
+Added a bounded iOS-only adapter and a small catalogue index while retaining the
+existing effective-pool rates renderer. Form fields are request-local and never
+logged as bodies; queries preserve campaign, RNG and ordinary request records.
+All 490 iOS and 22 legacy summon tests pass. The hosted native form/query routes
+now return valid rates HTML; the user subsequently confirms native unit names
+and probabilities display correctly.

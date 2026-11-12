@@ -61,6 +61,19 @@ def payloads(raw):
 
 
 class BannerCpk(unittest.TestCase):
+    def test_given_native_null_strings_when_encoded_then_keep_reserved_zero_offsets(self):
+        # Native TOCs and the reference builder use offset zero for UserString.
+        # Decoding both offsets as '<NULL>' hides a wire-format difference.
+        columns = [('UserString', 0x30, 10, '<NULL>'), ('FileName', 0x50, 10, 0)]
+        raw = cpk.encode_table('CpkTocInfo', columns,
+                               [{'FileName': '<NULL>'}, {'FileName': 'event_1115.png'}])
+        rows_at = 8 + struct.unpack_from('>H', raw, 10)[0]
+        strings_at = 8 + struct.unpack_from('>I', raw, 12)[0]
+        self.assertEqual(raw[strings_at:strings_at + 7], b'<NULL>\0')
+        self.assertEqual(struct.unpack_from('>I', raw, 37)[0], 0)
+        self.assertEqual(struct.unpack_from('>I', raw, rows_at)[0], 0)
+        self.assertGreater(struct.unpack_from('>I', raw, rows_at + 4)[0], 0)
+
     def test_given_native_utf_columns_when_round_tripped_then_keep_zero_constant_and_row_values(self):
         columns = [('zero', 0x10, 6, 0), ('name', 0x30, 10, 'constant'),
                    ('id', 0x50, 4, 0), ('data', 0x50, 11, 0)]
@@ -165,6 +178,19 @@ class VortexPreparation(unittest.TestCase):
         self.assertTrue(prep.prepare_data(self.config)['prepared_now']); new = prep.load_prepared(self.config)
         self.assertEqual(new.manifest['version'], 4)
         self.assertGreater(new.manifest['packs'][art.PACK]['version'], pack.manifest['packs'][art.PACK]['version'])
+        self.assertTrue(prep.verify_data(self.config)['ok'])
+
+    def test_given_new_encoder_revision_when_prepared_then_refresh_pack_version_with_unchanged_images(self):
+        self.artwork()
+        with patch.object(art, 'PIPELINE', art.PIPELINE - 1):
+            prep.prepare_data(self.config, vortex_art=True)
+            old = prep.load_prepared(self.config)
+        self.assertFalse(prep.verify_data(self.config)['ok'])
+        self.assertTrue(prep.prepare_data(self.config)['prepared_now'])
+        new = prep.load_prepared(self.config)
+        self.assertGreater(new.manifest['packs'][art.PACK]['version'], old.manifest['packs'][art.PACK]['version'])
+        self.assertEqual(new.manifest['sources']['art']['images'], old.manifest['sources']['art']['images'])
+        self.assertEqual(new.manifest['sources']['art']['pipeline'], art.PIPELINE)
         self.assertTrue(prep.verify_data(self.config)['ok'])
 
     def test_given_missing_required_image_or_pack_when_preparing_then_preserve_active_generation(self):

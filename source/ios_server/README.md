@@ -433,7 +433,12 @@ the localized-text index, all 25 pinned English label families and five economy 
 It moves `resources_common.cpk` and `resources.cpk` into the tutorial download,
 removes resource rows without a base or English file version, reveals quest
 rewards with their original quantities, and sets the Drop Rates URL to the v910
-route. English labels include all canonical revival bundles, ticket names and
+route. The iOS handler accepts the stock WebView's `gacha_id` form POST at this
+exact URL and reuses the existing replay-aware rates renderer. GET/HEAD query
+requests also work; a missing ID shows the current summon list. Forms are
+bounded and read per request, and rates pages do not dispatch gameplay commands,
+save the campaign or consume summon RNG. The existing banner-specific HTML
+routes remain available. English labels include all canonical revival bundles, ticket names and
 descriptions, summon names/details, reconstructed abilities/monsters/skills,
 native event modes, exchange products, items/equipment/materia, and all 22 custom
 daily quests. The pinned fallback file supplies 44 recoverable item names;

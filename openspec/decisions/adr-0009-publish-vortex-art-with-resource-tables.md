@@ -25,6 +25,11 @@ compression metadata, IDs and duplicate names. Append available canonical archiv
 art without replacing existing names. Record source hashes, metadata and image
 coverage. Reject unsupported layouts and invalid sources before publishing.
 
+Preserve reserved UTF null-string offsets, including UserString's zero offset;
+decoded text equality is insufficient to verify this binary contract. Artwork
+pipeline revision 2 records the corrected encoder in freshness so existing
+phones receive a new native pack version without altering source artwork.
+
 Missing required artwork fails. The nine pinned added-event images can remain
 reported gaps while gameplay retains its existing fallback from the common pack.
 No remote art is fetched and no replacement images are invented. Future supplied

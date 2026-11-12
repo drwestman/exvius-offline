@@ -480,6 +480,11 @@ class Handler(BaseHTTPRequestHandler):
         Both cases are logged, so the request list stays the record of what the client wants.
         """
         path = self.path.split("?", 1)[0]
+        if data_paths.PROFILE.name == 'ios-revival':
+            from ios_server.rates_delivery import owns, serve as serve_rates
+            if owns(path):
+                with STATE_LOCK:
+                    return serve_rates(self)
         raid_page = re.fullmatch(r'/exvius/raid-rewards/(\d+)\.html', path)
         rates_page = re.fullmatch(r'/exvius/gacha-rates/(\d+)\.html', path)
         parade_page = path == '/exvius/parade-rewards.html'

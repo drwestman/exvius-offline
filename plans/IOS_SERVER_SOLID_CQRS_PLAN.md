@@ -1,5 +1,12 @@
 # Native iOS revival server for this Mac
 
+Current checkpoint (November 12, 2026): the exercised core iPhone flows pass,
+including summons/Drop Rates, Vortex with a companion battle, bundle/exchange
+purchases and clean server-restart persistence. See the current summary in
+[device acceptance](IOS_DEVICE_ACCEPTANCE.md). Arena remains story-locked and
+other pending acceptance rows retain their status; full-catalogue acceptance is
+not claimed. Generation 4 and the fresh isolated iOS save remain active.
+
 ## Summary and review findings
 
 Add the iOS server to `exvius-offline`, using your installed Global FFBE app over home Wi-Fi. Start it manually when playing, configure DNS only on the iPhone, and create a fresh iOS campaign. Enable the full revival experience exclusively for this server.
@@ -1501,3 +1508,205 @@ GET/HEAD pack checks pass; GET hashes and lengths match recorded provenance.
 Full campaign bytes and CA identity were preserved, with shared/source writes
 guarded. The iPhone retry is to finish startup downloads, relaunch once more, then
 open the first banner; no physical recovery is claimed before that observation.
+
+Generation-3 device retry is still failed. The user additionally reports the
+before/after-tutorial required-data choice on every launch, with no visible
+progress for either selection. The current prepared table excludes every
+unversioned resource and marks the three menu dependencies TUTO. Real device GETs
+for those packs occurred on the 20:12 restart, after the latest uploaded crash
+session (20:06); HTTP success alone does not establish client installation/mounting.
+A newer failed-session report and dialog-size observation are the next diagnostic
+evidence. No further preload/cache change is justified from older errors alone.
+
+The 20:24 relaunch now provides client-side installFile END evidence for all three
+summon dependency packs (20:12:50–53 local time) and completion of the 12-file
+foreground download. The crash in that report precedes installation. The user is
+on Home; a first-banner retry is requested against the installed files. Physical
+banner recovery remains open, without another code or cache change.
+
+Physical recovery is now confirmed: after prerequisite installation and relaunch,
+the user opened the first Summon banner and reports that it displays without a
+crash (GachaEntry at 20:27:23 local time). Mark the banner-opening failure passed
+in the acceptance record. Draw/rates/cost/ownership, audio, other menus and restart
+persistence still need their own observations; the background asset queue remains
+active. Next acceptance check is audio.
+
+The user confirms normal music and button sound effects on the Summon page;
+recorded audio as passed for that observed flow. Next is an actual summon and
+verification of its animation, cost, result and saved ownership.
+
+Weekly Summon Gift mail claim passed on the device and in the save: ten Rare
+Summon Tickets, one Guaranteed Ticket and the received marker are persisted.
+Recorded the pre-draw baseline and requested one Rare-ticket summon to verify
+its animation, debit and awarded unit without a Lapis purchase.
+
+The device summon completed and awarded Strago. Saved state confirms one new
+unit, one Guaranteed Ticket spent, all ten Rare Tickets retained, and Lapis
+unchanged at 250 free/zero paid. The native request selected ticket ID 18 on
+banner 9/detail 9001; record this actual Guaranteed-ticket flow rather than a
+Rare-ticket draw. Next is the native roster display; restart persistence and
+broader catalogue/rate verification remain open.
+
+The user confirms Strago appears under Home → Units → List. Native roster display
+is passed. Next is a full app close/reopen to check saved ownership survives the
+client restart; server-restart persistence remains a separate pending check.
+
+App-restart persistence is passed: the user confirms Strago remains listed after
+a full app close/reopen. Clean server-restart persistence is still pending. Next
+is physical Shop listing/navigation acceptance.
+
+The user confirms Shop listings show names, images and prices correctly. Purchase
+and exchange acceptance remain pending. Requested one Bundle of Riches purchase
+(100 Lapis for 1,000,000 Gil), recording the pre-purchase saved balances for the
+subsequent charge/reward/receipt check.
+
+Bundle of Riches purchase passed on the device and in saved balances: 100 free
+Lapis spent (250 → 150), 1,000,000 Gil granted (13 → 1,000,013), paid Lapis
+unchanged. Next is Friends-list acceptance; exchange purchases remain pending.
+
+Friends-list acceptance passed: the user confirms offline friends and their
+units appear. Companion selection/use remains pending. Next is the physical
+Arena entry screen and its availability or progression lock.
+
+The physical Arena entry is dark/inert and matches the shipped story gate:
+FUNCTION_REEL_COLOSSEUM requires switch 10010300 (type 101/index 26), granted by
+Grandshelt Castle - Throne Room (1110703). This fresh save has not cleared that
+mission and lacks the flag. Defer Arena gameplay acceptance until progression;
+no artificial unlock was applied. Next is Vortex event-list/artwork navigation.
+
+Vortex acceptance is failed: blue background/header/footer, music continuing,
+and ineffective footer taps. The retained client report reaches GateScene and
+then fails to load event_1115.png (Chamber of Supercite), preventing creation of
+its sprite batch node. The prepared English pack contains the exact valid image;
+independent TOC parsing agrees, and client logs show English/common pack
+installation. There is no accompanying server exception. Native loading/mounting
+remains unresolved; no speculative preparation or gameplay change was made.
+Requested a full client restart to Home for the newest failed-session report
+before selecting a repair.
+
+Home recovers normally after the user's full client restart; the new report
+repeats the event_1115.png load failure. Binary comparison reproduces a pack
+encoding defect: the native/reference TOC's reserved null UserString offset is
+zero, while our writer emitted an ordinary string offset of 82. Preserving the
+reserved offset fixes the RED binary-cell regression. Artwork pipeline revision
+2 forces a new resource version even with unchanged image inputs. The iOS spec,
+ADR-0009 and AP-007 now document this contract; physical recovery is not inferred.
+
+All 486 iOS tests pass; strict OpenSpec adds no findings and static diff drift
+reports zero issues. Generation 4 is prepared, verified and hosted, with full
+campaign and CA-identity hashes unchanged and source/shared writes guarded.
+Ten transport probes and eight exact asset GET/HEAD checks pass, including the
+242,483,910-byte Ver240461_spdungeon1.cpk, its zero null-string offset and the
+Chamber of Supercite image hash. The next physical check is completing the new
+download, relaunching once more, then opening Vortex and returning via footer
+Home. The freeze remains open until that observation.
+
+November 12: the generation-4 retry is still failed. The user reports a crash;
+the new diagnostic upload confirms the repaired pack installed. Its preceding
+session ends at GateEntryScene without a new missing-banner error, while master
+downloads are still active. Do not treat the old texture error as the confirmed
+cause of this attempt or infer causation from concurrent downloads. Clarify
+whether the current failure closes the app or freezes the blue screen before
+choosing another repair; no additional code, pack or campaign change was made.
+
+The user confirms FFBE closes to the iPhone Home screen. The next diagnostic
+upload records another GateEntryScene app exit without a missing-banner message
+or crash stack; master downloads were at 30/100. Requested remaining on Home
+after reopening so downloads can complete before another controlled attempt.
+The pack remains unchanged while isolating timing from native loading failure.
+
+The user is back on Home, and the host is confirmed ready. Requested a single
+Vortex retry and reopening to Home after any exit to capture the post-wait
+session. The current upload predates the wait; background completion is still
+unverified rather than inferred from elapsed time.
+
+Vortex entry now passes the physical check: the user reports it opens after
+remaining on Home. No additional code or prepared-data change occurred. The
+last failure had only 30/100 remaining masters installed, making background
+dependency readiness the leading explanation for the final recovery. The
+specific missing dependency and the earlier encoding repair's contribution
+remain unproven; do not claim a crash-stack diagnosis. Individual Vortex tabs,
+footer navigation and event entry still need their own acceptance observations.
+
+Next is physical Enhance-tab banner display and footer-Home navigation, followed
+by event/companion gameplay and clean server-restart persistence. Requested the
+navigation check first; no new implementation or preparation is needed for it.
+
+Enhance banner display passes, but the user reports no footer on that view.
+Return navigation remains unverified. Requested a screenshot of the complete
+screen before treating this as a native layout defect or choosing a repair.
+
+The observed Back control returns to Home with the footer restored, as confirmed
+by the user. Enhance banner display and this return flow pass without another
+layout change. Next is opening the easiest Chamber of Experience mission and
+checking the native offline-friend companion list before battle acceptance.
+
+Companion selection passes: the user sees offline friends and their units.
+Recorded the pre-battle saved balances, rank/EXP, roster levels and cleared
+missions. Next is one user-played easy Chamber of Experience clear with an
+offline friend, through rewards and back Home, followed by read-only settlement
+verification. No gameplay command was submitted by the agent.
+
+Companion battle/reward acceptance passes: the user confirms normal borrowed-unit
+combat and rewards. The save records 2110401 completed/cleared with normal
+rewards, quest progress and three paid challenges; no blocked claims. Rank is
+now 3, the two original units are level 11, Strago remains level 1, and free
+Lapis is 1,350 (paid zero; Gil 1,000,013). Requested fully closing FFBE for the
+next clean server-restart persistence check. No synthetic request or retry was
+sent, and the current host remains running pending that app-close step.
+
+The user fully closed FFBE; the local server has now stopped and restarted
+cleanly. All seven saved-file/certificate/generation-pointer fingerprints match
+across the restart and probes. No preparation or gameplay request was issued;
+generation 4 is unchanged. Ten transport checks pass and gameplay hosting is
+ready. Next is reopening the app to confirm rank 3, 1,350 Lapis and Strago through
+the native UI. The file-preservation check passes; physical restart persistence
+still awaits that confirmation.
+
+Physical restart persistence now passes: the user confirms rank 3, 1,350 Lapis
+and Strago after fresh login. Native initialization/Home traffic and read-only
+saved-state checks agree; completed mission settlement is retained without an
+observed duplicate reward. Next is the native first-banner Drop Rates page,
+checking unit names and probabilities without another summon. Exchange purchase
+acceptance and Arena entry after natural story progression remain separate.
+
+## Native Drop Rates route defect — November 12, 2026
+
+The physical Drop Rates page was blank because the published native form-POST
+URL had no HTML handler and returned an empty 404. The existing banner-specific
+rates renderer already returned valid content. Live TLS probes reproduced both
+results without changing the campaign.
+
+Added an iOS-only bounded form/query adapter to that renderer, plus a replay
+catalogue index for requests without a banner ID. GET/HEAD/POST responses retain
+HTML lengths and read-only state/RNG semantics; legacy routing remains intact.
+The native-form regression was RED before the fix. All 490 iOS tests and 22
+legacy summon tests pass. Specs, ADR-0001, the runtime guide and AP-008 document
+the native URL/request contract. Strict spec validation adds no findings and
+static diff drift reports zero issues.
+
+The restarted host retains generation 4, full save bytes and every certificate
+file. After readiness, ten transport probes and three rates-path probes pass;
+native form/query requests now return the same valid rates content as the
+existing HTML route. Requested a native page retry; physical rendering remains
+pending, so this acceptance row is not yet marked passed.
+
+The physical retry now passes: the user confirms unit names and probabilities
+display on Drop Rates. The native banner-9 POST returns 200, and saved balances
+remain unchanged. Next is Exchange Shop listing/display; a purchase still needs
+an eligible offer and an earned currency balance, neither of which is assumed.
+
+Exchange catalogue display now passes. Verified an affordable permanent offer
+from the current source and save: Daily Coin Shop, one NRG Restore 10 for 3
+Lapis (940002004). Category-6 payment is Lapis, so event currency is unnecessary
+for this offer. Baseline: 1,350 free Lapis, zero restore items and no stock
+receipt. Requested one user purchase to check charge, grant and stock persistence;
+the agent issued no gameplay command.
+
+The exchange purchase passes physically and in saved state: one NRG Restore 10
+cost exactly 3 free Lapis (1,350 → 1,347), granted one item (0 → 1), and saved
+stock count 1 for 940002004/24322. Native quantity/product metadata agrees and
+the request decrypts without error. The exercised core gameplay checkpoint is
+ready for review/check-in; Arena remains deferred until the legitimate story
+unlock, and other pending acceptance observations are not inferred from this
+success. The agent did not issue a purchase or fabricate test currency.

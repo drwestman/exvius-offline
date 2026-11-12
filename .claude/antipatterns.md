@@ -41,3 +41,17 @@
 - **Symptom**: Native summon detail reported missing button textures and monster animation data immediately before the app crashed; their intact packs were still queued behind background movies.
 - **Rule**: Preload a synchronous scene's mandatory packs or wait for their availability before opening it; file presence on the server does not establish readiness on the client.
 - **Discovered**: 2026-11-11 via the iPhone's uploaded summon-crash session.
+
+## AP-007 — Losing reserved binary values in text round trips
+
+- **Class**: boundary
+- **Symptom**: A rebuilt CPK decoded like its source but changed the TOC's reserved null-string offset from zero to an ordinary string offset.
+- **Rule**: Preserve reserved wire values explicitly and test binary cells against the native contract; decoded text equality cannot establish binary compatibility.
+- **Discovered**: 2026-11-11 during Vortex banner-load diagnosis; physical recovery remains a separate device check.
+
+## AP-008 — Publishing native URLs without their request adapters
+
+- **Class**: boundary
+- **Symptom**: The iPhone's Drop Rates page was blank because its advertised form-POST URL returned an empty 404, while an alternate HTML URL worked.
+- **Rule**: Exercise the exact advertised native URL, method and parameter encoding through the real HTTP handler; rendering the same content through another route does not verify native navigation.
+- **Discovered**: 2026-11-12 via physical Drop Rates acceptance and matching live 404 probes.
