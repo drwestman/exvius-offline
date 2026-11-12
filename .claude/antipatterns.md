@@ -55,3 +55,10 @@
 - **Symptom**: The iPhone's Drop Rates page was blank because its advertised form-POST URL returned an empty 404, while an alternate HTML URL worked.
 - **Rule**: Exercise the exact advertised native URL, method and parameter encoding through the real HTTP handler; rendering the same content through another route does not verify native navigation.
 - **Discovered**: 2026-11-12 via physical Drop Rates acceptance and matching live 404 probes.
+
+## AP-009 — Treating release metadata as an installed content tree
+
+- **Class**: assumption
+- **Symptom**: The iPhone launcher selected the metadata-only checkout data directory and failed on a missing native registry despite prepared host assets being available.
+- **Rule**: Distinguish installation markers from release metadata when choosing default content paths. Preserve explicit selections and existing installations; never silently switch away from an incomplete installation.
+- **Discovered**: 2026-11-12 via Play Exvius on iPhone.command startup failure.

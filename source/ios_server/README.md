@@ -331,7 +331,10 @@ symlinks are excluded. Maintenance runs under the engine state lock. Existing
 bounded transport logs and stable certificate renewal remain in effect.
 
 [Play Exvius on iPhone.command](../../Play%20Exvius%20on%20iPhone.command) starts
-foreground gameplay using the checkout's managed `data/` directory by default.
+foreground gameplay using an existing installation in the checkout's `data/`
+directory, or the prepared `source/out/browser-data/` folder when `data/` contains
+only release metadata. Startup still validates the selected assets and campaign;
+it does not download or prepare them.
 For another prepared path, run `./"Play Exvius on iPhone.command" --data /path/to/data`
 or set `FFBE_IOS_DATA` in its environment. The existing connection-check launcher
 continues to run `serve` independently of game data.
@@ -854,6 +857,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_home_banners.py
 .venv-ios/bin/python -B source/exvius/test_ios_pack_install.py
 .venv-ios/bin/python -B source/exvius/test_ios_hosting.py
+.venv-ios/bin/python -B source/exvius/test_ios_launcher.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

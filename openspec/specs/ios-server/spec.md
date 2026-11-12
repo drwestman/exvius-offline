@@ -1558,6 +1558,14 @@ serve SHALL retain its independent connection-only behavior.
 - Then it reports the explicit preparation command without importing engine state
 - And no source, campaign or preparation record changes.
 
+#### Scenario: Launch with prepared host assets and release metadata
+
+- Given checkout data/ contains only release metadata and source/out/browser-data/ has a native registry
+- When Play Exvius on iPhone.command runs without an explicit data selection
+- Then it selects the prepared host assets and retains the private iOS campaign
+- And explicit --data or FFBE_IOS_DATA selections take priority
+- And an existing repository installation, including an incomplete one, is never silently replaced by another data selection.
+
 ### Requirement: ShareHostingRuntimeLease
 
 The prepared engine SHALL accept only a held InstanceLock for its own private
@@ -1699,6 +1707,12 @@ published native table identities SHALL receive prepared file versions.
 
 <!-- manual -->
 ### Known Invariants
+
+- The iPhone gameplay launcher must distinguish release metadata from installed
+  content when selecting its default data directory. A metadata-only data/ folder
+  must not hide existing prepared host assets; explicit selections and existing
+  installations remain authoritative. Discovered November 12, 2026: unconditional
+  selection of data/ failed on its missing client/shared_prefs/gamedata.xml.
 
 - PreparedTables.project_versions must distinguish global bootstrap/version
   metadata from downloadable native table rows. A file-publication allowlist must
