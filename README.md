@@ -2,7 +2,7 @@
 
 **Play Final Fantasy Brave Exvius offline on Android.**
 
-**[Download the APK (74 MB)](https://github.com/Elvlin/exvius-offline/releases/download/v0.1.23/exvius-offline-v0.1.23.apk)**
+**[Download the APK (106 MB)](https://github.com/Elvlin/exvius-offline/releases/download/v0.1.30/exvius-offline-v0.1.30.apk)**
 
 This is a fan project built from the original Global game. Download the game data once, then play it offline.
 
@@ -10,7 +10,7 @@ Replay stages to farm Lapis, pick the summon banner you want, and revisit events
 
 This project is still being worked on. It is unofficial and is not affiliated with Square Enix or gumi.
 
-[What changed in v0.1.23](release/notes-v0.1.23.md)
+[What changed in v0.1.30](release/notes-v0.1.30.md)
 
 ## Screenshots
 
@@ -36,7 +36,7 @@ Banner prices, featured units, tickets, step-ups and guarantees are kept where t
 
 ### Events are always available
 
-Open **Vortex** and use **Filter** to choose **All Events, Permanent, Season 1, Season 2, Season 3, Season 4, Collab or Other Events**. 
+Open **Vortex** and use **Filter** to choose **All Events, Permanent, Season 1, Season 2, Season 3, Season 4, Collab or Other Events**.
 The summon dropdown and Vortex filter are separate. You can browse one season's summons and another season's events on the same save.
 
 ### Raids are adjusted for solo play
@@ -52,7 +52,7 @@ Daily login rewards use your local save and date.
 
 ## Install
 
-1. [Download the APK](https://github.com/Elvlin/exvius-offline/releases/download/v0.1.23/exvius-offline-v0.1.23.apk) from the [release page](https://github.com/Elvlin/exvius-offline/releases/tag/v0.1.23).
+1. [Download the APK](https://github.com/Elvlin/exvius-offline/releases/download/v0.1.30/exvius-offline-v0.1.30.apk) from the [release page](https://github.com/Elvlin/exvius-offline/releases/tag/v0.1.30).
 2. Install it on an **Android 7.0 or newer phone with 64-bit ARM support**.
 3. Open it with an internet connection. The app downloads all the game data automatically, about **14.5 GB**. Allow about **18 GB of free space** for setup.
 4. Once setup is done, you can play offline.
@@ -152,7 +152,7 @@ Changed data downloads in the background and is installed after you close and re
 
 ## Still being worked on
 
-Some advanced upgrades and event interactions still need fixes. Loading can also be slow on some devices. 
+Some advanced upgrades and event interactions still need fixes. Loading can also be slow on some devices.
 Restored text, artwork and events may have mistakes, so please report anything you find.
 To report a problem, [open an issue](https://github.com/Elvlin/exvius-offline/issues). Tell me which screen or quest you were on, what you tried and what happened. A screenshot helps.
 
@@ -160,7 +160,7 @@ To report a problem, [open an issue](https://github.com/Elvlin/exvius-offline/is
 
 If you would like to support the project, you can find me on [Ko-fi](https://ko-fi.com/elvlin) or [Patreon](https://www.patreon.com/c/ElvlinGame).
 
-You can also contact me there if you have a project request or an idea you want to discuss. 
+You can also contact me there if you have a project request or an idea you want to discuss. [Discord](https://discord.gg/Wnqh9q5WMY)
 
 ## Files in this repository
 
