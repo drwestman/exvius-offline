@@ -285,9 +285,15 @@ class Handler(BaseHTTPRequestHandler):
         # `reply_pipeline` (extracted 2026-09-26, a pure move; see its docstring and
         # docs/SERVER_REFACTOR_PLAN.md Phase 2). Everything that is the REQUEST's I/O rather than the
         # REPLY's construction -- dispatch, the hot-reload checks, the record, the envelope -- stays here.
-        if missing_battle is None:
+        reports = getattr(State, 'native_reports', None)
+        log_upload = reports is not None and (reply_id == '6611dc2f' or reports.owns(self.path))
+        if log_upload:
+            spec = reports.receive(plaintext if reply_id == '6611dc2f' and decrypt_error is None else None)
+        elif missing_battle is None:
             spec = reply_pipeline(spec, reply_id=reply_id, plaintext=plaintext,
                                   mid=None if menu_resource else mid, spec_key=spec_key)
+        if reports is not None and not log_upload:
+            spec = reports.project(spec, reply_id)
         # NOTE: `json.dumps(None)` is the 4-char string "null" — an unconfigured endpoint must send NOTHING
         # (an empty body), not the literal null.
         body_plain = spec if isinstance(spec, str) else (None if spec is None else json.dumps(spec))
@@ -349,9 +355,9 @@ class Handler(BaseHTTPRequestHandler):
             "ciphertext_len": len(ciphertext) if ciphertext else 0,
             "endpoint": ep,
             "selected_by": how,
-            "plaintext": plaintext,
+            "plaintext": None if log_upload else plaintext,
             "decrypt_error": decrypt_error,
-            "body_raw": body_text if not envelope else None,
+            "body_raw": body_text if not envelope and not log_upload else None,
             "reply": {
                 "len": len(data),
                 "sha256_16": hashlib.sha256(data).hexdigest()[:16],
@@ -395,7 +401,7 @@ class Handler(BaseHTTPRequestHandler):
               f"reqID={header.get('z5hB3P01')}  mission={mid or '-'}  from={spec_key or '-'}  "
               f"body={len(raw)}B  {replied}  -> {os.path.relpath(fname, WORK)}",
               flush=True)
-        if plaintext:
+        if plaintext and not log_upload:
             print("    plaintext: " + plaintext[:600].replace("\n", " "), flush=True)
         if decrypt_error:
             print("    note: " + decrypt_error, flush=True)

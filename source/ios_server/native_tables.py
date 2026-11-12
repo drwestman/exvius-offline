@@ -8,10 +8,14 @@ from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
 import revival_economy
 
-PIPELINE_VERSION = 3
+PIPELINE_VERSION = 5
 VERSION_OFFSET = 200000
 VERSION_STEP = 10000
 EARLY_PACKS = frozenset(('resources_common.cpk', 'resources.cpk'))
+# Gacha detail opens synchronously: its UI and default Ochu preview cannot wait
+# behind the background movie queue (confirmed by native reports on 2026-11-11).
+MENU_PACKS = frozenset(('gacha1_common.cpk', 'gacha1.cpk', 'monster3_common.cpk'))
+UPFRONT_PACKS = EARLY_PACKS | MENU_PACKS
 RATE_URL = 'https://v910-lapis.gumi.sg/lapisProd/app/php/web/statics/probability/sg_summons_list.php'
 
 
@@ -103,7 +107,9 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floo
             return None
         if row.get('pJ56sAEo') in EARLY_PACKS:
             found.add(row['pJ56sAEo'])
-            if not row.get('81fTkEDP'):
+        if row.get('pJ56sAEo') in UPFRONT_PACKS:
+            if not row.get('81fTkEDP') or (row.get('pJ56sAEo') in MENU_PACKS
+                    and str(row.get('81fTkEDP', '')).upper() not in ('TUTO', 'PRE_TUTO')):
                 row['81fTkEDP'] = 'TUTO'
         return row
 

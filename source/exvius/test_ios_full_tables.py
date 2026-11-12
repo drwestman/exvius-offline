@@ -82,6 +82,115 @@ class CompleteTablePreparation(unittest.TestCase):
             self.assertIsNotNone(pack.lookup(rules.BY_NAME[row['a4hXTIm0']].path(row['wM9AfX6I'])))
         self.assertEqual(pack.manifest['preparation']['coverage']['unregistered_localized'],['F_TEXT_CRAFT'])
 
+    def test_given_global_version_rows_when_prepared_versions_project_then_preserve_bootstrap_metadata(self):
+        self.fixture(); prep.prepare_data(self.config); pack = prep.load_prepared(self.config)
+        globals = [{'a4hXTIm0': name, 'wM9AfX6I': value, 'keep': 'canonical'} for name, value in (
+            ('F_MST_VERSION', '1'), ('F_RSC_VERSION', '2'),
+            ('F_APP_VERSION_IOS', '1167'), ('F_APP_VERSION_AND', '0'))]
+        spec = {'c1qYg84Q': globals + [{'a4hXTIm0': 'F_UNKNOWN', 'wM9AfX6I': '99'}]}
+        original = copy.deepcopy(spec)
+        out = pack.project_versions(spec)
+        self.assertEqual(spec, original)
+        by_name = {row['a4hXTIm0']: row for row in out['c1qYg84Q']}
+        for row in globals:
+            self.assertEqual(by_name.get(row['a4hXTIm0']), row)
+        self.assertEqual(set(by_name), set(rules.BY_NAME) | {row['a4hXTIm0'] for row in globals})
+        self.assertEqual(len(by_name), len(out['c1qYg84Q']))
+        for name, row in pack.manifest['tables'].items():
+            self.assertEqual(by_name[name]['wM9AfX6I'], str(row['version']))
+
+    def test_given_upfront_pack_size_differs_when_prepared_then_match_served_bytes_and_detect_source_changes(self):
+        self.fixture()
+        def write(name, rows):
+            table = rules.BY_NAME[name]
+            self.source(table).write_bytes(harness.master(table.key, rows, mode=table.cipher))
+        resource = rules.BY_NAME['F_RESOURCE_MST']
+        rows = [row for _, row, _ in master_rows(self.source(resource).read_bytes(), resource.key)]
+        rows.append({'9ZCEWn0z': '900', '81fTkEDP': 'PRE_TUTO', '3LHdc6Qa': 'resources', 'pJ56sAEo': 'patched.cpk'})
+        write(resource.name, rows)
+        versions = rules.BY_NAME['F_RESOURCE_VERSION_MST_LOCALIZE']
+        rows = [row for _, row, _ in master_rows(self.source(versions).read_bytes(), versions.key)]
+        rows.append({'9ZCEWn0z': '900', 'OzT5lSz3': '5', '86SWOBTb': '6'})
+        write(versions.name, rows)
+        checksum = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
+        write(checksum.name, [{'9ZCEWn0z': '900', 'JwbkKrjA': '1', 'MLOSu5E0': '2', 'mYtcPkQQ': 'unchanged'}])
+        base = self.native / 'common_lang/sd/resources/Ver5_patched.cpk'
+        english = self.native / 'en/sd/resources/Ver6_patched.cpk'
+        for path, raw in ((base, b'CPK base'), (english, b'CPK english')):
+            path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(raw)
+        prep.prepare_data(self.config); snapshot = prep.load_prepared(self.config)
+        row = master_rows(snapshot.lookup(snapshot.manifest['tables'][checksum.name]['path']), checksum.key)[0][1]
+        self.assertEqual(row, {'9ZCEWn0z': '900', 'JwbkKrjA': '8', 'MLOSu5E0': '11', 'mYtcPkQQ': 'unchanged'})
+        self.assertEqual(base.read_bytes(), b'CPK base'); self.assertEqual(english.read_bytes(), b'CPK english')
+        english.write_bytes(b'CPK changed')  # same length; freshness must include bytes
+        self.assertFalse(prep.verify_data(self.config)['ok'])
+
+    def upfront_pack(self):
+        self.fixture()
+        checksum = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
+        self.source(checksum).write_bytes(harness.master(checksum.key,
+            [{'9ZCEWn0z': '1', 'JwbkKrjA': '1', 'MLOSu5E0': '0', 'mYtcPkQQ': '991'}]))
+        path = self.native / 'common_lang/sd/resources/Ver8_resources.cpk'
+        path.parent.mkdir(parents=True); path.write_bytes(b'CPK base')
+        return path, checksum
+
+    def test_given_background_summon_dependencies_when_prepared_then_preload_exact_packs_and_bind_sizes(self):
+        self.fixture()
+        resource, versions, checksums = (rules.BY_NAME[name] for name in
+            ('F_RESOURCE_MST', 'F_RESOURCE_VERSION_MST_LOCALIZE', 'F_RESOURCE_CHECKSUM_MST'))
+        rows = {t.name: [row for _, row, _ in master_rows(self.source(t).read_bytes(), t.key)]
+                for t in (resource, versions, checksums)}
+        cases = (('900', 'gacha', 'gacha1_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA'),
+                 ('901', 'gacha', 'gacha1.cpk', 'en', '86SWOBTb', 'MLOSu5E0'),
+                 ('902', 'monster', 'monster3_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA'),
+                 ('903', 'gacha', 'unrelated.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA'))
+        for identity, directory, name, locale, version_field, size_field in cases:
+            rows[resource.name].append({'9ZCEWn0z': identity, '3LHdc6Qa': directory,
+                                       'pJ56sAEo': name, '81fTkEDP': 'BACKGROUND'})
+            rows[versions.name].append({'9ZCEWn0z': identity, version_field: '7'})
+            rows[checksums.name].append({'9ZCEWn0z': identity, size_field: '1', 'mYtcPkQQ': 'android'})
+            path = self.native / f'{locale}/sd/{directory}/Ver7_{name}'
+            path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(b'CPK fixture')
+        for table in (resource, versions, checksums):
+            self.source(table).write_bytes(harness.master(table.key, rows[table.name]))
+        before = {p: p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()}
+        prep.prepare_data(self.config); pack = prep.load_prepared(self.config)
+        def published(table):
+            return {row['9ZCEWn0z']: row for _, row, _ in
+                    master_rows(pack.lookup(pack.manifest['tables'][table.name]['path']), table.key)
+                    if '9ZCEWn0z' in row}
+        resources, sizes = published(resource), published(checksums)
+        for identity, _directory, _name, _locale, _version, field in cases[:3]:
+            self.assertEqual(resources[identity]['81fTkEDP'], 'TUTO')
+            self.assertEqual(sizes[identity][field], str(len(b'CPK fixture')))
+            self.assertEqual(sizes[identity]['mYtcPkQQ'], 'android')
+            self.assertIn(identity + ':' + field, pack.manifest['sources']['upfront']['files'])
+        self.assertEqual(resources['903']['81fTkEDP'], 'BACKGROUND')
+        self.assertEqual(sizes['903']['JwbkKrjA'], '1')
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
+
+    def test_given_exact_overlay_pack_when_prepared_then_size_and_provenance_follow_served_overlay(self):
+        base, checksum = self.upfront_pack()
+        overlay = self.config.data / 'overlay/common_lang/sd/resources/Ver8_resources.cpk'
+        overlay.parent.mkdir(parents=True); overlay.write_bytes(b'CPK overlay')
+        prep.prepare_data(self.config); snapshot = prep.load_prepared(self.config)
+        row = master_rows(snapshot.lookup(snapshot.manifest['tables'][checksum.name]['path']), checksum.key)[0][1]
+        self.assertEqual((row['JwbkKrjA'], row['mYtcPkQQ']), ('11', '991'))
+        record = snapshot.manifest['sources']['upfront']['files']['1:JwbkKrjA']
+        self.assertEqual(record['path'], overlay.relative_to(self.config.data).as_posix())
+        self.assertEqual(record['sha256'], hashlib.sha256(b'CPK overlay').hexdigest())
+        self.assertEqual(base.read_bytes(), b'CPK base')
+
+    def test_given_escaping_upfront_pack_when_preparing_then_preserve_current_snapshot(self):
+        base, _ = self.upfront_pack()
+        prep.prepare_data(self.config); before = self.pointer().read_bytes()
+        outside = self.root / 'outside.cpk'; outside.write_bytes(b'private')
+        base.unlink(); base.symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, 'escapes shared content'):
+            prep.prepare_data(self.config)
+        self.assertEqual(self.pointer().read_bytes(), before)
+        self.assertEqual(outside.read_bytes(), b'private')
+
     def test_given_higher_registered_floor_when_prepared_then_advance_above_it_without_changing_source_identity(self):
         self.fixture();target=rules.ECONOMY_TABLES[0]
         path=self.version_file();text=path.read_text()
@@ -257,7 +366,8 @@ try:
     encoded=json.loads(response.body)['t7n6cVWf']['qrVcDe48']
     out=json.JSONDecoder().raw_decode(crypto.cbc_decrypt(key,encoded).decode())[0]
     versions={row['a4hXTIm0']:int(row['wM9AfX6I']) for row in out['c1qYg84Q']}
-    assert len(versions)==len(out['c1qYg84Q'])==364
+    assert len(versions)==len(out['c1qYg84Q'])==len(engine.tables.manifest['tables'])+2
+    assert {name:value for name,value in versions.items() if name not in engine.tables.manifest['tables']}=={'F_MST_VERSION':1,'F_RSC_VERSION':1}
     saved=config.state_file.read_bytes()
     def guard(event,args):
         if event.startswith('socket.'):raise AssertionError('asset query opened network')

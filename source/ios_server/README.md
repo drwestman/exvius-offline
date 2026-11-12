@@ -336,6 +336,10 @@ For another prepared path, run `./"Play Exvius on iPhone.command" --data /path/t
 or set `FFBE_IOS_DATA` in its environment. The existing connection-check launcher
 continues to run `serve` independently of game data.
 
+The dated [device acceptance record](../../plans/IOS_DEVICE_ACCEPTANCE.md) tracks
+persistent preparation and physical-iPhone checks separately. Use it to record
+actual device results after the Mac is ready.
+
 ## Managed-pack installation
 
 Use a separate shared-content directory, alongside the private runtime directory:
@@ -465,6 +469,49 @@ The hello-only `serve` service does not serve these files; `start` binds them fo
 gameplay. Managed-pack installation is available through the explicit commands
 above. Remaining source-art gaps, story compatibility if needed and physical
 iPhone acceptance remain pending.
+
+### Upfront resource size consistency
+
+Table preparation also measures available TUTO/PRE_TUTO CPKs, the two early
+resource packs and the required summon menu packs using exact overlay-first paths.
+Pipeline revision 5 records their paths, lengths and SHA-256s with the snapshot
+and corrects common/English iOS size fields to match the served files. Other
+platform fields and shared pack bytes stay unchanged. Missing packs are reported
+under `preparation.upfront.missing`; table-only fixtures remain supported.
+
+Source edits, including same-length changes, make preparation stale. Refresh
+with `prepare-data` and verify before restarting; existing Vortex/sound features
+remain enabled. The actual acceptance corpus measures 60 packs and corrects
+three stale size fields. It needs a new table generation, without rewriting the
+shared CPKs. Physical download recovery is tracked in the acceptance record.
+
+The common/English `gacha1` UI packs and `monster3_common.cpk` (the detail scene's
+default Ochu preview) are marked TUTO even if their original class was background.
+Those three packs total 17,682,014 bytes in the acceptance corpus. The detail scene
+loads their textures/animation synchronously, so leaving them behind the bulk movie
+queue can show fallback squares and fail when opening a banner. Unrelated packs
+keep their original classification. Refresh prepared tables explicitly and allow
+startup downloads to complete before retrying Summon. The documented first-login
+relaunch still applies; a second app launch can be needed to use updated lists.
+
+### Native device diagnostics
+
+Native client reports are off by default. To diagnose an iPhone-only failure,
+start a stopped gameplay service with `EXVIUS_CLIENT_REPORTS=1` in its environment.
+The game is asked for its log once per launch, on GameSetting; home polling does
+not ask repeatedly. Reproduce the issue, then fully close and reopen the app so
+its next upload includes the failed session. Status exposes `gameplay.client_reports`.
+Restart without that environment setting when diagnosis is finished.
+
+Reports are stored only under the private runtime's `client-reports/`, with three
+files/128 MiB retained, private permissions and atomic publication. Queued reports
+are acknowledged without storage when diagnostics are off. The dedicated upload
+route permits 64 MiB; ordinary gameplay POSTs retain the 4 MiB bound. Report bodies
+are excluded from ordinary request records and public serving. The read-only
+`ios_server.client_reports.decode(path)` iterator decrypts saved report lines.
+
+The [upstream review](../../plans/IOS_UPSTREAM_UPDATE_REVIEW.md) records the newer
+reference revision and the gameplay fixes still awaiting selective integration.
 
 ### Native Vortex artwork
 
@@ -681,8 +728,9 @@ Use `prepare-home-banners` and `verify-home-banners` for optional replay home ar
 Use `prepare-sounds`, then `prepare-data --sounds`, to include coordinated sound
 delivery. Refresh the table binding after preparing changed sound inputs.
 
-The prepared engine projects exactly 364 unique published table versions after canonical
-version handling. Table GET/HEAD requests return exact snapshot bytes and lengths;
+The prepared engine projects all 364 unique published table versions after canonical
+version handling, while preserving existing global master/resource/app version
+rows unchanged. Those bootstrap counters are metadata, not downloadable files. Table GET/HEAD requests return exact snapshot bytes and lengths;
 HEAD has no body. Unknown or old versions under `mst/` and `localized_texts/en/`
 return 404 without falling back to stock files. Schema-4 snapshots apply the same
 exact-version rule to the prepared Vortex pack. Path validation runs before lookup.

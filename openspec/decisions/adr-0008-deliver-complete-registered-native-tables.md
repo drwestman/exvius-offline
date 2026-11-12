@@ -45,3 +45,17 @@ preparation, managed installation and physical-iPhone acceptance remain pending.
 Reviewed for the Vortex checkpoint: schema 4 extends the same complete-table and
 exact-delivery contracts with an explicitly enabled pack and coordinated resource
 facts. See [ADR-0009](adr-0009-publish-vortex-art-with-resource-tables.md).
+
+Reviewed November 11, 2026 during physical MST_LOAD_FAILED diagnosis: complete
+file publication must preserve canonical global master/resource/app version rows.
+They are bootstrap metadata and do not name snapshot files. Keep all 364 prepared
+table versions exact while retaining those existing global counters unchanged.
+The regression reproduces the dropped counters; device recovery remains pending
+until the restarted host is retried on the iPhone.
+
+Reviewed for the summon-detail crash on November 11: pipeline revision 5 moves
+the two gacha UI packs and the default Ochu preview pack into upfront delivery.
+Their exact files/sizes/hashes join the existing provenance; unrelated background
+classification and shared bytes stay unchanged. Complete table delivery alone
+does not establish that assets queued in the background are ready for synchronous
+scene loading. A real iPhone retry remains the physical recovery gate.

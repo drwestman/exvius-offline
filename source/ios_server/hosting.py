@@ -34,7 +34,7 @@ class Gameplay:
         self.engine = Engine(self.config, prepared=True)
         with redirect_stdout(sys.stderr):
             server = self.engine.initialize(lease=lease)
-        self.handler = handler(server.Handler)
+        self.handler = handler(server.Handler, reports=self.engine.reports)
         self.maintain()
         return self.handler
 
@@ -43,12 +43,14 @@ class Gameplay:
             from ios_server.request_retention import prune
             with self.engine.server.STATE_LOCK:
                 prune(self.config.root)
+                self.engine.reports.prune()
 
     def describe(self):
         if self.engine is None or self.engine.tables is None:
             return {}
         return {'slot': self.config.slot, 'content_root': str(self.config.content_root),
-                'table_generation': self.engine.tables.manifest['generation']}
+                'table_generation': self.engine.tables.manifest['generation'],
+                'client_reports': self.engine.reports.enabled}
 
     def close(self):
         if self.engine is not None:

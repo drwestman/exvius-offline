@@ -1355,3 +1355,149 @@ initial downloads and documented first-login relaunch, tutorial battle, audio,
 summons, shops, friends, Arena and restart persistence. Full bulk-install validation,
 nine home/Vortex source-art gaps and 307 summon-detail gaps remain open. The
 unvalidated pinned story rewrite remains disabled; original scene packs stay in use.
+
+
+## Persistent iPhone-acceptance preparation — November 11, 2026
+
+Prepared the selected persistent private runtime at
+`~/Library/Application Support/Exvius Offline/iOS`, reusing the existing trusted CA
+and the read-only `source/out/browser-data` corpus. No prior iOS campaign existed;
+explicit initialization created the fresh `campaign` slot. All five initialization/
+preparation commands and four read-only verification commands succeeded: 364
+schema-5 tables, the Vortex pack, 735 sound banks (2,202,569,152 bytes), 974 fitted
+images (972 unique files) and 692 home-image sources (628 unique files).
+
+Preparation retained every existing certificate byte and the shared registry.
+A source-write audit guard remained active. Android/browser state and the Mac's
+DNS/trust settings were unchanged. The known 307 summon and nine home/Vortex
+source gaps remain reported; original story packs remain in use.
+
+Started the actual gameplay service at **192.168.86.40**, with upstream DNS
+**192.168.86.1** and the normal DNS/HTTP/HTTPS ports. Ten Mac-side transport probes
+passed: UDP/TCP game A/AAAA handling, ordinary DNS forwarding, HTTP setup/profile,
+and trusted HTTPS hello GET/HEAD. Campaign bytes were unchanged across the probes.
+No synthetic native login was sent to this persistent campaign; no gameplay
+request records had arrived at the checkpoint.
+
+The dated [device acceptance record](IOS_DEVICE_ACCEPTANCE.md) captures the
+runtime, selected data, CA identity, Mac results, manual lifecycle and remaining
+iPhone checks. Installed build confirmation, current physical Safari connection,
+native downloads/login, first-login relaunch, tutorial, audio, gameplay, artwork/
+taps and restart persistence are **pending device evidence**. Mac readiness does
+not complete physical-iPhone acceptance. No gameplay implementation changed in
+this preparation step.
+
+
+Physical acceptance update: the user confirmed the iPhone Safari secure hello
+shows the gameplay-ready page without a certificate warning. Current physical
+HTTPS reachability is passed. Ordinary browsing, installed client build, native
+login/downloads and gameplay checks remain pending in IOS_DEVICE_ACCEPTANCE.md.
+
+
+## Physical MST bootstrap defect — November 11, 2026
+
+The first physical app download reported MST_LOAD_FAILED. Its request AppVersion
+is 1167; nine canonical API requests decrypted successfully. Diagnosis reproduced
+a reply-contract defect: complete prepared version filtering dropped the original
+F_MST_VERSION and F_RSC_VERSION bootstrap counters because they do not name files.
+
+Preserve existing global master/resource/app version rows unchanged while keeping
+all 364 exact table versions and filtering unknown file identities. The physical
+initialization carrier now retains its two global counters, for 366 rows total.
+The regression failed before the fix; all 474 iOS checks and 200 legacy/decoder
+checks pass after it. Encrypted transport tests now assert the native rows and
+canonical counters separately. Strict OpenSpec adds no baseline findings and
+static drift has no tracked gaps or stale anchors. The invariant is recorded in
+the iOS spec and ADR-0008, with the mixed-metadata filtering antipattern documented.
+
+Restarted the same persistent host without changing its CA identity, replay
+record, prepared generation or asset bytes. Ten Mac transport probes pass again.
+No synthetic login or campaign reset was issued. **Physical recovery is pending
+an iPhone relaunch/retry**; the acceptance record retains the original failure
+until a successful client download/login is observed.
+
+## Physical upfront-pack size defect — November 11, 2026
+
+After the counter fix, the device downloaded to 98% and then reported a generic
+error with a return to the title screen. Auditing all 57 requested upfront packs
+found three stale iOS byte sizes: common map 127030, common event 127038 and English
+pretutorial resource 9200402. Their served lengths differ from the source size
+rows; the large movie pack matches its advertised length.
+
+Added a read-only upfront-file collector and pure checksum-table projection.
+Pipeline revision 4 records exact overlay-first paths, lengths and SHA-256s,
+corrects only the common/English iOS size fields, and detects source changes,
+including same-length edits. Missing packs remain reported; traversal/symlink
+escapes fail before publication. Shared CPKs and other platform fields stay intact.
+
+The new regression failed before the fix and passed afterward. The full 475-test
+iOS suite and 200 legacy/decoder checks passed, plus two added overlay/escape
+guards. Updated the iOS requirements, invariant, runtime docs and AP-004.
+Strict OpenSpec adds no findings to the 417-error/three-warning baseline; static
+drift has no tracked gaps or stale anchors, with four informational decision
+freshness notices remaining.
+
+Explicit preparation and verification published generation 2: 57 upfront packs
+checked, three corrected, none missing. The host is running again with its
+existing Vortex/sound features; ten Mac transport probes pass. The source-write
+guard, original CA and campaign replay identity were preserved. No campaign reset
+or synthetic login was performed. **Physical recovery remains pending**; retry
+from a fully closed app before advancing the remaining gameplay acceptance rows.
+
+Physical retry update: the user reports passing the tutorial after a restart.
+The device has reached gameplay with generation 2; the restart requirement and
+remaining acceptance rows still need evaluation. A live check found a ready host,
+successful summon-entry/banner requests and no bulk transfer during the sampled
+interval. Detailed observations are in IOS_DEVICE_ACCEPTANCE.md.
+
+## Updated revival reference and device diagnostics — November 11, 2026
+
+Reviewed the local reference at ae07888, 15 commits beyond the original 47a13c0
+baseline. [IOS_UPSTREAM_UPDATE_REVIEW.md](IOS_UPSTREAM_UPDATE_REVIEW.md) records
+selective integration slices; existing feature ports retain their original
+baseline. No blanket engine/data update is implied.
+
+Summon opens, narrowing the reported failure to a blank loading indicator. No
+general spinner repair was found upstream. Adapted the latest native report
+protocol and 590d4fb's policy: explicit opt-in, one request on GameSetting per
+launch, no requests on periodic Home polling, and queued-report acknowledgment
+while off. Uploads bypass gameplay commands, retain canonical encryption, exclude
+report bodies from ordinary records, and use atomic private storage bounded to
+three files/128 MiB. Only report routes admit up to 64 MiB; route/request-ID
+mismatches cannot use that allowance for gameplay commands.
+
+The persistent host was found stopped and restarted with temporary diagnostic
+capture enabled. Its campaign, CA and generation 2 remain selected. Ten Mac
+transport probes pass; a device report and physical loading recovery remain
+pending the requested app relaunch/retry. Broader newer gameplay features are
+separately planned. No save reset or synthetic native login was performed.
+
+Physical retry: Summon opens, but tapping the first banner crashes the app; the
+blank loading square was not observed. The two received startup logs predate this
+crash and reveal missing summon UI textures from an earlier session. Exact common/
+English gacha packs contain those textures and match their iOS size rows. A
+post-crash upload, requested by reopening once at Home, is needed before changing
+preload/cache behavior. The acceptance record captures this failed banner check;
+no draw, reward result or physical recovery is inferred from the automated suite.
+
+The next relaunch uploaded the crashed session: summon detail immediately reports
+missing UI textures and the default Ochu animation CSV/texture. Those files are
+present in intact common/English gacha1 and monster3_common packs, but all three
+are queued only in the background. Pipeline revision 5 moves these synchronous
+dependencies into TUTO delivery (17,682,014 bytes in the selected corpus) and
+includes their exact sizes/hashes in upfront provenance. Other background packs
+and all gameplay/purchase policies retain their behavior.
+
+The new BDD regression was RED before the change; all 484 iOS tests now pass.
+Actual source coverage is 60 upfront packs, three corrected sizes, none missing.
+Updated the iOS spec, ADR-0008, runtime guide and AP-006. Strict OpenSpec adds no
+findings to the 417-error/three-warning baseline; static drift has no tracked
+gaps or stale anchors, with five informational decision-freshness notices.
+Physical banner-opening recovery remains pending the refreshed-generation retry.
+
+Generation 3 is now prepared, verified and hosted with diagnostic capture enabled.
+Its three dependency rows are TUTO. Ten Mac connection probes and six exact HTTPS
+GET/HEAD pack checks pass; GET hashes and lengths match recorded provenance.
+Full campaign bytes and CA identity were preserved, with shared/source writes
+guarded. The iPhone retry is to finish startup downloads, relaunch once more, then
+open the first banner; no physical recovery is claimed before that observation.

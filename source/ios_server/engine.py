@@ -22,6 +22,7 @@ class Engine:
         self.prepared = prepared
         self.tables = None
         self.banners = None
+        self.reports = None
 
     def initialize(self, *, lease=None):
         if self.server is not None:
@@ -69,6 +70,9 @@ class Engine:
             if self.tables is not None:
                 server.State.native_tables = self.tables
                 server.State.native_banners = self.banners
+                from ios_server.client_reports import ClientReports
+                self.reports = ClientReports(self.config.root, enabled=os.environ.get('EXVIUS_CLIENT_REPORTS') == '1')
+                server.State.native_reports = self.reports
             return server
         except BaseException:
             self.close()
@@ -85,8 +89,10 @@ class Engine:
         if self.server is not None and self.tables is not None:
             self.server.State.native_tables = None
             self.server.State.native_banners = None
+            self.server.State.native_reports = None
         self.tables = None
         self.banners = None
+        self.reports = None
         if self._lock is not None:
             self._lock.__exit__()
             self._lock = None

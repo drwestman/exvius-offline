@@ -58,3 +58,10 @@ prepared assets before state imports. Transport and engine share one held runtim
 lease; shutdown drains native requests before asset unbinding and lease release.
 The canonical handler, wire fields and campaign transactions remain unchanged.
 See [ADR-0015](adr-0015-compose-prepared-native-gameplay-hosting.md).
+
+Reviewed November 11 for native diagnostic uploads: only the prepared iOS engine
+binds the report adapter, and close unbinds it. Uploads bypass the gameplay
+pipeline and preserve campaign bytes. The adapter owns private bounded storage;
+scheduling is a pure reply projection. An unbound canonical handler retains its
+legacy behavior. The once-per-launch policy follows upstream 590d4fb, reviewed at
+ae07888; other newer gameplay changes remain separately planned.

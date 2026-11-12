@@ -57,6 +57,11 @@ def _complete_inputs(config, vortex_art=False, sounds=False):
         records = {**records, 'sound': sound.provenance}
         context = {**context, 'sound': sound.coverage}
         fingerprint = _sha(_json({'tables': fingerprint, 'sound': sound.provenance}))
+    from ios_server import upfront_resources
+    upfront = upfront_resources.collect(config, sources)
+    records = {**records, 'upfront': upfront}
+    context = {**context, 'upfront': upfront_resources.coverage(upfront)}
+    fingerprint = _sha(_json({'tables': fingerprint, 'upfront': upfront}))
     return sources, records, fingerprint, context, labels, art, sound
 
 
@@ -88,10 +93,11 @@ class PreparedTables:
                 seen.add(row['a4hXTIm0'])
         out['c1qYg84Q'].extend({'a4hXTIm0': name, 'wM9AfX6I': versions[name]} for name in sorted(versions.keys() - seen))
         if self.manifest['version'] >= 3:
-            # Complete delivery advertises only exact, published identities.
+            # Global counters describe the application/bootstrap, not downloadable tables.
+            allowed = versions.keys() | {'F_MST_VERSION', 'F_RSC_VERSION', 'F_APP_VERSION_IOS', 'F_APP_VERSION_AND'}
             unique = {}
             for row in out['c1qYg84Q']:
-                if isinstance(row, dict) and row.get('a4hXTIm0') in versions:
+                if isinstance(row, dict) and row.get('a4hXTIm0') in allowed:
                     unique.setdefault(row['a4hXTIm0'], row)
             out['c1qYg84Q'] = list(unique.values())
         return out
@@ -111,6 +117,8 @@ def _validate_sources(manifest, registry):
     """Validate recorded source inventories and policy before reading outputs."""
     version = manifest['version']
     optional = ({'art'} if 'packs' in manifest else set()) | ({'sound'} if version == 5 else set())
+    if version >= 3 and 'upfront' in manifest['sources']:
+        optional |= {'upfront'}
     if version == 1:
         if set(manifest['sources']) != registry.keys():
             raise ValueError('invalid core source inventory')
@@ -130,6 +138,10 @@ def _validate_sources(manifest, registry):
             or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
         raise ValueError('invalid preparation policy')
     settings({'ios_economy': {'version': 1, 'settings': policy['settings']}})
+    if 'upfront' in optional:
+        from ios_server.upfront_resources import coverage
+        if context['upfront'] != coverage(manifest['sources']['upfront']):
+            raise ValueError('Invalid upfront resource coverage')
     if version >= 3:
         registration = manifest['sources']['registry']
         if (set(registration) != {'versions', 'sha256', 'definition_sha256'}
@@ -197,6 +209,9 @@ def load_prepared(config):
                 raise ValueError('table checksum mismatch: ' + name)
             outputs[name], versions[name], files[entry['path']] = raw, version, raw
         rules.validate(outputs, versions, tables=tables)
+        if 'upfront' in manifest['sources']:
+            from ios_server.upfront_resources import project
+            project(manifest['sources']['upfront'], outputs, verify=True)
         if 'packs' in manifest:
             from ios_server import vortex_art
             files.update(vortex_art.load(config, directory, manifest, outputs))
@@ -323,6 +338,8 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
             generation = native_sounds.advance(generation, sound, current.manifest.get('sounds') if current else None)
         outputs, versions, changes = rules.build(sources, generation, labels=labels,
             economy=context['economy']['settings'], floors=floors)
+        from ios_server.upfront_resources import CHECKSUM, project
+        changes[CHECKSUM] += project(records['upfront'], outputs)
         packs = {}
         if art is not None:
             from ios_server import vortex_art as art_rules

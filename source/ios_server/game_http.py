@@ -8,7 +8,7 @@ PUBLIC = frozenset(('/', '/__exvius/hello', '/ca.mobileconfig', '/__exvius/ca.mo
 MAX_BODY = 4 * 1024 * 1024
 
 
-def handler(base):
+def handler(base, *, reports=None):
     class GameHandler(base, PublicHandler):
         def end_headers(self):
             self.send_header('Connection', 'close')
@@ -37,7 +37,9 @@ def handler(base):
                     or not values[0].isascii() or not values[0].isdigit()):
                 self.send_body(400, b'Expected one Content-Length.', 'text/plain')
                 return False
-            if int(values[0]) > MAX_BODY:
+            from ios_server.client_reports import owns, MAX_BODY as report_limit
+            limit = report_limit if reports is not None and owns(self.route()) else MAX_BODY
+            if int(values[0]) > limit:
                 self.send_body(413, b'Request body too large.', 'text/plain')
                 return False
             return True

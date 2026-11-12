@@ -338,7 +338,7 @@ with patch('ios_server.network.discover',return_value=network):
         deadline = time.monotonic() + 15
         while True:
             report = read_service(self.config.root)
-            if report is not None:
+            if report is not None and report['ready']:
                 self.assertTrue(report['ready']); self.assertEqual(report['mode'], 'gameplay')
                 self.report = report
                 return
@@ -387,14 +387,18 @@ with patch('ios_server.network.discover',return_value=network):
         self.prepare(); self.start()
         initialized = self.initialize()
         versions = {row['a4hXTIm0']: int(row['wM9AfX6I']) for row in initialized['c1qYg84Q']}
-        self.assertEqual(len(versions), 364)
+        self.assertEqual(len(versions), len(initialized['c1qYg84Q']))
+        self.assertEqual(len(versions), 366)
+        self.assertEqual({name: value for name, value in versions.items() if name not in native_tables.BY_NAME},
+                         {'F_MST_VERSION': 1, 'F_RSC_VERSION': 1})
         saved = self.config.state_file.read_bytes()
         shared = {p: p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()}
         expected = {entry['path']: self.pack.lookup(entry['path']) for entry in self.pack.manifest['tables'].values()}
         expected.update({entry['path']: self.pack.lookup(entry['path']) for entry in self.pack.manifest['packs'].values()})
         expected.update({entry['path']: self.pack.sounds.read(entry['path']) for entry in self.pack.manifest['sounds']['banks'].values()})
         for name, version in versions.items():
-            self.assertIn(native_tables.BY_NAME[name].path(version), expected)
+            if name in native_tables.BY_NAME:
+                self.assertIn(native_tables.BY_NAME[name].path(version), expected)
         home = home_banners.current(self.config)
         home_path = home.image(self.area_id)['url']
         expected[home_path] = home.lookup(home_path)
@@ -436,7 +440,7 @@ with patch('ios_server.network.discover',return_value=network):
 
     def test_given_managed_layout_when_hosted_then_serve_native_tables_and_sound_through_tls(self):
         self.prepare(managed=True); self.start()
-        self.assertEqual(len(self.initialize()['c1qYg84Q']), 364)
+        self.assertEqual(len(self.initialize()['c1qYg84Q']), 366)
         row = next(iter(self.pack.manifest['tables'].values()))
         self.assertEqual(self.request('/' + row['path'], secure=True)[1], self.pack.lookup(row['path']))
         row = next(iter(self.pack.manifest['sounds']['banks'].values()))

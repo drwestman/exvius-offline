@@ -910,7 +910,8 @@ download assets or change campaign facts. Closing the engine SHALL unbind it.
 
 - Given an initialized campaign and current schema-3 preparation
 - When the opt-in engine answers encrypted initialization and table GET/HEAD requests
-- Then all 364 unique advertised versions resolve to the snapshot bytes
+- Then all 364 unique table versions resolve to the snapshot bytes
+- And canonical global master/resource/app version rows retain their original values
 - And stale/unknown paths return 404 and traversal returns 400 without query writes.
 
 ### Requirement: PrepareVortexArtworkExplicitly
@@ -1587,7 +1588,9 @@ engine debug/status/new-game routes. HEAD SHALL omit bodies.
 ### Requirement: BoundNativePostFraming
 
 Native gameplay POST SHALL require one nonnegative decimal Content-Length no
-larger than 4 MiB and reject transfer encoding before canonical dispatch. The
+larger than 4 MiB, except the dedicated native report upload route, which SHALL
+allow at most 64 MiB while a native report adapter is bound. It SHALL reject
+transfer encoding before canonical dispatch. The
 same check SHALL guard Expect: 100-continue. Connections SHALL close after their
 response and game sockets SHALL have a bounded I/O timeout.
 
@@ -1663,3 +1666,138 @@ Neither condition SHALL permit a competing runtime instance.
 - When status and stop probes time out before listeners start
 - Then readiness remains false and the runtime stays exclusively locked
 - And the queued stop is honored after activation even though its client disconnected.
+
+
+### Requirement: PreserveGlobalVersionRowsInPreparedReplies
+
+Prepared version projection SHALL retain existing F_MST_VERSION, F_RSC_VERSION,
+F_APP_VERSION_IOS and F_APP_VERSION_AND rows unchanged. These bootstrap counters
+SHALL not be treated as downloadable tables, inflated or synthesized. Only known
+published native table identities SHALL receive prepared file versions.
+
+- **Implementation**: `PreparedTables::source/ios_server/preparation.py`
+
+#### Scenario: Project a mixed bootstrap version carrier
+
+- Given canonical global counters, known table rows and an unknown table row
+- When complete prepared versions are projected
+- Then global rows retain their original values and extra fields
+- And all 364 native tables advertise published versions while the unknown table is omitted
+- And the input reply and campaign remain unchanged.
+
+<!-- manual -->
+### Known Invariants
+
+- PreparedTables.project_versions must distinguish global bootstrap/version
+  metadata from downloadable native table rows. A file-publication allowlist must
+  not remove F_MST_VERSION or F_RSC_VERSION from canonical initialization replies.
+  Discovered November 11, 2026 during physical-iPhone MST_LOAD_FAILED diagnosis:
+  the complete-table filter dropped both original counters. Counter preservation
+  is verified by regression tests; physical recovery requires an iPhone retry.
+
+- iOS upfront resource sizes must describe the exact files selected by CDN overlay
+  precedence. Repacked assets can retain their filename/version while changing
+  length; trusting stale platform-size metadata then disagrees with downloaded
+  bytes. Discovered November 11, 2026 during a physical 98%-download failure:
+  three of 57 served upfront packs differed from their iOS size fields.
+
+- Native diagnostic uploads must bypass gameplay commands, keep their bodies out
+  of ordinary records, and be requested only on GameSetting while explicitly
+  enabled. Periodic Home polling must never repeatedly request a whole device log.
+  Discovered November 11, 2026 while porting the upstream 590d4fb diagnostic fix:
+  the prior adapter neither acknowledged queued reports nor retained device errors.
+
+- Synchronous summon detail dependencies must not remain solely in the bulk
+  background queue. The native client loads gacha UI textures and the default
+  monster preview immediately when entering detail. Discovered November 11, 2026:
+  the crashed session reported missing gacha button textures and Ochu CSV/animation
+  data while their intact packs were scheduled only as background downloads.
+<!-- /manual -->
+
+### Requirement: ReconcileUpfrontIosResourceSizes
+
+Preparation SHALL measure available TUTO/PRE_TUTO CPKs, both early resource packs
+and the required summon menu packs from exact overlay-first CDN paths. It SHALL record contained paths, byte
+lengths and SHA-256s, and correct only common/English iOS size fields. Other
+platform fields and source files SHALL remain unchanged. Missing files SHALL be
+reported without invented sizes; escaping paths SHALL fail.
+
+- **Implementation**: `collect::source/ios_server/upfront_resources.py`, `project::source/ios_server/upfront_resources.py`
+
+#### Scenario: Serve a patched upfront pack
+
+- Given a served pack has a different length than its original iOS size row
+- When native tables are prepared
+- Then the iOS size row matches the selected pack's actual bytes
+- And exact overlays take precedence without changing base or overlay files.
+
+### Requirement: BindUpfrontCpkFactsToPreparedGeneration
+
+Upfront CPK provenance and coverage SHALL participate in the preparation identity.
+Published size rows SHALL agree with recorded facts. Source edits, including
+same-length changes, SHALL make verification stale until explicit preparation.
+Failed collection/publication SHALL preserve the active pointer and campaign.
+
+- **Implementation**: `prepare_data::source/ios_server/preparation.py`, `coverage::source/ios_server/upfront_resources.py`
+
+#### Scenario: Change an upfront source after preparation
+
+- Given a current prepared size table and its source inventory
+- When the selected source changes bytes without changing length
+- Then read-only verification reports stale preparation
+- And a failed preparation never replaces the prior snapshot or repairs shared inputs.
+
+### Requirement: CollectNativeReportsWithoutGameplayWrites
+
+The prepared iOS engine SHALL bind a private diagnostic adapter. Explicit
+EXVIUS_CLIENT_REPORTS=1 SHALL request a log on GameSetting only; all other replies
+SHALL omit report-back instructions. Uploads SHALL bypass gameplay commands and
+return the encrypted report-state acknowledgment. When disabled, queued uploads
+SHALL be acknowledged without saving. Undecryptable uploads and invalid or unsaved
+uploads while enabled SHALL not claim success. Closing the engine SHALL unbind
+the adapter.
+
+- **Implementation**: `ClientReports::source/ios_server/client_reports.py`, `project::source/ios_server/client_reports.py`
+
+#### Scenario: Receive a queued log with diagnostics disabled
+
+- Given a native campaign and disabled diagnostic storage
+- When an encrypted queued report arrives
+- Then the reply acknowledges it without saving its body or changing campaign bytes
+- And periodic home replies never request another log.
+
+### Requirement: BoundAndKeepNativeReportsPrivate
+
+Native report storage SHALL be atomic, contained in the private runtime, mode
+0600 under a 0700 directory, and bounded to three reports and 128 MiB. Retention
+SHALL ignore symlinks and unrelated files. Report bodies SHALL be omitted from
+ordinary request records and diagnostic output. A read-only decoder SHALL decrypt
+the report lines without loading gameplay state. Public asset routes SHALL never
+serve report files.
+
+- **Implementation**: `save::source/ios_server/client_reports.py`, `prune::source/ios_server/client_reports.py`, `decode::source/ios_server/client_reports.py`
+
+#### Scenario: Save a report larger than an ordinary gameplay request
+
+- Given opt-in diagnostics and a valid encrypted report larger than 4 MiB
+- When it arrives on the dedicated report route within its 64 MiB bound
+- Then it is saved privately and acknowledged without a campaign write
+- And its body is absent from ordinary records and cannot be fetched as an asset.
+
+### Requirement: PreloadSynchronousSummonDependencies
+
+Native preparation SHALL classify gacha1_common.cpk, gacha1.cpk and
+monster3_common.cpk for upfront TUTO download when present in the resource list.
+Existing TUTO/PRE_TUTO classifications SHALL be retained. Unversioned resources
+SHALL remain omitted, and unrelated background packs SHALL keep their class.
+Exact file provenance and iOS sizes SHALL be bound through upfront collection
+without changing source files, summon costs, pools, awards or legacy projections.
+
+- **Implementation**: `build::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`
+
+#### Scenario: Open summon detail before the bulk movie queue finishes
+
+- Given the summon UI and default preview packs have background classifications
+- When native tables are prepared
+- Then those three dependencies are advertised for upfront download with exact iOS sizes
+- And an unrelated background pack, source files and campaign remain unchanged.

@@ -317,7 +317,8 @@ try:
     response=LocalGame.request(engine,'POST',ep['url'],json.dumps(body));assert response.status==200
     out=json.JSONDecoder().raw_decode(crypto.cbc_decrypt(key,json.loads(response.body)['t7n6cVWf']['qrVcDe48']).decode())[0]
     versions={row['a4hXTIm0']:int(row['wM9AfX6I']) for row in out['c1qYg84Q']}
-    assert len(versions)==len(out['c1qYg84Q'])==364
+    assert len(versions)==len(out['c1qYg84Q'])==len(engine.tables.manifest['tables'])+2
+    assert {name:value for name,value in versions.items() if name not in engine.tables.manifest['tables']}=={'F_MST_VERSION':1,'F_RSC_VERSION':1}
     saved=config.state_file.read_bytes()
     def guard(event,args):
         if event.startswith('socket.'):raise AssertionError('query network')

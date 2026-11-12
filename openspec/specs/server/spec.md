@@ -512,6 +512,22 @@ The system SHALL the service shall create the battle-bundle reply for a story ma
 - **WHEN** its bundle is built
 - **THEN** the reply contains the carrier and no encounter
 
+### Requirement: IsolateNativeDiagnosticDispatch
+
+The canonical handler SHALL use the report adapter only when explicitly bound by
+the prepared native engine. A native report upload SHALL bypass the gameplay
+pipeline, omit its body from request records/output, and retain canonical encrypted
+framing. Ordinary native replies SHALL project diagnostic scheduling separately
+from gameplay commands. An unbound legacy handler SHALL retain existing behavior.
+
+- **Implementation**: `Handler::source/server/capture_server.py`
+
+#### Scenario: Handle an encrypted native log upload
+
+- Given a bound native diagnostic adapter and an initialized campaign
+- When a report upload is decrypted
+- Then it is acknowledged through the diagnostic adapter without gameplay writes
+- And its body is excluded from canonical request records and printed plaintext.
 
 ## Sub-components
 
