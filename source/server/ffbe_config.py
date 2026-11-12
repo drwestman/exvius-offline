@@ -136,7 +136,8 @@ MARQUEE_LOCATION_GATE = os.environ.get("MARQUEE_LOCATION_GATE", "10")
 # nor its `0HUPxDf1` column -- so the client has no record for this ticket in the important-item singleton
 # and a type-23 row would render as a nameless entry. (That table DOES hold anniversary tickets -- ids 280/290
 # for the 2nd and 110000-110002 for the 4th -- but there is no 8th, which is why ours is a plain item.)
-ANNIVERSARY_TICKET = os.environ.get("ANNIVERSARY_TICKET", "1") == "1"
+ANNIVERSARY_TICKET = os.environ.get("ANNIVERSARY_TICKET",
+                                   "1" if data_paths.PROFILE.anniversary_ticket else "0") == "1"
 ANNIVERSARY_TICKET_ITEM = int(os.environ.get("ANNIVERSARY_TICKET_ITEM", "1209002123"))
 ANNIVERSARY_TICKET_TYPE = int(os.environ.get("ANNIVERSARY_TICKET_TYPE", "20"))
 ANNIVERSARY_TICKET_COUNT = int(os.environ.get("ANNIVERSARY_TICKET_COUNT", "1"))

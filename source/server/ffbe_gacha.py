@@ -18,6 +18,7 @@ import ffbe_state as st           # the REBOUND runtime state; see ffbe_state's 
 from ffbe_state import State, _note
 from player_state import COST_KINDS, cost_numeric_kind
 from data_paths import TEXT_DIR
+from engine_profile import current_profile
 
 
 __all__ = [
@@ -259,6 +260,10 @@ def all_banners() -> list:
     art/cost/pool is kept. Ids never collide (generated/catalogue 1-8xxxxx, community 9xxxxxx, curated low).
     `GACHA_CAMPAIGN` slices the result to standard + one campaign period (see `campaign_selection`);
     `GACHA_STANDARD=1` then merges the STANDARD families (`standard_banners()`) on top of that slice."""
+    if current_profile().name == 'ios-revival':
+        from revival_summons import plan
+        selected = plan(State.player.data if State.player else {})
+        return [with_global_buttons(b) for b in selected.banners()]
     by_id: dict[str, dict] = {}
     for b in catalogue_banners():
         by_id[str(b["id"])] = b
@@ -478,6 +483,9 @@ def _gacha_detail_row(b, art, detail_id, cost, draws, exe_type=None, img_btn=Non
         det["1ovyP04j"] = f"{int(b.get('weekly_limit') or b['daily_limit'])}:1"
     elif b.get('lap_limit') and b.get('steps'):
         det['1ovyP04j'] = f"{int(b['lap_limit'])}:0"
+    elif (current_profile().name == 'ios-revival' and b.get('resummon')
+          and str(exe_type or b.get('exe_type', 'primary')) == 'secondary'):
+        det['1ovyP04j'] = f"{int(b['resummon'])}:0"
     elif b.get('purchase_limit'):
         det['1ovyP04j'] = f"{int(b['purchase_limit'])}:0"
     if b.get('boxes'):
@@ -547,12 +555,92 @@ SERVED_END = "2099-12-31 23:59:59"
 
 
 def _served_start(b, window):
+    if b.get('_replay_window'):
+        return b['_replay_window']['from']
     release = (b.get("community") or {}).get("release") or b.get("release")
     try:
         year, month, day = ([int(part) for part in str(release).split("-")[:3]] + [1, 1])[:3]  # "2024-07" = 1 July
         return "%04d-%02d-%02d 00:00:00" % (year, month, day)
     except (TypeError, ValueError):
         return str(window.get("from", ""))
+
+
+def _served_end(b):
+    return (b.get('_replay_window') or {}).get('to', SERVED_END)
+
+
+def _gacha_master_row(b, art):
+    row = {"X1IuZnj2": str(b["id"]),
+           "sx4kyW0i": str(gacha_type_code(b)),
+           "XFLm4Mx6": gacha_button_base(b),
+           "g38Pjk10": str(art.get("anime_file") or GACHA_DEFAULT_ANIME_FILE),
+           "JDFMe3A7": str(art.get("anime_name") or GACHA_DEFAULT_ANIME_NAME),
+           # GachaMst.displayType (+0x50) enables the original Drop Rates button.
+           "8s9wNSpd": "1",
+           "2RtVPS3b": "0"}
+    # `7xBNR2MH` = `GachaMst.setGachaLayout` (+0x9c). `GachaMst::isPayGacha()` (0x1cea448) is exactly
+    # `layout == 1`, and `GachaUtil::changeSummonSecondScene` (0x1a5314c branches on PLT `isPayGacha`)
+    # routes on it: **1 -> `GachaPayDetailScene`** (the GOLD lapis/ticket buttons), else the base
+    # `GachaDetailScene` (the BLUE friend button). So a pay banner MUST send 1 or it wears the friend
+    # button; a step-up sends 2 (0x1cea458). An authored `gacha_layout` still wins.
+    layout = b.get("gacha_layout")
+    if layout is None:
+        kind = str(_primary_cost(b).get("kind") or "")
+        if str(b.get("type")) == "step":
+            layout = 2
+        elif kind not in ("free", "friend_point"):
+            layout = 1                       # lapis / ticket / gil -> the pay detail scene
+    if layout:
+        row["7xBNR2MH"] = str(layout)
+    return row
+
+
+def _gacha_detail_rows(b, art, steps, step_index):
+    detail = []
+    if steps:
+        # GL9 selects the first primary detail row. The server publishes
+        # the current step and replaces it after a successful pull.
+        step = steps[step_index]
+        sid = str(int(b["id"]) * 10 + step_index + 1)
+        # One purchase of this step. GL9 multiplies useCost by exeCount
+        # (clamped by affordability); the server's step.draws is the award count.
+        detail.append(_gacha_detail_row(b, art, sid, step.get("cost"), 1,
+                                        img_btn=step.get("img_btn")))
+    else:
+        swap = GACHA_MULTI_BTN == "swap"      # see the constant's comment: an exeType probe, not a feature
+        # exeCount (costInfo [3]) stays 1: `GachaPayDetailScene::initialize` (0x2147344) drops a row whose
+        # max play count is not 1 unless the player can pay for it more than once, and `setLayout` then
+        # dereferences the missing row (crash, phone 2026-10-24). The units drawn come from `draws`.
+        detail.append(_gacha_detail_row(b, art, b.get("detail_id", ""),
+                                        b.get("cost"), 1,
+                                        exe_type=("secondary" if swap else None),
+                                        img_btn=b.get("img_btn_primary")))
+        # A SECOND row (`exeType = 2`) is what produces the archive's three summon buttons (single /
+        # 11-summons / ticket) -- see `_gacha_detail_row`'s docstring and `gacha_multi_button.md`. Opt-in
+        # per banner via `secondary_offer`, because the shape is only PROVEN readable, not yet live-run.
+        sec = b.get("secondary_offer")
+        if GACHA_MULTI_BTN != "0" and isinstance(sec, dict) and sec:
+            detail.append(_gacha_detail_row(b, art, gacha_secondary_detail_id(b),
+                                            sec.get("cost") or b.get("cost"),
+                                            # `exe_count` is the costInfo ENTRY [3] (the client's
+                                            # `getExeCount()`/`getMaxPlayCount()`), which is NOT the same
+                                            # thing as `draws` (the units we grant). Keep it 1: with
+                                            # exeCount != 1 the pay multi button prints
+                                            # `useCost * min(have/useCost, exeCount)` AND renders the
+                                            # `GACHA_MULTI` "Nx Summon" caption -- neither is retail. The
+                                            # "11" is the button art; the 11 units come from `draws`.
+                                            # `docs/notes/gacha_multi_button.md` SS15.
+                                            sec.get("exe_count", sec.get("draws", 11)),
+                                            exe_type=("primary" if swap else "secondary"),
+                                            img_btn=sec.get("img_btn")))
+    return detail
+
+
+def _prepared_gacha_groups(out):
+    snapshot = getattr(State, 'native_banners', None)
+    if current_profile().name == 'ios-revival' and snapshot is not None:
+        return snapshot.project(out)
+    return out
 
 
 def gacha_groups(banners: list) -> dict:
@@ -574,65 +662,8 @@ def gacha_groups(banners: list) -> dict:
         sd = b.get("schedule") or {}
         window = sd.get("window") or {}
         has_panel = bool(b.get("panel_id"))
-        row = {"X1IuZnj2": str(b["id"]),
-               "sx4kyW0i": str(gacha_type_code(b)),
-               "XFLm4Mx6": gacha_button_base(b),
-               "g38Pjk10": str(art.get("anime_file") or GACHA_DEFAULT_ANIME_FILE),
-               "JDFMe3A7": str(art.get("anime_name") or GACHA_DEFAULT_ANIME_NAME),
-               # GachaMst.displayType (+0x50) enables the original Drop Rates button.
-               "8s9wNSpd": "1",
-               "2RtVPS3b": "0"}
-        # `7xBNR2MH` = `GachaMst.setGachaLayout` (+0x9c). `GachaMst::isPayGacha()` (0x1cea448) is exactly
-        # `layout == 1`, and `GachaUtil::changeSummonSecondScene` (0x1a5314c branches on PLT `isPayGacha`)
-        # routes on it: **1 -> `GachaPayDetailScene`** (the GOLD lapis/ticket buttons), else the base
-        # `GachaDetailScene` (the BLUE friend button). So a pay banner MUST send 1 or it wears the friend
-        # button; a step-up sends 2 (0x1cea458). An authored `gacha_layout` still wins.
-        layout = b.get("gacha_layout")
-        if layout is None:
-            kind = str(_primary_cost(b).get("kind") or "")
-            if str(b.get("type")) == "step":
-                layout = 2
-            elif kind not in ("free", "friend_point"):
-                layout = 1                       # lapis / ticket / gil -> the pay detail scene
-        if layout:
-            row["7xBNR2MH"] = str(layout)
-        mst.append(row)
-        if steps:
-            # GL9 selects the first primary detail row. The server publishes
-            # the current step and replaces it after a successful pull.
-            step = steps[step_index]
-            sid = str(int(b["id"]) * 10 + step_index + 1)
-            # One purchase of this step. GL9 multiplies useCost by exeCount
-            # (clamped by affordability); the server's step.draws is the award count.
-            detail.append(_gacha_detail_row(b, art, sid, step.get("cost"), 1,
-                                            img_btn=step.get("img_btn")))
-        else:
-            swap = GACHA_MULTI_BTN == "swap"      # see the constant's comment: an exeType probe, not a feature
-            # exeCount (costInfo [3]) stays 1: `GachaPayDetailScene::initialize` (0x2147344) drops a row whose
-            # max play count is not 1 unless the player can pay for it more than once, and `setLayout` then
-            # dereferences the missing row (crash, phone 2026-10-24). The units drawn come from `draws`.
-            detail.append(_gacha_detail_row(b, art, b.get("detail_id", ""),
-                                            b.get("cost"), 1,
-                                            exe_type=("secondary" if swap else None),
-                                            img_btn=b.get("img_btn_primary")))
-            # A SECOND row (`exeType = 2`) is what produces the archive's three summon buttons (single /
-            # 11-summons / ticket) -- see `_gacha_detail_row`'s docstring and `gacha_multi_button.md`. Opt-in
-            # per banner via `secondary_offer`, because the shape is only PROVEN readable, not yet live-run.
-            sec = b.get("secondary_offer")
-            if GACHA_MULTI_BTN != "0" and isinstance(sec, dict) and sec:
-                detail.append(_gacha_detail_row(b, art, gacha_secondary_detail_id(b),
-                                                sec.get("cost") or b.get("cost"),
-                                                # `exe_count` is the costInfo ENTRY [3] (the client's
-                                                # `getExeCount()`/`getMaxPlayCount()`), which is NOT the same
-                                                # thing as `draws` (the units we grant). Keep it 1: with
-                                                # exeCount != 1 the pay multi button prints
-                                                # `useCost * min(have/useCost, exeCount)` AND renders the
-                                                # `GACHA_MULTI` "Nx Summon" caption -- neither is retail. The
-                                                # "11" is the button art; the 11 units come from `draws`.
-                                                # `docs/notes/gacha_multi_button.md` SS15.
-                                                sec.get("exe_count", sec.get("draws", 11)),
-                                                exe_type=("primary" if swap else "secondary"),
-                                                img_btn=sec.get("img_btn")))
+        mst.append(_gacha_master_row(b, art))
+        detail.extend(_gacha_detail_rows(b, art, steps, step_index))
         sched.append({"X1IuZnj2": str(b["id"]),
                       "Z0EN6jSh": str(sd.get("disp_order", 1)),
                       "w2A76noc": str(sd.get("banner_type", 0)),
@@ -640,13 +671,16 @@ def gacha_groups(banners: list) -> dict:
                                                                  _gacha_art(schedule_art, "detail_banner"),
                                                                  schedule_art.get("detail_extra") or ()),
                       "VjJQ51uG": _served_start(b, window),
-                      "m8ivD4NX": SERVED_END,
+                      "m8ivD4NX": _served_end(b),
                       "N2PkD9sy": _served_start(b, window)})
         if not has_panel:
             continue
         panel.append({"LFoU0M3v": str(b.get("panel_id", "")), "X1IuZnj2": str(b["id"]),
                       "vFqVXP19": str(b.get("panel_group_id", ""))})
         pool_rows = b.get("pool") if isinstance(b.get("pool"), list) else []
+        if current_profile().name == 'ios-revival':
+            from revival_summons import unit_allowed
+            pool_rows = [entry for entry in pool_rows if unit_allowed(b, entry['unit_id'])]
         for i, entry in enumerate(pool_rows):
             pgroup.append({"vFqVXP19": str(b.get("panel_group_id", "")),
                            "q4m8aKr0": str(b.get("detail_id", "")),
@@ -659,7 +693,7 @@ def gacha_groups(banners: list) -> dict:
             from gacha_box import groups
             for tag, rows in groups(State.player, banner).items():
                 out.setdefault(tag, []).extend(rows)
-    return out
+    return _prepared_gacha_groups(out)
 def serve_gacha_info(spec, reply_id: str):
     """Attach the authored banner layer to the reply that opens the gacha screen.
 
@@ -671,7 +705,7 @@ def serve_gacha_info(spec, reply_id: str):
     if reply_id not in GACHA_INFO_REPLIES:
         return spec
     banners = all_banners()
-    if not banners:
+    if not banners and current_profile().name != 'ios-revival':
         return spec
     if os.environ.get('EXVIUS_SUMMON_ARCHIVE') == '1':
         from gacha_archive import visible_banners
@@ -863,7 +897,7 @@ def serve_gacha(spec, plaintext: str | None = None, reply_id=None):
             _gacha_player_refresh(out)
             # The detail scene returns straight from the result screen. Refresh
             # its step state in this reply, without requiring a new GachaEntry.
-            if banner.get('steps') or banner.get('boxes'):
+            if banner.get('steps') or banner.get('boxes') or (current_profile().name == 'ios-revival' and banner.get('resummon')):
                 banners = all_banners()
                 if os.environ.get('EXVIUS_SUMMON_ARCHIVE') == '1':
                     from gacha_archive import visible_banners

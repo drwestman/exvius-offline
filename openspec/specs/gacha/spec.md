@@ -74,6 +74,19 @@ rolls.
 
 ## Requirements
 
+### Requirement: PreserveIosSummonCostDenomination
+
+The iOS earned-Lapis multiplier SHALL not alter summon costs, refunds, or purchased
+Lapis. A successful iOS summon SHALL score the recorded current-day summon quest;
+a refused pull SHALL not score merely because a request was received. Existing
+summon receipts, counters, roster ownership, and retry rules SHALL be retained.
+
+#### Scenario: Repeat a refused limited pull
+
+- Given a completed purchase has exhausted the offer's limit
+- When the same offer is requested again
+- Then neither its currency nor current daily summon progress changes.
+
 ### Requirement: GachaBannerValidation
 
 The system SHALL validate GachaBanner according to these rules:

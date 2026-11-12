@@ -6,8 +6,42 @@
 
 Prepares and packages an offline-enabled Android build by modifying application code and
 configuration, assembling runtime assets, and updating the APK.
+The native iOS launcher also dispatches explicit connection, campaign and
+preparation commands through the dedicated Python runtime.
 
 ## Requirements
+
+### Requirement: DispatchNativePreparationThroughIsolatedRuntime
+
+The native iOS launcher SHALL reuse the prepared .venv-ios interpreter for
+summon/home artwork and sound preparation or verification, and plan-data,
+fetch-data, verify-packs and foreground gameplay start, including from a different
+Python installation. It SHALL forward arguments and
+delegate command handling to the iOS CLI without installing dependencies or
+initializing a campaign. CLI commands SHALL emit one JSON result document.
+
+- **Implementation**: `main::source/ios_server/cli.py`
+
+#### Scenario: Prepare sound from the base interpreter
+
+- Given the dedicated iOS runtime and a separate invoking Python interpreter
+- When macos_ios_server.py receives prepare-sounds or verify-sounds
+- Then it runs the selected command through the dedicated runtime
+- And preserves the supplied private root and shared data paths.
+
+#### Scenario: Install packs from the base interpreter
+
+- Given the dedicated runtime and a local manifest with cached ZIPs
+- When the base interpreter invokes plan-data, fetch-data or verify-packs
+- Then the dedicated runtime handles the command and emits one JSON result
+- And supplied manifest, archive, data and private runtime paths are preserved.
+
+#### Scenario: Start gameplay from system Python
+
+- Given the dedicated iOS environment and a different system Python
+- When the native entrypoint receives start with invalid listener ports
+- Then the dedicated runtime emits the CLI port-validation error as one JSON document
+- And it neither initializes a campaign nor starts listeners.
 
 > `source/exvius/android_build.py`
 

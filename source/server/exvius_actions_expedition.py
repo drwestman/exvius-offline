@@ -340,7 +340,9 @@ def expedition_end(spec, req):
     if grade == 1:
         for reward in bonus:
             reward['count'] *= 2
-    _grant(rewards + relics + bonus)
+    _grant(rewards + relics + bonus, earned=True)
+    from ffbe_player import score_daily
+    score_daily('expedition_finish')
     roster = {str(u['instance_id']): u for u in State.player.data['roster']}
     xp = max(1, _int(difficulty['7Ac7722s']) * policy['xp_per_hour'] // 3600)
     for entry in str(quest.get('7mA422N6') or '').split(','):

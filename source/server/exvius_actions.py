@@ -301,6 +301,10 @@ NOTICE_GROUPS = ('3BI1xSGW', 'R17unt2e', 'VKA5urE1', 'fzm3je8p', 'oUk10RXm', 'tN
 
 
 def notice_state(spec, req, reply_id):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_notice_commands import serve
+        return serve(spec, req, reply_id)
     player = State.player
     if not isinstance(spec, dict):
         spec = {}

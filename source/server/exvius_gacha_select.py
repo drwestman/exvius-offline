@@ -39,6 +39,9 @@ def _execute(spec, req, prism=False):
     if row is None or not row[first] <= today <= row[last]:
         _note('Select summon: selected reward is not in the original available master')
         return decline()
+    from revival_summons import unit_allowed
+    if not unit_allowed(banner, row.get('3HriTp6B', iid)):
+        return decline()
     cost = int(row['e4mG8jTc'])
     reward = {'kind': 20 if prism else 10, 'id': int(iid), 'count': 1}
     if cost < 1 or not player._can_credit(reward):

@@ -285,9 +285,15 @@ class Handler(BaseHTTPRequestHandler):
         # `reply_pipeline` (extracted 2026-09-26, a pure move; see its docstring and
         # docs/SERVER_REFACTOR_PLAN.md Phase 2). Everything that is the REQUEST's I/O rather than the
         # REPLY's construction -- dispatch, the hot-reload checks, the record, the envelope -- stays here.
-        if missing_battle is None:
+        reports = getattr(State, 'native_reports', None)
+        log_upload = reports is not None and (reply_id == '6611dc2f' or reports.owns(self.path))
+        if log_upload:
+            spec = reports.receive(plaintext if reply_id == '6611dc2f' and decrypt_error is None else None)
+        elif missing_battle is None:
             spec = reply_pipeline(spec, reply_id=reply_id, plaintext=plaintext,
                                   mid=None if menu_resource else mid, spec_key=spec_key)
+        if reports is not None and not log_upload:
+            spec = reports.project(spec, reply_id)
         # NOTE: `json.dumps(None)` is the 4-char string "null" — an unconfigured endpoint must send NOTHING
         # (an empty body), not the literal null.
         body_plain = spec if isinstance(spec, str) else (None if spec is None else json.dumps(spec))
@@ -349,9 +355,9 @@ class Handler(BaseHTTPRequestHandler):
             "ciphertext_len": len(ciphertext) if ciphertext else 0,
             "endpoint": ep,
             "selected_by": how,
-            "plaintext": plaintext,
+            "plaintext": None if log_upload else plaintext,
             "decrypt_error": decrypt_error,
-            "body_raw": body_text if not envelope else None,
+            "body_raw": body_text if not envelope and not log_upload else None,
             "reply": {
                 "len": len(data),
                 "sha256_16": hashlib.sha256(data).hexdigest()[:16],
@@ -395,7 +401,7 @@ class Handler(BaseHTTPRequestHandler):
               f"reqID={header.get('z5hB3P01')}  mission={mid or '-'}  from={spec_key or '-'}  "
               f"body={len(raw)}B  {replied}  -> {os.path.relpath(fname, WORK)}",
               flush=True)
-        if plaintext:
+        if plaintext and not log_upload:
             print("    plaintext: " + plaintext[:600].replace("\n", " "), flush=True)
         if decrypt_error:
             print("    note: " + decrypt_error, flush=True)
@@ -474,14 +480,23 @@ class Handler(BaseHTTPRequestHandler):
         Both cases are logged, so the request list stays the record of what the client wants.
         """
         path = self.path.split("?", 1)[0]
+        if data_paths.PROFILE.name == 'ios-revival':
+            from ios_server.rates_delivery import owns, serve as serve_rates
+            if owns(path):
+                with STATE_LOCK:
+                    return serve_rates(self)
         raid_page = re.fullmatch(r'/exvius/raid-rewards/(\d+)\.html', path)
         rates_page = re.fullmatch(r'/exvius/gacha-rates/(\d+)\.html', path)
         parade_page = path == '/exvius/parade-rewards.html'
         equip_page = path == '/exvius/equipment-enhancement.html'
         clash_page = path in ('/exvius/clash-rewards.html', '/exvius/clash-ranking.html')
-        if raid_page or rates_page or parade_page or clash_page or equip_page:
+        notice_page = re.fullmatch(r'/exvius/notices/(\d+)\.html', path)
+        if raid_page or rates_page or parade_page or clash_page or equip_page or notice_page:
             with STATE_LOCK:
-                if raid_page:
+                if notice_page:
+                    from revival_notice_pages import page
+                    html = page(State.player.data if State.player else {}, notice_page.group(1))
+                elif raid_page:
                     from exvius_raid_progress import personal_rewards_page
                     html = personal_rewards_page(State.player, raid_page.group(1))
                 elif equip_page:
@@ -524,6 +539,13 @@ class Handler(BaseHTTPRequestHandler):
                 any(part in ("", ".", "..") for part in rel.split("/"))):
             self.send_error(400, "Invalid content path")
             return
+        if data_paths.PROFILE.name == 'ios-revival':
+            from ios_server.banner_delivery import serve as serve_banners
+            if serve_banners(self, getattr(State, 'native_banners', None), rel):
+                return
+            from ios_server.table_delivery import serve
+            if serve(self, getattr(State, 'native_tables', None), rel):
+                return
         def safe_join(base, relative):
             candidate = os.path.realpath(os.path.join(base, relative))
             boundary = os.path.realpath(base)
@@ -563,6 +585,11 @@ class Handler(BaseHTTPRequestHandler):
                     search_root = safe_join(root, sub)
                     hits = sorted(glob.glob(os.path.join(search_root, f"Ver*_{m.group(1)}.dat"))) \
                         if search_root else []
+                    # A token match is another path rewrite: an exact lookup may have
+                    # rejected this very symlink, so recheck every candidate before opening it.
+                    hits = [safe for hit in hits
+                            if (safe := safe_join(root, os.path.relpath(hit, root)))
+                            and os.path.isfile(safe)]
                     if len(hits) == 1:
                         data = open(hits[0], "rb").read()
                         how = "token-match " + os.path.basename(hits[0])
@@ -582,8 +609,16 @@ class Handler(BaseHTTPRequestHandler):
                 hit = area_art_index().get(os.path.basename(rel))
                 how_art = "area-art basename"
             if hit:
-                data = open(hit, "rb").read()
-                how = how_art + " (" + os.path.relpath(hit, os.path.dirname(WORK)) + ")"
+                # Validate against top-level content roots, not their indexed subdirectories:
+                # a subdirectory itself may be a symlink out of the permitted tree.
+                art_roots = (data_paths.ART_ROOT, data_paths.COMMUNITY_ART_ROOT,
+                             data_paths.GAME_FILES, data_paths.CDN_ROOT,
+                             os.path.join(HERE, "assets", "banner_art"))
+                safe_hit = next((safe for base in art_roots if base
+                                 and (safe := safe_join(base, os.path.relpath(hit, base)))), None)
+                if safe_hit and os.path.isfile(safe_hit):
+                    data = open(safe_hit, "rb").read()
+                    how = how_art + " (" + os.path.relpath(safe_hit, os.path.dirname(WORK)) + ")"
         n = len(data) if data is not None else 0
         verdict = f"200 {n} B ({how})" if data is not None else f"404 ({how or 'not in the CDN root'})"
         print(f"CDN  {self.command} {self.path}  host={self.headers.get('Host')}  "
@@ -845,6 +880,12 @@ def main(argv=None, *, in_process=False) -> int:
         if args.state and args.state != mode_slot:
             ap.error(f"--{mode_slot} means `--state {mode_slot}`, so --state {args.state!r} contradicts it")
         args.state = mode_slot
+    # Profile isolation also applies to explicit state CLI flags, before any load or write.
+    if args.state_file:
+        data_paths.validate_state_path(args.state_file)
+    for slot in (args.state, args.state_save):
+        if slot:
+            data_paths.validate_state_path(os.path.join(data_paths.STATE_DIR, f"{slot}.json"))
     if args.print_paths:
         # The GUI's contract: resolve everything, side-effect free. `--state-file` wins, then the slot
         # (`--state`/a mode), then the default state file; `state_dir` is that file's directory.

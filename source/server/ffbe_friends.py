@@ -156,6 +156,30 @@ def load_friends(path: str | None = None) -> list:
     return friends
 
 
+def configured_friends():
+    """The existing operator-configured roster, with the pipeline's error policy."""
+    try:
+        return load_friends()
+    except (ValueError, OSError) as error:
+        from ffbe_state import _note
+        _note(f"friends configuration ignored: {error}")
+        return []
+
+
+def all_friends():
+    """Accepted iOS companions for gifts; legacy keeps its original YAML roster."""
+    from engine_profile import current_profile
+    if current_profile().replay is None:
+        return load_friends()
+    from ffbe_state import State
+    from revival_friends import catalogue, state_view
+    if State.player is None:
+        return []
+    catalog = catalogue(State.player.data)
+    relations = state_view(State.player.data, catalog)['relations']
+    return [friend for fid, friend in catalog.items() if relations.get(fid, {}).get('type') == 1]
+
+
 def _reinforce_row(f: dict) -> dict:
     """One friend -> one ReinforcementResponse row (the support/companion list).
 
@@ -270,6 +294,14 @@ def serve_friends(spec, reply_id=None):
     relevant = set(BOOT_REPLIES) | {REINFORCE_REPLY, FRIENDLIST_REPLY}
     if reply_id not in relevant:
         return spec
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from ffbe_state import State
+        if State.player is None:
+            return spec
+        from exvius_actions_arena import friend_list, friend_reinforcements
+        out = friend_list(spec, {})
+        return friend_reinforcements(out, {}) if reply_id == REINFORCE_REPLY else out
     try:
         friends = load_friends()
     except (ValueError, OSError) as error:

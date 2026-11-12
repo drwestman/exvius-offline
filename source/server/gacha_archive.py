@@ -160,6 +160,9 @@ def selected_group(player, groups):
 
 
 def visible_banners(player, banners):
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        return banners  # Already selected by the saved replay calendar, across archive groups.
     ids = selected_group(player, catalogue(banners))['ids']
     by_id = {str(banner['id']): banner for banner in banners}
     # GL9 sorts schedule rows by descending display order. Publish the archive's

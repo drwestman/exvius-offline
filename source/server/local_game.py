@@ -25,6 +25,8 @@ class LocalGame:
     _active = None
 
     def __init__(self, data, slot='campaign'):
+        from engine_profile import select_profile
+        select_profile('legacy')
         root = str(Path(data).resolve())
         if not re.fullmatch(r'[A-Za-z0-9_-]+', slot):
             raise ValueError('Invalid local save slot.')

@@ -44,6 +44,13 @@ def groups(player, banner):
 
 
 def roll(player, banner, requested_detail, repeats=1):
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_summons import authorize_pull, reward_allowed
+        banner = authorize_pull(player.data, banner)
+        if banner is None or any(not reward_allowed(banner, entry['reward'])
+                                 for box in banner.get('boxes', []) for entry in box):
+            return None
     if player.mode == 'frozen' or str(requested_detail) != detail_id(player, banner):
         return None
     saved = state(player, banner)

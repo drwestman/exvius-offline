@@ -16,6 +16,9 @@ from exvius_actions import serve_actions
 from exvius_actions_shops import serve_feature_state
 from exvius_field_treasures import serve as serve_field_treasures
 from exvius_repeat import observe_load, repeat_challenge_rewards
+from revival_campaign import initialize_for_reply
+from revival_mail_commands import synchronize_for_reply
+from revival_daily_commands import synchronize_for_reply as synchronize_daily
 
 
 from ffbe_config import *          # noqa: F401,F403 -- constants; the table has no behaviour
@@ -78,7 +81,7 @@ class _Ctx:
     `save_state`) can return it unchanged, and every step has the same shape: take a ctx, return a spec.
     """
 
-    __slots__ = ("spec", "reply_id", "plaintext", "mid", "spec_key", "is_battle_bundle", "prior")
+    __slots__ = ("spec", "reply_id", "plaintext", "mid", "spec_key", "is_battle_bundle", "prior", "persist")
 
     def __init__(self, spec, reply_id, plaintext, mid, spec_key):
         self.spec = spec
@@ -91,6 +94,7 @@ class _Ctx:
         # mission is what stops a mission-end from mirroring a different battle's drops.
         self.is_battle_bundle = mid is not None and spec_key == f"{reply_id}@{mid}"
         self.prior: set = set()
+        self.persist = True
 def _snapshot_cleared(ctx: _Ctx):
     """D3, as a named step: the PRE-battle cleared set, snapshotted before anything spends it.
 
@@ -151,6 +155,17 @@ def _repeat_run_report(ctx: _Ctx):
     ctx.plaintext = repeat_run_report(ctx.plaintext)
     return ctx.spec
 PIPELINE: tuple = (
+    Step("initialize_revival_campaign", lambda c: initialize_for_reply(
+        c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
+         "state", "State.player.ios_revival / exvius_friends / ios_mail_rewards",
+         "explicit first-gameplay command; commit replay anchor before projecting any views"),
+    Step("synchronize_revival_daily", lambda c: synchronize_daily(
+        c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
+         "state", "State.player.daily_quest", "explicit daily period update before gameplay scoring"),
+    Step("synchronize_revival_mail", lambda c: synchronize_for_reply(
+        c.spec, c.reply_id, State, st.STATE_FILE, persist=st.STATE_PERSIST),
+         "state", "State.player.mailbox / ios_mail_rewards",
+         "explicit iOS login/home synchronization; commit weekly and due replay deliveries"),
     Step("repeat_run_report", _repeat_run_report, "io", "ctx.plaintext",
          "FIRST: an autoplay continuation's running totals become this run's exp/gil/drops"),
     Step("serve_lapis_shop", lambda c: serve_lapis_shop(c.spec, c.reply_id, c.plaintext),
@@ -381,7 +396,7 @@ PIPELINE: tuple = (
          "spec", "12 player groups", "the PROJECTION: rebuilt from the one player state"),
     # Persist what this request changed. One small file under out/; see the STATE_FILE block for why it
     # stays a single, wipeable file. The player's OWN dirty flag counts too.
-    Step("save_state", lambda c: (save_state(), c.spec)[1], "io", st.STATE_FILE,
+    Step("save_state", lambda c: (save_state() if c.persist else None, c.spec)[1], "io", st.STATE_FILE,
          "position is load-bearing: the strips below rewrite the reply AFTER this, so persisting earlier "
          "would write a different spec than the one served"),
     # The result-item A/B strips LAST, after every transform: mission_end_echo and credit_mission_rewards
@@ -394,10 +409,25 @@ PIPELINE: tuple = (
          "spec", "an6TB4WS", "A/B strip; last, beside the other one, so the rule is in one place"),
     # After every rewrite of the result row: the client stores exactly this echo, and an autoplay
     # continuation adds its next run on top of it.
-    Step("record_result_echo", lambda c: (record_result_echo(c.spec, c.plaintext), save_state(), c.spec)[2],
-         "io", "State.player.exvius_repeat.echo", "LAST: records the result values actually served"),
+    Step("record_result_echo", lambda c: (record_result_echo(c.spec, c.plaintext),
+         save_state() if c.persist else None, c.spec)[2],
+         "io", "State.player.exvius_repeat.echo", "records result facts before iOS denomination projection"),
+    Step("project_revival_economy", lambda c: __import__('revival_economy').project(c.spec, State.player),
+         "spec", "earned reward amounts", "normalize only the wire copy after recording raw reward facts"),
 )
 PIPELINE_EDGES: tuple = (
+    Edge("initialize_revival_campaign", "synchronize_revival_daily", "State.player.ios_economy",
+         "record policy before freezing the day's selection and rewards"),
+    Edge("synchronize_revival_daily", "apply_progress", "State.player.daily_quest",
+         "score gameplay into the committed current-day set"),
+    Edge("record_result_echo", "project_revival_economy", "State.player.exvius_repeat.echo",
+         "keep stored source-denomination facts separate from normalized wire amounts"),
+    Edge("initialize_revival_campaign", "synchronize_revival_mail", "State.player.ios_mail_rewards",
+         "record calendar and delivery settings before issuing reward mail"),
+    Edge("synchronize_revival_mail", "serve_mail", "State.player.mailbox",
+         "project the committed inbox after login/home reward synchronization"),
+    Edge("initialize_revival_campaign", "apply_to_reply", "State.player.ios_revival",
+         "persist the first-gameplay anchor before projecting the initialized campaign"),
     Edge("roll_drops", "apply_result_drops", "LAST_DROPS",
          "the roll is written at mission LOAD and read at mission END -- two different requests, so it has "
          "to survive in between"),
@@ -529,8 +559,30 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
     `validate_pipeline()` enforces at import. The audit that established them is
     `docs/notes/server_code_review_2nd_opinion.md` §C1.
     """
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival' and str(reply_id) == 'jnw49dUq' and mid:
+        from player_state import mission_row
+        from revival_events import can_enter
+        if not can_enter(State.player.data if State.player else {}, mission_row(mid), resume=True):
+            st._note(f'Replay event closed: mission {mid}; no load or mutation')
+            return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
-    for step in PIPELINE:
+    if (current_profile().replay is not None and str(reply_id) == 'x5Unqg2d'
+            and mid and isinstance(spec, dict) and RESULT_TAG in spec):
+        if not st.STATE_PERSIST or State.player is None or State.player.mode != 'live':
+            raise ValueError('iOS battle settlement requires live persistence.')
+        # Explicit period synchronization is its own transaction. Everything
+        # after it, including result echoes, belongs to the battle candidate.
+        split = next(i for i, step in enumerate(PIPELINE) if step.key == 'synchronize_revival_daily') + 1
+        _run_steps(ctx, PIPELINE[:split])
+        ctx.persist = False
+        from revival_battle_commands import settle
+        return settle(State, st.STATE_FILE, lambda: _run_steps(ctx, PIPELINE[split:]))
+    return _run_steps(ctx, PIPELINE)
+
+
+def _run_steps(ctx, steps):
+    for step in steps:
         ctx.spec = step.call(ctx)
     return ctx.spec
 _PIPELINE_PROBLEMS = validate_pipeline()

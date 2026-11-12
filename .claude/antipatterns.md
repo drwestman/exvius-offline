@@ -13,3 +13,45 @@
 - **Symptom**: A launcher shows Android home even though the app process is running.
 - **Rule**: Query foreground activity/task state before assuming an application is visible. Preserve an existing task and apply the same visibility check when reusing an existing session.
 - **Discovered**: 2026-11-07 via Exvius browser mode displaying Android home.
+
+## AP-003 — Filtering mixed metadata carriers as file inventories
+
+- **Class**: boundary
+- **Symptom**: Complete prepared-table filtering removed global bootstrap counters from a native initialization reply during MST_LOAD_FAILED diagnosis.
+- **Rule**: Classify metadata rows separately from downloadable resource identities before applying publication allowlists; preserve canonical metadata values and test the mixed carrier.
+- **Discovered**: 2026-11-11 via physical iPhone initialization.
+
+## AP-004 — Trusting size metadata after selecting asset overlays
+
+- **Class**: boundary
+- **Symptom**: Three upfront iOS download packs had different byte lengths from their size-table rows, followed by a physical download error at 98%.
+- **Rule**: Measure the exact served asset after overlay selection and bind its size/hash to published metadata; do not assume platform tables still describe repacked bytes.
+- **Discovered**: 2026-11-11 via physical iPhone download acceptance.
+
+## AP-005 — Repeating bulk diagnostics from periodic polling
+
+- **Class**: resource
+- **Symptom**: Upstream's home-poll report-back instruction caused whole device logs to upload every few seconds and slowed loading.
+- **Rule**: Request bulk diagnostics at an explicit session boundary with bounded private storage; acknowledge queued work when disabled and keep bodies out of ordinary records.
+- **Discovered**: 2026-11-11 while reviewing upstream 590d4fb during native UI diagnosis.
+
+## AP-006 — Opening synchronous UI before background dependencies are ready
+
+- **Class**: ordering
+- **Symptom**: Native summon detail reported missing button textures and monster animation data immediately before the app crashed; their intact packs were still queued behind background movies.
+- **Rule**: Preload a synchronous scene's mandatory packs or wait for their availability before opening it; file presence on the server does not establish readiness on the client.
+- **Discovered**: 2026-11-11 via the iPhone's uploaded summon-crash session.
+
+## AP-007 — Losing reserved binary values in text round trips
+
+- **Class**: boundary
+- **Symptom**: A rebuilt CPK decoded like its source but changed the TOC's reserved null-string offset from zero to an ordinary string offset.
+- **Rule**: Preserve reserved wire values explicitly and test binary cells against the native contract; decoded text equality cannot establish binary compatibility.
+- **Discovered**: 2026-11-11 during Vortex banner-load diagnosis; physical recovery remains a separate device check.
+
+## AP-008 — Publishing native URLs without their request adapters
+
+- **Class**: boundary
+- **Symptom**: The iPhone's Drop Rates page was blank because its advertised form-POST URL returned an empty 404, while an alternate HTML URL worked.
+- **Rule**: Exercise the exact advertised native URL, method and parameter encoding through the real HTTP handler; rendering the same content through another route does not verify native navigation.
+- **Discovered**: 2026-11-12 via physical Drop Rates acceptance and matching live 404 probes.

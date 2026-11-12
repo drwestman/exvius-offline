@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 
 from data_paths import TEXT_DIR
+from revival_summons import reward_allowed, unit_allowed
+from engine_profile import current_profile
 
 
 @lru_cache(maxsize=1)
@@ -50,15 +52,34 @@ def _table(pool, mixed=False):
     return '<table><thead><tr><th>Reward</th><th>Chance per draw</th></tr></thead><tbody>' + ''.join(rows) + '</tbody></table>'
 
 
+def index_page():
+    """Link the current replay catalogue when the WebView supplies no banner ID."""
+    from ffbe_gacha import all_banners
+    links = ''.join('<li><a href="/exvius/gacha-rates/%s.html">%s</a></li>' % (
+        escape(str(banner['id']), quote=True), escape(str(banner['name'])))
+        for banner in all_banners())
+    return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>Summon Rates</title><style>body{background:#081d43;color:white;font:16px Arial}'
+            'a{color:#ffe398}li{padding:12px}</style></head><body><h1>Summon Rates</h1><ul>'
+            + links + '</ul></body></html>')
+
+
 def page(banner_id):
     from ffbe_gacha import all_banners
-    from player_state import expand_pool
+    from player_state import expand_pool, summon_subpool, summon_pool, summon_guarantee_pool
     banner = next((b for b in all_banners() if str(b['id']) == str(banner_id)), None)
     if banner is None:
         return None
     notice = ('Choose a unit or prism from the selection list.' if banner.get('selection') else
               'The rates below apply to this summon. Guaranteed slots and additional rewards are listed separately.')
     body = '<h1>' + escape(banner['name']) + '</h1><p class="notice">' + escape(notice).replace('\n', '<br>') + '</p>'
+    if current_profile().name == 'ios-revival' and banner.get('resummon'):
+        from revival_deal_commands import remaining
+        from ffbe_state import State
+        left = remaining(State.player, banner) if State.player else 0
+        body += '<p>Free re-summons remaining: ' + str(left) + '. Each replaces the previous main result. '
+        body += 'The paid-pull bonus is kept. Using or changing a result prevents replacement.</p>'
     if banner.get('boxes'):
         body += '<p>The first five boxes draw without replacement. Remaining quantities and featured rewards appear in the original Box Details screen.</p>'
         body += '<h2>Standard pool after the five boxes</h2><p>Materials 80%, enhancers 19%, ultra-rare rewards 1%, divided equally within each group.</p>'
@@ -68,7 +89,7 @@ def page(banner_id):
         choices = _mst('F_GACHA_SELECT_UNIT_MST.ndjson', '3HriTp6B')
         body += '<table><thead><tr><th>Selectable unit</th><th>Select tickets</th></tr></thead><tbody>' + ''.join(
             '<tr><td>' + escape(unit_name(iid)) + '</td><td>' + row['e4mG8jTc'] + '</td></tr>'
-            for iid, row in choices.items()) + '</tbody></table>'
+            for iid, row in choices.items() if unit_allowed(banner, iid)) + '</tbody></table>'
     offers = banner.get('steps') or [banner]
     if not banner.get('steps') and banner.get('secondary_offer'):
         offers = [banner, banner['secondary_offer']]
@@ -97,26 +118,40 @@ def page(banner_id):
             else:
                 cost_text = 'Free'
             body += '<p>' + str(offer.get('draws', banner.get('draws', 1))) + ' draws. Cost: ' + cost_text + '.</p>'
-        definition = dict(banner)
-        if 'pool' in offer:
-            definition['pool'] = offer['pool']
-        pool = banner.get('reward_pool') or expand_pool(definition)
-        body += _table(pool, bool(banner.get('reward_pool')))
+        ios = current_profile().name == 'ios-revival'
+        if ios:
+            from revival_deals import effective_banner
+            definition = effective_banner(banner, offer)
+            pool = summon_pool(definition)
+        else:
+            definition = dict(banner)
+            if 'pool' in offer:
+                definition['pool'] = offer['pool']
+            pool = banner.get('reward_pool') or expand_pool(definition)
+            if banner.get('reward_pool'):
+                pool = [row for row in pool if reward_allowed(banner, row)]
+        body += _table(pool, bool(definition.get('reward_pool')))
         guarantee = offer.get('guarantee', banner.get('guarantee', {}))
+        if ios:
+            guarantee = definition.get('guarantee') or {}
         if guarantee:
             count = int(guarantee.get('count', 1))
             if guarantee.get('rarity'):
                 body += '<p>' + str(count) + ' guaranteed reward(s) of rarity ' + str(guarantee['rarity']) + ' or higher.</p>'
-                restricted = expand_pool({'pool': guarantee['pool']}) if guarantee.get('pool') else pool
-                restricted = [r for r in restricted if int(r.get('rarity', 0)) >= int(guarantee['rarity'])]
+                if ios:
+                    restricted = summon_guarantee_pool(definition, pool, guarantee)
+                else:
+                    restricted = summon_subpool(definition, guarantee['pool']) if guarantee.get('pool') else pool
+                    restricted = [r for r in restricted if int(r.get('rarity', 0)) >= int(guarantee['rarity'])]
                 body += '<h3>Guaranteed slot rates</h3>' + _table(restricted)
-            if guarantee.get('unit_id'):
+            if guarantee.get('unit_id') and unit_allowed(definition, guarantee['unit_id']):
                 from ffbe_gacha import unit_name
                 body += '<p>Guaranteed unit: ' + escape(unit_name(guarantee['unit_id'])) + '.</p>'
         bonuses = offer.get('bonus_rewards', banner.get('bonus_rewards', []))
         for slot in offer.get('guarantee_slots', banner.get('guarantee_slots', [])):
             body += '<h3>' + str(slot.get('count', 1)) + ' guaranteed ' + escape(slot.get('label', 'reward')) + '</h3>'
-            body += _table(expand_pool({'pool': slot['pool']}))
+            body += _table(summon_subpool(definition, slot['pool']))
+        bonuses = [reward for reward in bonuses if reward_allowed(definition, reward)]
         if bonuses:
             body += '<h3>Additional rewards</h3><ul>' + ''.join(
                 '<li>' + escape(reward_name(r)) + ' x' + str(r['count']) + '</li>' for r in bonuses) + '</ul>'
@@ -124,7 +159,8 @@ def page(banner_id):
         if choices:
             total = sum(float(choice['rate']) for choice in choices)
             body += '<h3>Bonus alternatives</h3><ul>' + ''.join('<li>' +
-                ', '.join(escape(reward_name(r)) + ' x' + str(r['count']) for r in choice['rewards']) +
+                ', '.join(escape(reward_name(r)) + ' x' + str(r['count']) for r in choice['rewards']
+                          if reward_allowed(definition, r)) +
                 ': %.2f%%</li>' % (float(choice['rate']) * 100 / total) for choice in choices) + '</ul>'
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
