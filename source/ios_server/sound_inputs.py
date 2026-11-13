@@ -22,6 +22,16 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def _bank_identity(path):
+    # Inventory retains facts only; do not allocate whole banks or cache hashes.
+    # Count the bytes actually hashed, including a short final block.
+    value, size = hashlib.sha256(), 0
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            value.update(block); size += len(block)
+    return {'size': size, 'sha256': value.hexdigest()}
+
+
 def positive(value):
     return isinstance(value, str) and value.isascii() and value.isdigit() and int(value) > 0
 
@@ -118,11 +128,10 @@ def collect(config):
                     break
             if path is None:
                 raise ValueError('Missing exact sound source: ' + target)
-            raw = path.read_bytes()
             # These masters contain zero and stale sizes. Record them as facts;
             # validate bank structure/CRCs and measure bytes before later table repair.
             banks[target] = {'path': str(path.relative_to(config.data)), 'native': native,
-                             'size': len(raw), 'sha256': digest(raw)}
+                             **_bank_identity(path)}
     if not banks:
         raise ValueError('No sound resources in the selected data root')
     sources = {'pipeline': sound_codec.PIPELINE, 'reference_commit': REVIVAL_COMMIT,

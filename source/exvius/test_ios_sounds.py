@@ -8,6 +8,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import tracemalloc
 import unittest
 from unittest.mock import patch
 
@@ -200,6 +201,44 @@ class SoundPreparation(unittest.TestCase):
         self.assertEqual(before, {str(p): p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()})
         self.assertFalse(self.config.state_file.exists())
         self.assertFalse((self.config.root / 'assets/tables').exists())
+
+    def test_given_large_bank_when_inventoried_then_hash_all_bytes_with_bounded_allocations(self):
+        # Inventory needs only identity facts, even for banks larger than its buffer.
+        block = bytes(range(256)) * 4096
+        expected = hashlib.sha256(self.bank)
+        with self.android.open('ab') as stream:
+            for _ in range(12):
+                stream.write(block); expected.update(block)
+            stream.write(b'last partial block'); expected.update(b'last partial block')
+        before = self.android.stat()
+        tracemalloc.start()
+        try:
+            inventory = inputs.collect(self.config)
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(inventory.sources['banks'][self.relative], {
+            'path': str(self.android.relative_to(self.config.data)), 'native': False,
+            'size': before.st_size, 'sha256': expected.hexdigest()})
+        self.assertEqual(len(inventory.sources['resources']), 2)
+        self.assertLess(peak, 6 * 1024 * 1024)
+        after = self.android.stat()
+        self.assertEqual((after.st_size, after.st_mtime_ns), (before.st_size, before.st_mtime_ns))
+        self.assertFalse(self.config.root.exists())
+
+    def test_given_same_size_and_mtime_edit_beyond_first_block_when_inventoried_then_change_fingerprint(self):
+        with self.android.open('ab') as stream:
+            stream.write(b'\0' * (2 * 1024 * 1024))
+        original = inputs.collect(self.config); before = self.android.stat()
+        with self.android.open('r+b') as stream:
+            stream.seek(-1, os.SEEK_END); stream.write(b'X')
+        os.utime(self.android, ns=(before.st_atime_ns, before.st_mtime_ns))
+        changed = inputs.collect(self.config)
+        self.assertEqual(changed.sources['banks'][self.relative]['size'], before.st_size)
+        self.assertNotEqual(changed.fingerprint, original.fingerprint)
+        self.assertEqual(changed.sources['banks'][self.relative]['sha256'],
+                         hashlib.sha256(self.android.read_bytes()).hexdigest())
+        self.assertFalse(self.config.root.exists())
 
     def test_given_current_snapshot_when_prepared_again_then_keep_generation_and_files(self):
         sounds.prepare(self.config); before = self.tree()
