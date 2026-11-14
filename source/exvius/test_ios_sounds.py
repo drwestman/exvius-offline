@@ -68,6 +68,32 @@ def acb(payloads=None, *, encoding=0x50, blob_storage=0x50, masked=False):
 
 
 class SoundCodec(unittest.TestCase):
+    def test_given_large_native_bank_when_validated_then_avoid_copying_embedded_audio(self):
+        # A synthetic, CRC-valid 4 MiB waveform, built before tracing allocations.
+        sample = hca(0)
+        header, frame, _, _, _ = codec.hca(sample, 0, len(sample))
+        count = 262144
+        prefix = bytearray(sample[:header - 2])
+        struct.pack_into('>I', prefix, 16, count)
+        payload = checked(prefix) + sample[header:header + frame] * count
+        raw = acb([payload]); before = hashlib.sha256(raw).digest()
+        # Buffer types are allocated before tracing; neither may be copied whole.
+        for source in (raw, bytearray(raw)):
+            with self.subTest(kind=type(source).__name__):
+                tracemalloc.start()
+                try:
+                    out, facts = codec.prepare(source, native=True)
+                    _, peak = tracemalloc.get_traced_memory()
+                finally:
+                    tracemalloc.stop()
+                self.assertIs(out, source)
+                self.assertEqual(facts, {'waveforms': 1, 'decrypted': 0, 'reflagged': 0})
+                self.assertEqual(hashlib.sha256(source).digest(), before)
+                self.assertLess(peak, 1024 * 1024, 'metadata inspection copied an audio payload')
+        damaged = bytearray(raw); damaged[-1] ^= 1
+        with self.assertRaisesRegex(ValueError, 'frame checksum'):
+            codec.prepare(damaged, native=True)
+
     def test_given_crc_oracle_when_accelerated_then_match_known_and_random_vectors(self):
         for raw in (b'', b'123456789', bytes(range(256)), hashlib.sha256(b'fixture').digest() * 100):
             self.assertEqual(codec.crc16(raw), slow_crc(raw))

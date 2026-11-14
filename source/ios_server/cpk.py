@@ -19,6 +19,20 @@ def mask(raw):
 
 def table(raw):
     """Decode one bounded @UTF table, including zero and constant columns."""
+    return _walk(raw, decode=True)
+
+
+def check(raw):
+    """Validate exactly as table() does; return (name, columns, row count).
+
+    No row values are built. Constant blob columns hold absolute (offset, length)
+    spans into the unmasked table instead of copies of their payloads.
+    """
+    return _walk(raw, decode=False)
+
+
+def _walk(raw, *, decode):
+    """Validate every header, schema and cell bound; optionally build values."""
     raw = raw if raw[:4] == b'@UTF' else mask(raw)
     if raw[:4] != b'@UTF' or len(raw) < 32 or struct.unpack_from('>I', raw, 4)[0] + 8 != len(raw):
         raise ValueError('Invalid CPK UTF header')
@@ -44,7 +58,8 @@ def table(raw):
             begin, length = result
             if data_at + begin + length > len(raw):
                 raise ValueError('Invalid CPK data offset')
-            result = raw[data_at + begin:data_at + begin + length]
+            begin += data_at
+            result = raw[begin:begin + length] if decode else (begin, length)
         else:
             result = result[0]
         return result, size
@@ -68,15 +83,18 @@ def table(raw):
         raise ValueError('Invalid CPK row layout')
     result = []
     for index in range(rows):
-        cursor = rows_at + index * row_size
+        cursor, end = rows_at + index * row_size, rows_at + (index + 1) * row_size
         row = {}
         for name, storage, kind, constant in columns:
             if storage == 0x50:
-                row[name], size = value(kind, cursor, rows_at + (index + 1) * row_size); cursor += size
+                cell, size = value(kind, cursor, end); cursor += size
             else:
-                row[name] = constant
-        result.append(row)
-    return string(name_at), columns, result
+                cell = constant
+            if decode:
+                row[name] = cell
+        if decode:
+            result.append(row)
+    return string(name_at), columns, result if decode else rows
 
 
 def encode_table(name, columns, rows):

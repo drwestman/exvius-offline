@@ -61,6 +61,50 @@ def payloads(raw):
 
 
 class BannerCpk(unittest.TestCase):
+    def test_given_utf_tables_when_checked_then_report_decoded_schema_spans_and_row_count(self):
+        columns = [('constant', 0x30, 11, b'constant'), ('data', 0x50, 11, 0),
+                   ('name', 0x50, 10, 0), ('zero', 0x10, 11, 0), ('label', 0x30, 10, 'fixed')]
+        raw = cpk.encode_table('Fixture', columns, [{'data': b'payload', 'name': 'first'},
+                                                   {'data': b'', 'name': 'second'}])
+        for source in (raw, cpk.mask(raw), bytearray(raw)):
+            with self.subTest(kind=type(source).__name__, masked=source[:4] != b'@UTF'):
+                name, decoded, rows = cpk.table(source)
+                checked_name, checked, count = cpk.check(source)
+                self.assertEqual((checked_name, count), (name, len(rows)))
+                plain = source if source[:4] == b'@UTF' else cpk.mask(source)
+                self.assertEqual(len(checked), len(decoded))
+                for spanned, value in zip(checked, decoded):
+                    self.assertEqual(spanned[:3], value[:3])
+                    if spanned[1] == 0x30 and spanned[2] == 11:
+                        # Constant blobs are absolute (offset, length) spans, never copies.
+                        offset, length = spanned[3]
+                        self.assertEqual(bytes(plain[offset:offset + length]), value[3])
+                    else:
+                        self.assertEqual(spanned[3], value[3])
+
+    def test_given_invalid_utf_cells_when_checked_then_reject_exactly_like_table(self):
+        cases = []
+        for storage in (0x30, 0x50):
+            raw = cpk.encode_table('Fixture', [('Unused', storage, 11, b'payload')], [{'Unused': b'payload'}])
+            # Corrupt a blob that the sound inspector would not otherwise consume.
+            at = 37 if storage == 0x30 else 8 + struct.unpack_from('>H', raw, 10)[0]
+            damaged = bytearray(raw); struct.pack_into('>I', damaged, at, len(raw))
+            cases.append((f'blob-{storage:#x}', bytes(damaged), 'data offset'))
+        raw = cpk.encode_table('Fixture', [('name', 0x50, 10, 0), ('id', 0x50, 4, 0)], [{'name': 'a', 'id': 1}])
+        rows_at = 8 + struct.unpack_from('>H', raw, 10)[0]
+        strings_at = 8 + struct.unpack_from('>I', raw, 12)[0]
+        bad_string = bytearray(raw); struct.pack_into('>I', bad_string, rows_at, len(raw))
+        bad_utf8 = bytearray(raw); bad_utf8[strings_at + struct.unpack_from('>I', raw, 20)[0]] = 0xff
+        bad_kind = bytearray(raw); bad_kind[32] = 0x5c
+        bad_layout = bytearray(raw); struct.pack_into('>H', bad_layout, 26, 9)
+        cases += [('header', raw[:31], 'header'), ('string', bytes(bad_string), 'string offset'),
+                  ('utf8', bytes(bad_utf8), 'utf-8'), ('kind', bytes(bad_kind), 'Unsupported CPK column'),
+                  ('layout', bytes(bad_layout), 'bounds|row layout'), ('masked', cpk.mask(bytes(bad_string)), 'string offset')]
+        for label, data, message in cases:
+            for decoder in (cpk.table, cpk.check):
+                with self.subTest(case=label, decoder=decoder.__name__), self.assertRaisesRegex(ValueError, message):
+                    decoder(data)
+
     def test_given_native_null_strings_when_encoded_then_keep_reserved_zero_offsets(self):
         # Native TOCs and the reference builder use offset zero for UserString.
         # Decoding both offsets as '<NULL>' hides a wire-format difference.

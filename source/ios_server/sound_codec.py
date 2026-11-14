@@ -34,8 +34,11 @@ class Utf:
         size = struct.unpack_from('>I', raw, base + 4)[0] + 8
         if base + size > end:
             raise ValueError('Sound UTF exceeds its blob')
-        _, self.columns, rows = cpk.table(raw[base:base + size])
-        self.count = len(rows)
+        # Metadata-only validation: every cell is bounds-checked, but no rows or
+        # blob payloads (the embedded AWB audio) are materialized. A UTF spanning
+        # the whole buffer is passed as-is so bytes and bytearray avoid a copy.
+        region = raw if base == 0 and size == len(raw) else raw[base:base + size]
+        _, self.columns, self.count = cpk.check(region)
         self.base, self.raw = base, raw
         _, row_at, _, data_at, _, _, row_size, _ = struct.unpack_from('>HHIIIHHI', raw, base + 8)
         self.data_at = base + 8 + data_at
