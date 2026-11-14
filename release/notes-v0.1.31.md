@@ -1,0 +1,2 @@
+- Includes the engine updates for NV, NV+ and EX awakening, fusion, unit selling, shops, equipment and party editing.
+- Fix for S2 banner
