@@ -429,10 +429,24 @@ An older campaign missing this checkpoint SHALL be backfilled atomically.
 Friend lists, search, details, suggestions, and companion lists SHALL be read-only.
 Generated handles and ranks SHALL retain the pinned deterministic seeds. Helpers
 SHALL rotate with the saved calendar's real week and use named, renderable shipped
-base units available in the historical window, within their form's level cap.
-Statless placeholder masters SHALL be excluded. Daily suggestions SHALL exclude
+forms from character families currently owned in the roster, including storage.
+Family identity SHALL use `F_UNIT_MST.woghJa61`, not display names; separately
+released variants SHALL remain separate families. Temporary guests, material units,
+standalone Brave Shift rows, and statless placeholder masters SHALL be excluded.
+Forms SHALL respect the historical cutoff, using their own release date or the
+family root's date when no form date exists. Rank SHALL NOT restrict eligible
+rarities. Generated levels SHALL use the existing rarity suggestions (otherwise
+the form maximum), capped by the form maximum and the highest owned family level.
+Duplicate copies SHALL NOT weight selection. Daily suggestions SHALL exclude
 existing relationships and use the saved calendar timezone, including DST.
 Projections SHALL neither seed missing friendships nor consume global gameplay RNG.
+Every projection SHALL reflect the current roster and levels without a migration.
+Curated friends SHALL keep eligible configured units at their configured level,
+capped by the same form and owned-family limits. Otherwise their identities SHALL
+receive deterministic weekly eligible replacements with bare equipment, abilities,
+card and esper slots, and valid default Limit Burst levels. Cached YAML SHALL NOT
+be changed. With no eligible forms, projections SHALL emit empty friend/companion
+rows without an unowned fallback or changes to stored relationships or gift receipts.
 
 #### Scenario: Read native social pages
 
@@ -440,6 +454,20 @@ Projections SHALL neither seed missing friendships nor consume global gameplay R
 - When encrypted friend, suggestion, search, and reinforcement requests run
 - Then they return complete native rows for the current relationships
 - And campaign data and save bytes remain unchanged.
+
+#### Scenario: Borrow another form of an owned character
+
+- Given a lower-rarity owned unit and a higher-level stored copy in the same family
+- When friend lists, search, details, suggestions, boot and companion lists are projected
+- Then every helper belongs to an owned family and respects its highest owned level
+- And eligible forms vary deterministically by friend and week without duplicate-copy weighting.
+
+#### Scenario: Lose the last owned copy
+
+- Given friends lending units from an owned family
+- When the last copy is sold or consumed and the next projection runs
+- Then that family is absent, including after reload
+- And an empty eligible pool clears display rows while preserving stored friendships.
 
 ### Requirement: PersistIosFriendCommands
 
@@ -476,12 +504,22 @@ validation, quest/archive progress, and one-time collection SHALL be preserved.
 With the simulated crowd enabled, iOS Arena SHALL use the shipped weekly season
 running at the start of the historical slice, or the last shipped season after
 history finishes. Rival teams SHALL contain up to five distinct, named,
-renderable, historically eligible units from the same pool as simulated helpers.
+renderable, historically eligible base units from the original rank-based pool,
+independent of companion ownership and level restrictions. When the generated
+crowd is disabled, accepted curated rivals SHALL retain their original configured
+units and levels, including during matching and battle startup.
 The pinned strength, gear, weekly target, pace, tie ordering, and Global placement
 scale SHALL be preserved. Ratios SHALL range from 0.50 to 1.50 in steps of 0.05.
 Five opponents SHALL refresh every ten minutes by default; ranking SHALL show
 the top 100 accounts and the player's own row. Global gameplay RNG SHALL be untouched.
 Elapsed-time scoring and displayed week boundaries SHALL account for Eastern DST.
+
+#### Scenario: Change owned units without changing Arena rivals
+
+- Given generated opponents or the curated fallback roster
+- When owned families or levels change
+- Then Arena retains its original rival units and levels
+- And friend/companion projections independently apply ownership and family level caps.
 
 #### Scenario: Inspect a moving leaderboard
 

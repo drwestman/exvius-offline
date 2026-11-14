@@ -90,8 +90,8 @@ def _friend(target):
         ladder = Ladder(State.player.data)
         if ladder.enabled:
             return ladder.directory.by_id(target)
-        from ffbe_friends import all_friends
-        return next((f for f in all_friends() if str(f['friend_id']) == target), None)
+        from revival_friends import curated_arena_friends
+        return next((f for f in curated_arena_friends(State.player.data) if str(f['friend_id']) == target), None)
     return next((f for f in load_friends() if str(f['friend_id']) == target), None)
 
 

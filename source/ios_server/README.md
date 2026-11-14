@@ -748,6 +748,20 @@ Reads do not write caches, refresh inputs, download or change the campaign. Clos
 the engine unbinds its snapshot. The `start` command composes this adapter with
 the native listeners and waits for active requests before unbinding it.
 
+## Friends and companions
+
+iPhone friends lend units from character upgrade families currently owned in your
+roster or storage. Other rarities and awakened forms in the same family can appear
+in the weekly rotation, subject to replay availability. Each friend's level is
+capped by the selected form's maximum and your highest owned level in that family.
+Selling or consuming the last copy removes that family from subsequent lists.
+
+Curated friends keep their identities and receive a bare eligible replacement
+when their configured unit is ineligible. Arena keeps its original opponent units
+and levels. An empty eligible pool clears the displayed helper lists while
+preserving stored friendships. Restart the server and game after this code update
+to refresh the client's cached friend data; existing saves need no migration.
+
 ## Replay notices
 
 The iOS News board now lists the current and seven previous replay weeks by

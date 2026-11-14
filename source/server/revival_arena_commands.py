@@ -112,10 +112,10 @@ def entry(spec, request):
         if ladder.enabled:
             packed = ladder.candidate_entries(ladder.candidates(_party()))
         else:
-            from ffbe_friends import all_friends
+            from revival_friends import curated_arena_friends
             packed = ','.join(':'.join(map(str, (f['friend_id'], policy.clean(f['display_name']),
                 f['unit']['master_id'], f['unit']['level'], 0, 0, f['rank'], 100, f['emblem_id'], 0, 0)))
-                for f in all_friends())
+                for f in curated_arena_friends(State.player.data))
         _save(model)
         return _entry_reply(spec, model, rows, packed)
     return execute(spec, run, initialize=True)

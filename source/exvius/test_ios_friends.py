@@ -91,6 +91,141 @@ class SimulatedFriendIntegration(unittest.TestCase):
     child = harness.ReplaySummonIntegration.child
     run_engine = harness.ReplaySummonIntegration.run_engine
 
+    def family_masters(self):
+        self.extra_units = [('100000103', 3), ('100000106', 6), ('100000107', 7),
+                            ('100000108', 8), ('100000109', 5), ('900000001', 5)]
+        self.unit_fields = {uid: {'woghJa61': '100000102'} for uid, _ in self.extra_units}
+        self.unit_fields['100000102'] = {'JPW8Vs40': '100000108'}
+        self.unit_fields['100000103']['aU3o2D4t'] = 20
+        self.unit_fields['100000109'].update({stat: '0' for stat in
+            ('em5hx4FX', 'L0MX7edB', 'o7Ynu1XP', '6tyb58Kc', 'Y9H6TWnv', 'sa8Ewx3H')})
+
+    def test_given_owned_family_when_projected_then_rotate_valid_forms_and_cap_levels_without_writes(self):
+        self.family_masters()
+        self.run_engine('''
+import random
+import revival_friends as friends
+from ffbe_friends import serve_friends, BOOT_REPLIES
+player.data['roster'] = [dict(player.data['roster'][0], level=12),
+                        dict(player.data['roster'][0], instance_id='999', level=30, storage_state=1)]
+player.dirty = True
+player.save(str(config.state_file))
+before, saved, rng = copy.deepcopy(player.data), config.state_file.read_bytes(), random.getstate()
+dates = {'100000102': '2016-01-01', '100000107': '2099-01-01'}
+with patch.object(friends, 'unit_dates', return_value=dates), patch.object(friends, 'clock', return_value=NOW):
+    listing = request('FriendListRequest')['56gJBnVh']
+    suggestions = request('FriendSuggestRequest')['f6yGgCj2']
+    supports = request('GetReinforcementInfoRequest')['pzf5se6V']
+    target = listing[0]['m3Wghr1j']
+    payload = {'I53AVzSo': [{'m3Wghr1j': target, 'K3BV17gk': '1'}]}
+    searched = request('FriendSearchRequest', payload)['2K05IxtX']
+    detail = request('FriendDetailRequest', payload)['2vuhy0Ex']
+    boot = serve_friends({}, next(iter(BOOT_REPLIES)))['56gJBnVh']
+    for row in listing + suggestions + supports + searched + detail + boot:
+        assert row['3HriTp6B'] in ('100000102', '100000103', '100000106'), row
+        assert int(row['10fNKueF']) == (20 if row['3HriTp6B'] == '100000103' else 30), row
+        assert all(row.get(k) for k in ('m3Wghr1j', 'og2GHy49', 'em5hx4FX'))
+    first = friends.catalogue(player.data, NOW)
+    without_duplicate = dict(player.data, roster=[player.data['roster'][1]])
+    assert friends.catalogue(without_duplicate, NOW) == first
+    later = friends.catalogue(player.data, NOW + timedelta(weeks=1))
+    assert first == friends.catalogue(player.data, NOW)
+    assert any(first[fid]['unit'] != later[fid]['unit'] for fid in first)
+    for fid in first:
+        assert all(first[fid][k] == later[fid][k] for k in ('friend_id', 'display_name', 'rank', 'instance_id'))
+assert player.data == before and config.state_file.read_bytes() == saved
+assert random.getstate() == rng
+''')
+
+    def test_given_roster_changes_when_projected_then_refresh_families_and_caps_after_reload(self):
+        self.run_engine('''
+import revival_friends as friends
+from player_state import PlayerState
+data = copy.deepcopy(player.data)
+data['roster'] = [dict(data['roster'][0], level=7)]
+def helpers():
+    return list(friends.catalogue(data, NOW).values())
+assert {f['unit']['master_id'] for f in helpers()} == {100000102}
+assert {f['unit']['level'] for f in helpers()} == {7}
+data['roster'][0]['level'] = 18
+assert {f['unit']['level'] for f in helpers()} == {18}
+data['roster'].append(dict(player.data['roster'][1], level=9, storage_state=1))
+assert {f['unit']['master_id'] for f in helpers()} == {100000102, 100000202}
+player.data = data
+player.drop_units([data['roster'][0]['instance_id']])
+data = player.data
+assert {f['unit']['master_id'] for f in helpers()} == {100000202}
+for deck in data['party']['decks']:
+    deck['members'] = []  # The remaining copy is in storage, outside active parties.
+player.dirty = True
+player.save(str(config.state_file))
+reloaded = PlayerState.load(str(config.state_file), slot='campaign')
+assert friends.catalogue(reloaded.data, NOW) == friends.catalogue(data, NOW)
+''')
+
+    def test_given_curated_friends_when_unowned_then_replace_builds_and_keep_owned_forms_capped(self):
+        self.family_masters()
+        self.run_engine('''
+import ffbe_friends
+import revival_friends as friends
+player.data['roster'] = [dict(player.data['roster'][0], level=30)]
+yaml = config.root / 'owned-test-friends.yaml'
+yaml.write_text('friends:\\n  - display_name: Replaced\\n    friend_id: 900000003\\n    rank: 150\\n    unit:\\n      master_id: 100000337\\n      level: 80\\n      equipment: [123]\\n      abilities: [456]\\n      vision_card: 789\\n      esper: 1\\n  - display_name: Kept\\n    friend_id: 900000004\\n    unit:\\n      master_id: 100000103\\n      level: 90\\n      equipment: [123]\\n')
+with patch.object(ffbe_friends, 'FRIENDS_FILE', str(yaml)), patch.object(ffbe_friends, '_cache', {'mtime': None, 'friends': []}):
+    original = copy.deepcopy(ffbe_friends.configured_friends())
+    before = copy.deepcopy(player.data)
+    catalog = friends.catalogue(player.data, NOW)
+    replaced, kept = catalog['900000003'], catalog['900000004']
+    assert replaced['unit']['master_id'] in (100000102, 100000103, 100000106, 100000107)
+    assert replaced['unit']['level'] <= 30
+    assert replaced['unit']['equipment'] == replaced['unit']['abilities'] == []
+    assert replaced['unit']['vision_card'] == '' and replaced['unit']['esper'] == 0
+    assert all(replaced[k] == original[0][k] for k in ('friend_id', 'display_name', 'rank', 'instance_id'))
+    assert kept['unit']['master_id'] == 100000103 and kept['unit']['level'] == 20
+    assert kept['unit']['equipment'] == ['123']
+    assert friends.catalogue(player.data, NOW) == catalog
+    assert ffbe_friends.configured_friends() == original and player.data == before
+    assert friends.catalogue(dict(player.data, roster=[]), NOW) == {}
+''')
+
+    def test_given_no_eligible_units_when_read_then_clear_rows_without_changing_relationships(self):
+        self.run_engine('''
+import revival_friends as friends
+player.data['roster'] = []
+player.dirty = True
+player.save(str(config.state_file))
+before, saved = copy.deepcopy(player.data), config.state_file.read_bytes()
+with patch.object(friends, 'clock', return_value=NOW):
+    assert request('FriendListRequest')['56gJBnVh'] == []
+    assert request('FriendSuggestRequest')['f6yGgCj2'] == []
+    supports = request('GetReinforcementInfoRequest')
+    assert supports['pzf5se6V'] == [] and '9Tp2fiyB' not in supports
+    target = friends.accepted_ids(player.data)[0]
+    assert request('FriendSearchRequest', {'I53AVzSo': [{'m3Wghr1j': target}]})['2K05IxtX'] == []
+    assert friends.catalogue(player.data, NOW) == {}
+assert player.data == before and config.state_file.read_bytes() == saved
+''')
+
+    def test_given_undated_form_when_family_is_future_then_do_not_bypass_replay_cutoff(self):
+        self.family_masters()
+        self.run_engine('''
+import revival_friends as friends
+data = copy.deepcopy(player.data)
+data['roster'] = data['roster'][:1]
+with patch.object(friends, 'unit_dates', return_value={'100000102': '2099-01-01'}):
+    assert friends.catalogue(data, NOW) == {}
+''')
+
+    def test_given_missing_family_metadata_when_initialized_then_omit_helpers_without_query_writes(self):
+        self.unit_fields = {uid: {'woghJa61': None} for uid in ('100000102', '100000202')}
+        self.run_engine('''
+import revival_friends as friends
+before, saved = copy.deepcopy(player.data), config.state_file.read_bytes()
+assert friends.catalogue(player.data, NOW) == {}
+assert request('FriendListRequest')['56gJBnVh'] == []
+assert player.data == before and config.state_file.read_bytes() == saved
+''')
+
     def test_given_native_friend_pages_when_read_then_show_seeded_friends_without_writes(self):
         self.run_engine('''
 import revival_friends as friends

@@ -388,18 +388,41 @@ import ffbe_friends
 player.data['exvius_friends']['simulation']['count'] = 0
 player.data['exvius_friends']['relations'] = {}
 yaml = config.root / 'arena-test-friends.yaml'
-yaml.write_text('friends:\\n  - display_name: Kupo\\n    friend_id: 900000003\\n    unit:\\n      master_id: 100000102\\n      level: 10\\n')
+yaml.write_text('friends:\\n  - display_name: Kupo\\n    friend_id: 900000003\\n    unit:\\n      master_id: 100000315\\n      level: 80\\n')
 with patch.object(ffbe_friends, 'FRIENDS_FILE', str(yaml)), patch.object(ffbe_friends, '_cache', {'mtime': None, 'friends': []}), patch.object(arena, 'clock', return_value=NOW):
     entered = enter()
     assert entered['yT12twnc'][0]['S3rek7hC'] == '2'
     rows = entered['Tr9m32i1'][0]['TI6deE8P'].split(',')
     assert len(rows) == 1 and rows[0].split(':')[7] == '100'
+    assert rows[0].split(':')[2:4] == ['100000315', '80']
+    # The same identity lends an owned, level-capped replacement outside Arena.
+    from revival_friends import catalogue
+    companion = catalogue(player.data, NOW)['900000003']['unit']
+    assert companion['master_id'] in (100000102, 100000202) and companion['level'] == 1
     req = selection(entered)
     matched = request('RbMatchingRequest', req)
     assert len(matched['DW0rgk3C'][0]['Jc4udh7x'].split(';')) == 1
     request('RbStartRequest', req)
+    assert set(player.data['exvius_arena']['active']['members'].values()) == {'100000315'}
     done = request('RbEndRequest', report(req))['g3JFd0y7'][0]
     assert done['42GLsTok'] == '0,100,0,0'
+''')
+
+    def test_given_roster_changes_when_arena_projects_then_keep_original_generated_rivals(self):
+        self.run_engine('''
+import revival_arena as arena
+from revival_friends import catalogue
+data = copy.deepcopy(player.data)
+first = arena.Ladder(data, NOW)
+original = [(first.directory.by_id(fid), first.team(first.directory.by_id(fid)))
+            for fid in first.directory.ids()]
+assert catalogue(data, NOW)
+data['roster'] = []
+assert catalogue(data, NOW) == {}
+later = arena.Ladder(data, NOW)
+assert [(later.directory.by_id(fid), later.team(later.directory.by_id(fid)))
+        for fid in later.directory.ids()] == original
+assert first.standings(0) == later.standings(0)
 ''')
 
     def test_given_pre_ladder_pending_battle_when_restarted_then_finish_snapshot_before_migrating_points(self):

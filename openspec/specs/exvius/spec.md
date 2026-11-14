@@ -31695,3 +31695,7 @@ Browser capture and authentication behavior are specified in browser-streaming.
 - **GIVEN** the browser bridge and named emulator are running
 - **WHEN** the existing stop command is invoked
 - **THEN** bridge shutdown precedes the emulator shutdown command.
+
+## Decisions
+
+> Decision pointer: d86cabfa — "Separate owned-family companions from Arena unit selection" is recorded in `openspec/specs/server/spec.md`; it also affects this domain.

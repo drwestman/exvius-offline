@@ -206,18 +206,87 @@ class Directory:
             return None
         rng = random.Random(f'exvius-player-{index}')
         rank = rng.choice([rng.randint(8, 40), rng.randint(40, 120), rng.randint(120, 250), rng.randint(60, 180)])
-        uid, level = random.Random(f'exvius-player-{index}-week-{self.week}').choice(self.unit_pool(rank))
+        pool = self.unit_pool(rank)
+        if not pool:
+            return None
+        uid, level = random.Random(f'exvius-player-{index}-week-{self.week}').choice(pool)
         return _entry(index, {'display_name': names(self.config['count'])[index - 1],
                               'friend_id': ID_BASE + index, 'rank': rank, 'emblem_id': 0,
                               'unit': {'master_id': uid, 'level': level}})
 
 
+class CompanionDirectory(Directory):
+    """Current owned families and level limits; Arena retains Directory's policy."""
+    def __init__(self, data, now=None):
+        from player_state import named_unit_ids, nv_shift_targets, unit_mst, unit_stats
+        super().__init__(data, now)
+        family_levels = {}
+        for unit in data.get('roster', []):
+            if unit.get('guest'):
+                continue
+            master = unit_mst(unit['master_id'])
+            if master and master.get('woghJa61'):
+                root = str(master['woghJa61'])
+                family_levels[root] = max(family_levels.get(root, 0), int(unit['level']))
+        dates, shifts = unit_dates(), nv_shift_targets()
+        self._caps, pool = {}, []
+        suggested = {'4': 60, '5': 80, '7': 99}
+        for uid in sorted(named_unit_ids()):
+            if uid.startswith('9') or uid in shifts:
+                continue
+            master = unit_mst(uid)
+            if not master:
+                continue
+            root = str(master.get('woghJa61') or '')
+            if root not in family_levels:
+                continue
+            release = dates.get(uid, dates.get(root, ''))
+            if self.cutoff is not None and release >= self.cutoff:
+                continue
+            cap = min(int(master.get('aU3o2D4t') or 0), family_levels[root])
+            level = min(suggested.get(str(master.get('9fW0TePj')), cap), cap)
+            if level > 0 and any(unit_stats(uid, level)):
+                self._caps[uid] = cap
+                pool.append((uid, level))
+        self._companions = tuple(pool)
+
+    def unit_pool(self, rank):
+        # Rank remains part of the friend's identity, not an ownership filter.
+        return self._companions
+
+    def curated(self, friend):
+        from ffbe_friends import _entry
+        uid = str(friend['unit']['master_id'])
+        if uid in self._caps:
+            out = copy.deepcopy(friend)
+            out['unit']['level'] = min(out['unit']['level'], self._caps[uid])
+            return out
+        if not self._companions:
+            return None
+        uid, level = random.Random(
+            f"exvius-curated-{friend['friend_id']}-week-{self.week}").choice(self._companions)
+        # Build from the new master's safe defaults rather than transferring a
+        # different unit's gear, abilities, esper or vision card from cached YAML.
+        return _entry(0, {**friend, 'unit_instance_id': friend['instance_id'],
+                          'unit': {'master_id': uid, 'level': level}})
+
+
 def catalogue(data, now=None):
     from ffbe_friends import configured_friends
     yaml = {str(f['friend_id']): f for f in configured_friends()}
-    directory = Directory(data, now)
+    directory = CompanionDirectory(data, now)
+    curated = {fid: directory.curated(friend) for fid, friend in yaml.items()}
     generated = {fid: directory.by_id(fid) for fid in directory.ids() if fid not in yaml}
-    return {**yaml, **generated}
+    return {fid: friend for fid, friend in {**curated, **generated}.items() if friend is not None}
+
+
+def curated_arena_friends(data):
+    """Accepted original YAML rivals when the generated Arena crowd is disabled."""
+    from ffbe_friends import configured_friends
+    settings(data)
+    catalog = {str(f['friend_id']): f for f in configured_friends()}
+    relations = state_view(data, catalog)['relations']
+    return [friend for fid, friend in catalog.items() if relations.get(fid, {}).get('type') == 1]
 
 
 def state_view(data, catalog):
