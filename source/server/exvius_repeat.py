@@ -10,7 +10,7 @@ import threading
 _LOCK = threading.RLock()
 
 
-def begin_attempt(player, mid, captures=None):
+def begin_attempt(player, mid, captures=None, map_quest_monsters=None):
     if player.mode == 'frozen' or not mid:
         return False
     with _LOCK:
@@ -22,6 +22,8 @@ def begin_attempt(player, mid, captures=None):
                             'status': 'pending'}
         if captures:
             state['attempt']['captures'] = captures
+        if map_quest_monsters is not None:
+            state['attempt']['map_quest_monsters'] = map_quest_monsters
         player.dirty = True
         return True
 
@@ -159,7 +161,9 @@ def observe_load(spec, mid, is_battle_bundle):
                 kind, unit, count = entry.split(':')
                 if kind == '10':
                     captures.append({'kind': 10, 'id': int(unit), 'count': int(count)})
-        if begin_attempt(State.player, mid, captures=captures):
+        from exvius_map_quests import monster_map
+        if begin_attempt(State.player, mid, captures=captures,
+                         map_quest_monsters=monster_map(spec)):
             from engine_profile import current_profile
             if current_profile().replay is not None:
                 from ffbe_battle import ENLIGHTENMENT_DROPS

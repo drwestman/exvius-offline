@@ -951,6 +951,7 @@ def mission_result_from(plaintext: str | None) -> dict:
     result_operation = first_row('3uy7DzGB')
     ctx['mission_id'] = str(operation.get('qo3PECw6') or result_operation.get('qo3PECw6') or '')
     ctx['party_history'] = first_row('9uzBbMgf')
+    ctx['monster_defeats'] = first_row('09HRWXDf').get('f6M1cJgk')
     ctx['party_size'] = party_size(ctx['mission_id'])
     helper = str(operation.get('qLke7K8f') or '')
     if helper.isdigit() and (operation.get('dUX7Pt5i') or operation.get('w40YsHIz')):

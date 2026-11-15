@@ -760,6 +760,16 @@ Frozen/ephemeral players and disabled persistence SHALL be refused without
 mutations. The existing mission-load attempt identity and delayed-retry limits
 SHALL remain the wire contract.
 
+<!-- manual -->
+#### Scenario: Persist a monster-defeat town quest with the battle receipt
+
+- Given an accepted counted-monster quest and a loaded monster-family mapping
+- When an encrypted MissionEndRequest reports a successful wolf battle
+- Then native quest progress and its consumed attempt receipt save together
+- And the reply publishes the saved count, leaving NPC hand-in pending
+- And save or projection failure preserves the previous counter and receipt for retry.
+<!-- /manual -->
+
 #### Scenario: Fail after planning a mastery award
 
 - Given a pending battle that will reach mastery

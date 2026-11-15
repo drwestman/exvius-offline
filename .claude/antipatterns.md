@@ -62,3 +62,10 @@
 - **Symptom**: The iPhone launcher selected the metadata-only checkout data directory and failed on a missing native registry despite prepared host assets being available.
 - **Rule**: Distinguish installation markers from release metadata when choosing default content paths. Preserve explicit selections and existing installations; never silently switch away from an incomplete installation.
 - **Discovered**: 2026-11-12 via Play Exvius on iPhone.command startup failure.
+
+## AP-010 — Joining battle IDs directly to quest target IDs
+
+- **Class**: boundary
+- **Symptom**: Reported wolf defeats never advanced the accepted town quest after returning from a mission.
+- **Rule**: Resolve battle monster IDs through the served bundle's dictionary-family mapping and retain that mapping with the attempt before joining defeat reports to quest targets.
+- **Discovered**: 2026-11-14 via Bleeder of the Pack quest progress.

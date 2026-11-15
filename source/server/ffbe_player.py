@@ -1497,6 +1497,8 @@ def score_completed_quest_mission(plaintext):
     mid = ctx.get('mission_id')
     if ctx['cleared'] is not True or not claim_quest_progress(State.player, mid):
         return False
+    from exvius_map_quests import score_defeats
+    score_defeats(State.player, ctx.get('monster_defeats'))
     score_quest_action('15', param=mid)
     score_daily('mission_clear')
     for action in mission_daily_actions(mid):

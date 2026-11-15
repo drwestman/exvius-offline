@@ -10383,6 +10383,45 @@ The system SHALL the service shall use a durable completion receipt at most once
 - **WHEN** Quest progress is claimed again
 - **THEN** Quest counters are not incremented again
 
+<!-- manual -->
+### Requirement: PersistMapQuestDefeats
+
+All editions SHALL advance accepted counted-monster map quests (F_QUEST_SUB_MST
+task type 2, amount type 2) on a successful mission's existing quest-progress
+receipt. Battle monster IDs SHALL resolve through the loaded attempt's recorded
+dictionary-family metadata. Progress SHALL use the native ordered ID:count list,
+retain original target order, cap each target, and remain available after reload.
+Unknown monsters and malformed count reports SHALL grant no defeat progress.
+Older attempts without recorded mappings SHALL not guess a family from an ID.
+Quest projections SHALL remain read-only; reaching a target SHALL leave the quest
+active for its normal NPC hand-in and one-time reward.
+
+- **Implementation**: `monster_map::source/server/exvius_map_quests.py`, `plan_progress::source/server/exvius_map_quests.py`, `score_defeats::source/server/exvius_map_quests.py`, `observe_load::source/server/exvius_repeat.py`, `score_completed_quest_mission::source/server/ffbe_player.py`
+
+#### Scenario: Return from Dalnakya Cavern with four wolf defeats
+
+- Given the accepted Bleeder of the Pack quest targets family 1010250, count 10
+- And the loaded attempt maps monster 101025000 to family 1010250
+- When a successful mission reports four defeats of monster 101025000
+- Then subquest 100100401 persists progress 1010250:4
+- And a retry after reload grants no further progress
+- And exploration and ordinary battles use the same rule.
+
+#### Scenario: Restore missed progress without repeating settlement
+
+- Given verified historical defeats and an active counted-monster quest
+- When an explicit maintenance operation restores a historical total
+- Then progress increases only to the larger of its current and verified totals, capped at the target
+- And repeating recovery adds nothing and leaves NPC reward collection pending.
+
+### Known Invariants
+
+- `score_defeats`: resolve result monster IDs through the attempt's served family
+  mapping and apply capped map-quest counters only behind its once-only successful
+  completion receipt. Discovered 2026-11-14: battle settlement discarded wolf
+  defeats because town quests had no result-to-family progress join.
+<!-- /manual -->
+
 ### Requirement: ObserveLoad
 
 The system SHALL the service shall observe a mission load and identify the applicable repeat-attempt state for the supplied mission and battle-bundle status.
