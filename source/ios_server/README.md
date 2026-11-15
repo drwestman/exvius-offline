@@ -315,6 +315,9 @@ fields. Exact prepared tables, Vortex packs, sound and artwork use the existing
 contained GET/HEAD paths. HEAD omits bodies. Unpublished versions return 404 and
 damaged bound sound returns an empty 500. Public setup/profile/hello routes stay
 available. Engine debug/new-game routes are not exposed by the native host.
+Ordinary source files, including movie/CPK downloads, stream from one open file
+in bounded chunks. Their HEAD replies use that file's length without reading its
+payload. Prepared asset integrity checks retain their existing delivery paths.
 POSTs require a single nonnegative Content-Length, a body of at most 4 MiB, and no
 transfer encoding. Each connection closes after its response. Only loopback and
 the selected home subnet can connect, as with the connection check.
@@ -856,6 +859,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 ```sh
 .venv-ios/bin/python -B source/exvius/test_ios_connectivity.py
 .venv-ios/bin/python -B source/exvius/test_ios_server.py
+.venv-ios/bin/python -B source/exvius/test_ios_cdn.py
 .venv-ios/bin/python -B source/exvius/test_ios_summons.py
 .venv-ios/bin/python -B source/exvius/test_ios_events.py
 .venv-ios/bin/python -B source/exvius/test_ios_deals.py

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+from contextlib import nullcontext
 import glob
 import hashlib
 import json
@@ -553,7 +554,7 @@ class Handler(BaseHTTPRequestHandler):
                 return candidate if os.path.commonpath((candidate, boundary)) == boundary else None
             except ValueError:
                 return None
-        data = None
+        filename = None
         how = None
         # --- authored web content -------------------------------------------------
         # The client's ToS / policy screens are WebViews that fetch HTML, observed live as
@@ -563,19 +564,17 @@ class Handler(BaseHTTPRequestHandler):
         if rel.endswith(".html") and re.search(r'(^|/)content/userpolicys?in/', rel):
             page = os.path.join(HERE, "webcontent", "userpolicy.html")
             if os.path.isfile(page):
-                data, how = open(page, "rb").read(), "authored html stand-in"
+                filename, how = page, "authored html stand-in"
         overlay = State.cdn_overlay
-        if data is None and overlay and rel:
+        if filename is None and overlay and rel:
             exact = safe_join(overlay, rel)
             if exact and os.path.isfile(exact):
-                data, how = open(exact, "rb").read(), "overlay"
+                filename, how = exact, "overlay"
         root = State.cdn_root
-        if data is None and root and rel:
+        if filename is None and root and rel:
             exact = safe_join(root, rel)
             if exact and os.path.isfile(exact):
-                with open(exact, "rb") as content:
-                    data = content.read()
-                how = "exact"
+                filename, how = exact, "exact"
             else:
                 # Same token, any Ver<N>_ prefix, looked up in the SAME directory as the request
                 # (see the docstring: the advertised version and the shipped one can disagree).
@@ -591,7 +590,7 @@ class Handler(BaseHTTPRequestHandler):
                             if (safe := safe_join(root, os.path.relpath(hit, root)))
                             and os.path.isfile(safe)]
                     if len(hits) == 1:
-                        data = open(hits[0], "rb").read()
+                        filename = hits[0]
                         how = "token-match " + os.path.basename(hits[0])
                     elif len(hits) > 1:
                         how = f"AMBIGUOUS ({len(hits)} candidates)"
@@ -600,7 +599,7 @@ class Handler(BaseHTTPRequestHandler):
         # AREA art request (the gate/list tile art family, e.g. the spd_bn_list_* files under
         # area/Ver<N>_*/) never reached it and 404ed, leaving a tile that drew its frame with nothing in it
         # (operator report 2026-10-12). Both families are indexed; the verdict line says which answered.
-        if data is None and rel and ".." not in rel \
+        if filename is None and rel and ".." not in rel \
                 and os.path.splitext(rel)[1].lower() in (".png", ".jpg", ".jpeg") \
                 and ("banner" in rel.lower() or "area" in rel.lower()):
             hit = banner_art_index().get(os.path.basename(rel)) if "banner" in rel.lower() else None
@@ -617,31 +616,50 @@ class Handler(BaseHTTPRequestHandler):
                 safe_hit = next((safe for base in art_roots if base
                                  and (safe := safe_join(base, os.path.relpath(hit, base)))), None)
                 if safe_hit and os.path.isfile(safe_hit):
-                    data = open(safe_hit, "rb").read()
+                    filename = safe_hit
                     how = how_art + " (" + os.path.relpath(safe_hit, os.path.dirname(WORK)) + ")"
-        n = len(data) if data is not None else 0
-        verdict = f"200 {n} B ({how})" if data is not None else f"404 ({how or 'not in the CDN root'})"
-        print(f"CDN  {self.command} {self.path}  host={self.headers.get('Host')}  "
-              f"ua={self.headers.get('User-Agent')}  -> {verdict}", flush=True)
-        try:
-            if data is None:
-                self.send_response(404)
-                self.send_header("Content-Length", "0")
-                self.send_header("Connection", "close")
-                self.end_headers()
-            else:
-                self.send_response(200)
-                self.send_header("Content-Type", "application/octet-stream")
-                self.send_header("Content-Length", str(n))
-                self.send_header("Connection", "close")
-                # end_headers() MUST come before the body, or the body is written into the header block and the
-                # client sees a malformed response (caught by a curl test: server logged 200, client got 000).
-                self.end_headers()
-                if self.command != "HEAD":
-                    self.wfile.write(data)
+        self._cdn_reply(filename, how)
+
+    def _cdn_reply(self, filename, how):
+        """Send a selected file without retaining a whole movie/CPK per client."""
+        # Open once: HEAD and GET lengths describe this descriptor, even if the
+        # pathname is replaced. No asset cache or cross-request lifetime is added.
+        content = None
+        if filename is not None:
+            try:
+                content = open(filename, "rb")
+            except OSError as exc:  # removed or unreadable after selection: answer 404 and log it
+                how = f"{how}; open failed: {exc.__class__.__name__}"
+        with (content if content is not None else nullcontext()):
+            n = os.fstat(content.fileno()).st_size if content is not None else 0
+            verdict = f"200 {n} B ({how})" if content is not None else f"404 ({how or 'not in the CDN root'})"
+            print(f"CDN  {self.command} {self.path}  host={self.headers.get('Host')}  "
+                  f"ua={self.headers.get('User-Agent')}  -> {verdict}", flush=True)
             self.close_connection = True
-        except Exception:  # noqa: BLE001 -- the client may have gone away; nothing to do
-            pass
+            try:
+                if content is None:
+                    self.send_response(404)
+                    self.send_header("Content-Length", "0")
+                    self.send_header("Connection", "close")
+                    self.end_headers()
+                else:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/octet-stream")
+                    self.send_header("Content-Length", str(n))
+                    self.send_header("Connection", "close")
+                    self.end_headers()
+                    if self.command != "HEAD":
+                        # Bound allocations and never send beyond Content-Length
+                        # if an ordinary source file grows during this response.
+                        remaining = n
+                        while remaining:
+                            block = content.read(min(256 * 1024, remaining))
+                            if not block:
+                                break
+                            self.wfile.write(block)
+                            remaining -= len(block)
+            except Exception:  # noqa: BLE001 -- the client may have gone away; nothing to do
+                pass
 
 
 def _proc_cmdlines() -> dict:
