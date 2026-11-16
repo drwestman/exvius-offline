@@ -16,7 +16,8 @@ def main(argv=None) -> int:
     parser.add_argument('command', choices=('setup', 'serve', 'start', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
                                            'prepare-data', 'verify-data', 'prepare-banners', 'verify-banners',
                                            'prepare-sounds', 'verify-sounds', 'prepare-home-banners', 'verify-home-banners',
-                                           'plan-data', 'fetch-data', 'verify-packs'))
+                                           'plan-data', 'fetch-data', 'verify-packs', 'plan-campaign-upgrade', 'upgrade-campaign'))
+    parser.add_argument('--expected-save-sha256', help='required save digest for upgrade-campaign')
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
@@ -31,6 +32,8 @@ def main(argv=None) -> int:
     parser.add_argument('--http-port', type=int, default=80)
     parser.add_argument('--https-port', type=int, default=443)
     args = parser.parse_args(argv)
+    if args.expected_save_sha256 is not None and args.command != 'upgrade-campaign':
+        parser.error('--expected-save-sha256 applies only to upgrade-campaign')
     if args.vortex_art and args.command != 'prepare-data':
         parser.error('--vortex-art applies only to prepare-data')
     if args.sounds and args.command != 'prepare-data':
@@ -41,7 +44,11 @@ def main(argv=None) -> int:
         parser.error('--archive-dir applies only to fetch-data')
     try:
         config = Configuration(args.root, args.data, args.slot)
-        if args.command in ('plan-data', 'fetch-data', 'verify-packs'):
+        if args.command in ('plan-campaign-upgrade', 'upgrade-campaign'):
+            from ios_server import campaign_upgrade
+            result = (campaign_upgrade.apply(config, args.expected_save_sha256) if args.command == 'upgrade-campaign'
+                      else campaign_upgrade.plan(config)[1])
+        elif args.command in ('plan-data', 'fetch-data', 'verify-packs'):
             from ios_server import pack_install, pack_manifest
             manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
             result = (pack_install.fetch(config, manifest, archive_dir=args.archive_dir) if args.command == 'fetch-data' else

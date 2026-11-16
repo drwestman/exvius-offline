@@ -1,0 +1,55 @@
+{
+ "_provenance": "Build source/server/content/story_recipes.json: recipes the story gave that the server never paid (GitHub issue\n#3, 2026-11-11: \"Bronze Knife doesn't get unlocked. Magic Key doesn't get unlocked ... Cutscene/story seems to\nbe the issue\"). Built by ios-server/devtools/build_story_recipes.py.",
+ "missions": {
+  "1110703": [
+   {
+    "reward": "60:901000500:1",
+    "name": "Magic Key",
+    "page": "Grandshelt_Castle.wiki",
+    "mission_name": "Grandshelt Castle - Throne Room"
+   }
+  ]
+ },
+ "tutorial": [
+  {
+   "treasure": 1101013,
+   "after_mission": "1110103",
+   "rewards": "60:903000010:1,20:203000100:3",
+   "basis": "stand-in approved by the operator (2026-11-11)",
+   "why": "wiki: Bronze Knife recipe \"Tutorial\"; treasure 1101013 (switch type 420, no map); nothing records when the tutorial ran, so it is paid after Earth Shrine - Exit, the beat before Mitra"
+  }
+ ],
+ "scripted": [
+  {
+   "treasure": 9001006,
+   "after_mission": "2000101",
+   "rewards": "21:304000900:1",
+   "name": "Murasame (White Dragon)"
+  },
+  {
+   "treasure": 9001011,
+   "after_mission": "2000102",
+   "rewards": "21:407001300:1",
+   "name": "Force Armor (Demon Chimera)"
+  },
+  {
+   "treasure": 9001012,
+   "after_mission": "2000103",
+   "rewards": "21:312001000:1",
+   "name": "Killer Bow (Brachiosaur)"
+  },
+  {
+   "treasure": 9001013,
+   "after_mission": "2000201",
+   "rewards": "21:316040300:1",
+   "name": "Apollo Harp (Erinyes)"
+  }
+ ],
+ "unmatched": [
+  {
+   "mission": "10850102",
+   "page": "Tomb_Raider_The_Great_Pyramid.wiki",
+   "recipe": "The Atlantean Scion"
+  }
+ ]
+}

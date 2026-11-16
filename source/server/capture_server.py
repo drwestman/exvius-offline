@@ -143,6 +143,8 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _handle(self):
+        from revival_messages import clear as clear_message
+        clear_message()
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length) if length else b""
         body_text = raw.decode("utf-8", errors="replace")
@@ -340,6 +342,10 @@ class Handler(BaseHTTPRequestHandler):
             payload = {"t7n6cVWf": [{"qrVcDe48": b64}], "TEAYk6R1": [hdr]}
         else:
             raise SystemExit(f"unknown ENVELOPE mode {mode!r}")
+        from revival_messages import take as take_message
+        message = take_message()
+        if message is not None:
+            payload['bCf65yoK'] = message
         is_action = "/actionSymbol/" in self.path
         data = json.dumps(payload).encode() if is_action else b"{}"
         if missing_battle:

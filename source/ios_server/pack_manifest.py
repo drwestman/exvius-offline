@@ -95,7 +95,24 @@ def parse(raw):
 
 
 def read(path=DEFAULT):
-    return parse(Path(path).read_bytes())
+    path = Path(path)
+    raw = path.read_bytes()
+    if path.resolve() == DEFAULT.resolve():
+        doc = json.loads(raw)
+        overlay = json.loads(Path(__file__).with_name('revival_packs.json').read_bytes())
+        from revival_update import REVISION
+        if overlay['revision'] != REVISION:
+            raise ValueError('Invalid iOS supplemental pack provenance')
+        ids = {row['id'] for row in doc['packs']}
+        for row in overlay['packs']:
+            if row['id'] in ids:
+                raise ValueError('Supplemental pack conflicts with destination manifest')
+            doc['packs'].append(row)
+            ids.add(row['id'])
+        doc['downloadBytes'] = sum(row['size'] for row in doc['packs'])
+        doc['installedBytes'] = sum(row['unpackedSize'] for row in doc['packs'])
+        raw = encoded(doc)
+    return parse(raw)
 
 
 def destination(name):
@@ -110,6 +127,8 @@ def destination(name):
     if re.fullmatch(r'static/(?:mst_decoded|text_decoded|cpk_extract)/.+', name):
         return name
     if name.startswith('static/gacha_community/art/') or name == 'static/client/shared_prefs/gamedata.xml':
+        return name
+    if name == 'static/summon_art/list.json' or re.fullmatch(r'static/summon_art/(?:base|main|sub)/[^/]+\.png', name):
         return name
     raise ValueError('Unsupported iOS data pack entry: ' + name)
 

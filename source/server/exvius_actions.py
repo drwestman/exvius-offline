@@ -86,6 +86,10 @@ def unit_class_up(spec, req):
     names the next rarity (`t74crqAL`), its gil (`7UR4J2SE`) and materials (`KCk8u0am`). The reply is
     UnitClassUpResponse on the same tag (UserUnitClassUpResult: og2GHy49 unit, 5u7VYNEX new unit,
     KCk8u0am materials, WbGYcN17/02CI3bpE element info, p9Xj4Anc all-kigen flag)."""
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import awaken
+        return awaken(spec, req)
     node = _node(req, "sWc7EH69")
     iid = str(node.get("og2GHy49") or "") if node else ""
     unit = next((u for u in State.player.data["roster"] if str(u["instance_id"]) == iid), None)
@@ -194,6 +198,11 @@ def unit_equip(spec, req):
 
 def sacrifice(spec, req, group="6kvFj2Kw"):
     """Consume eligible units only after resolving the fragment rewards for the full batch."""
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import convert
+        result = convert(State.player, req.get(group), nv=group == '4Ncra9DF')
+        return dict(_refresh(spec), **{group: result}) if result is not None else _refresh(spec)
     from exvius_actions_shops import deployed_unit_ids
     from player_state import unit_mst
 

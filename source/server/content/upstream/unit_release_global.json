@@ -1,0 +1,7126 @@
+{
+ "_provenance": "Global release dates of summonable units, from the FFBE wiki: each unit page (Unit Infobox id, limited, acquisition) and the Update Schedule, Global Update History \"Unit\" lines. Built by ios-server/devtools/build_unit_release_check.py; see ios-server/research/UNIT_RELEASE_CHECK.md. `later`: units unit_release.json dates after Global; replay.unit_dates uses Global's date for them.",
+ "later": {
+  "100002103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Clyne",
+   "ours": "2016-07-08"
+  },
+  "100002203": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Anzelm",
+   "ours": "2016-07-08"
+  },
+  "100002303": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Luna",
+   "ours": "2016-07-08"
+  },
+  "100002403": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Bedile",
+   "ours": "2016-07-08"
+  },
+  "100002503": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Duane",
+   "ours": "2016-11-18"
+  },
+  "100002603": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Cerius",
+   "ours": "2016-12-23"
+  },
+  "100002703": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Roselia",
+   "ours": "2018-02-02"
+  },
+  "100002803": {
+   "bound": "first named, no release line",
+   "global": "2016-12-21",
+   "name": "Medius",
+   "ours": "2016-12-23"
+  },
+  "100003703": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Russell",
+   "ours": "2016-07-08"
+  },
+  "100003803": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Miyuki",
+   "ours": "2018-01-12"
+  },
+  "100003903": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Gilbert",
+   "ours": "2017-12-22"
+  },
+  "100004003": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Xiao",
+   "ours": "2017-01-27"
+  },
+  "100004103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Rakshasa",
+   "ours": "2016-07-08"
+  },
+  "100016605": {
+   "global": "2018-05-25",
+   "name": "Ukiyo",
+   "ours": "2018-10-12"
+  },
+  "100024105": {
+   "global": "2020-02-13",
+   "name": "Sweet Nichol",
+   "ours": "2020-02-17"
+  },
+  "100024205": {
+   "global": "2020-02-13",
+   "name": "Sweet Luka",
+   "ours": "2020-02-17"
+  },
+  "100024805": {
+   "global": "2020-07-30",
+   "name": "Fina & Dark Fina",
+   "ours": "2021-01-21"
+  },
+  "100025705": {
+   "global": "2020-01-30",
+   "name": "Blue Mage Fina",
+   "ours": "2020-04-09"
+  },
+  "100026103": {
+   "global": "2020-04-09",
+   "name": "Caroline",
+   "ours": "2020-04-16"
+  },
+  "100027205": {
+   "global": "2020-04-16",
+   "name": "Draconian Princess Fina",
+   "ours": "2020-04-23"
+  },
+  "100027405": {
+   "global": "2020-04-16",
+   "name": "Supreme Deva Akstar",
+   "ours": "2020-04-23"
+  },
+  "100028305": {
+   "global": "2021-06-17",
+   "name": "Daisy",
+   "ours": "2021-10-14"
+  },
+  "100032907": {
+   "global": "2021-02-01",
+   "name": "Charlotte & Physalis",
+   "ours": "2021-02-04"
+  },
+  "100040807": {
+   "global": "2023-03-30",
+   "name": "Lasswell -Dark Lineage-",
+   "ours": "2023-03-31"
+  },
+  "100040907": {
+   "global": "2023-03-30",
+   "name": "Roca -Dark Lineage-",
+   "ours": "2023-03-31"
+  },
+  "100041007": {
+   "global": "2023-04-06",
+   "name": "Veritas of the Frost",
+   "ours": "2023-04-08"
+  },
+  "100041107": {
+   "global": "2023-04-06",
+   "name": "Sakura -Dark Lineage-",
+   "ours": "2023-04-08"
+  },
+  "100041207": {
+   "global": "2023-04-13",
+   "name": "Flaring Aether Rain",
+   "ours": "2023-04-14"
+  },
+  "100041307": {
+   "global": "2023-04-13",
+   "name": "Fina -Dark Lineage-",
+   "ours": "2023-04-14"
+  },
+  "100041407": {
+   "global": "2023-02-23",
+   "name": "Mid",
+   "ours": "2023-02-24"
+  },
+  "100041707": {
+   "global": "2023-05-11",
+   "name": "Blades of Black Flame Raegen",
+   "ours": "2023-05-13"
+  },
+  "100041807": {
+   "global": "2023-05-11",
+   "name": "Red-Eyed Sage Sol",
+   "ours": "2023-05-13"
+  },
+  "100042107": {
+   "global": "2023-09-28",
+   "name": "Dark Dragon Buffon",
+   "ours": "2023-10-26"
+  },
+  "100042307": {
+   "global": "2023-08-31",
+   "name": "Grand Couture Ayaka",
+   "ours": "2023-10-26"
+  },
+  "100042407": {
+   "global": "2023-10-05",
+   "name": "Deity of War Taivas",
+   "ours": "2023-10-26"
+  },
+  "100042507": {
+   "global": "2023-09-28",
+   "name": "Cursebringer Neilikka",
+   "ours": "2023-10-26"
+  },
+  "100042607": {
+   "global": "2023-10-05",
+   "name": "Petite Jewel Lehftia",
+   "ours": "2023-10-26"
+  },
+  "100042707": {
+   "global": "2023-09-28",
+   "name": "Voidmage Roca",
+   "ours": "2023-10-26"
+  },
+  "100042807": {
+   "global": "2023-10-12",
+   "name": "Dragonlord Rhus",
+   "ours": "2023-10-26"
+  },
+  "100042907": {
+   "global": "2023-10-12",
+   "name": "Bewitching Warrior Yshe",
+   "ours": "2023-10-26"
+  },
+  "100043207": {
+   "global": "2024-03-07",
+   "name": "Fina -Esper of Destruction-",
+   "ours": "2024-06-01"
+  },
+  "100043507": {
+   "global": "2024-03-28",
+   "name": "Charlotte -Esper of Destruction-",
+   "ours": "2024-06-01"
+  },
+  "100043607": {
+   "global": "2024-03-28",
+   "name": "Dark Fina -Esper of Destruction-",
+   "ours": "2024-06-01"
+  },
+  "100043807": {
+   "global": "2024-04-04",
+   "name": "Sophie",
+   "ours": "2024-06-01"
+  },
+  "100044107": {
+   "global": "2024-02-08",
+   "name": "Magic Markswoman Physalis",
+   "ours": "2024-06-01"
+  },
+  "100044207": {
+   "global": "2024-02-08",
+   "name": "Metze",
+   "ours": "2024-06-01"
+  },
+  "201000203": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Garland",
+   "ours": "2016-11-18"
+  },
+  "201000505": {
+   "global": "2020-01-02",
+   "name": "Immortal Knight Garland",
+   "ours": "2022-05-19"
+  },
+  "201000807": {
+   "global": "2023-10-19",
+   "name": "Princess of Cornelia Sarah",
+   "ours": "2023-10-26"
+  },
+  "202000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Firion",
+   "ours": "2017-02-17"
+  },
+  "202000203": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Maria",
+   "ours": "2019-10-04"
+  },
+  "202002205": {
+   "global": "2020-10-08",
+   "name": "Minwu",
+   "ours": "2022-06-16"
+  },
+  "203000803": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Cloud of Darkness",
+   "ours": "2016-09-16"
+  },
+  "203004507": {
+   "global": "2023-10-19",
+   "name": "Evoker",
+   "ours": "2023-10-26"
+  },
+  "204000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Cecil",
+   "ours": "2016-10-14"
+  },
+  "204000203": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Kain",
+   "ours": "2017-05-12"
+  },
+  "204000403": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Rydia",
+   "ours": "2016-07-08"
+  },
+  "205000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Bartz",
+   "ours": "2016-11-25"
+  },
+  "205000303": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Galuf",
+   "ours": "2016-11-25"
+  },
+  "205000403": {
+   "global": "2016-11-24",
+   "name": "Faris",
+   "ours": "2016-11-25"
+  },
+  "205000503": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Krile",
+   "ours": "2016-11-25"
+  },
+  "205000703": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Exdeath",
+   "ours": "2016-11-25"
+  },
+  "205000805": {
+   "global": "2016-11-24",
+   "name": "Gilgamesh (FFV)",
+   "ours": "2019-08-30"
+  },
+  "205002107": {
+   "global": "2023-02-09",
+   "name": "Kelger",
+   "ours": "2024-08-22"
+  },
+  "205002207": {
+   "global": "2023-11-30",
+   "name": "King of Bal Galuf",
+   "ours": "2024-08-22"
+  },
+  "206000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Terra",
+   "ours": "2016-09-02"
+  },
+  "206000303": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Edgar",
+   "ours": "2016-07-08"
+  },
+  "206000403": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Sabin",
+   "ours": "2016-07-08"
+  },
+  "206000503": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Shadow",
+   "ours": "2016-07-08"
+  },
+  "206000603": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Cyan",
+   "ours": "2016-07-08"
+  },
+  "206000703": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Celes",
+   "ours": "2016-09-02"
+  },
+  "206001803": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Leo",
+   "ours": "2016-09-02"
+  },
+  "206003407": {
+   "global": "2023-11-30",
+   "name": "Treasure Hunter Locke",
+   "ours": "2024-08-22"
+  },
+  "206003507": {
+   "global": "2024-02-01",
+   "name": "Fastest in the Skies Setzer",
+   "ours": "2024-08-22"
+  },
+  "207002607": {
+   "global": "2023-05-04",
+   "name": "Young Hero Zack",
+   "ours": "2023-05-05"
+  },
+  "207002707": {
+   "global": "2023-05-04",
+   "name": "Angeal",
+   "ours": "2023-05-05"
+  },
+  "207002807": {
+   "global": "2023-04-27",
+   "name": "Genesis",
+   "ours": "2023-04-28"
+  },
+  "207002907": {
+   "global": "2023-01-12",
+   "name": "Materia Hunter Yuffie",
+   "ours": "2024-08-22"
+  },
+  "207003007": {
+   "global": "2023-01-12",
+   "name": "Sonon",
+   "ours": "2024-08-22"
+  },
+  "207003107": {
+   "global": "2022-12-15",
+   "name": "Cloud Strife",
+   "ours": "2024-08-22"
+  },
+  "207003207": {
+   "global": "2022-12-15",
+   "name": "Avalanche's Barret",
+   "ours": "2024-08-22"
+  },
+  "207003307": {
+   "global": "2023-04-27",
+   "name": "Cissnei",
+   "ours": "2024-08-22"
+  },
+  "208002507": {
+   "global": "2023-06-01",
+   "name": "Sorceress's Knight Squall",
+   "ours": "2023-06-03"
+  },
+  "208002607": {
+   "global": "2023-06-01",
+   "name": "SeeD's Blue Mage Quistis",
+   "ours": "2023-06-03"
+  },
+  "208002807": {
+   "global": "2023-05-25",
+   "name": "Sorceress of the Present Edea",
+   "ours": "2024-08-22"
+  },
+  "209000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Zidane",
+   "ours": "2016-08-19"
+  },
+  "209000203": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Vivi",
+   "ours": "2016-08-19"
+  },
+  "209001003": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Kuja",
+   "ours": "2016-08-19"
+  },
+  "209003407": {
+   "global": "2023-07-13",
+   "name": "Thief of Tantalus Zidane",
+   "ours": "2023-07-21"
+  },
+  "209003607": {
+   "global": "2023-07-13",
+   "name": "Little Summoner Eiko",
+   "ours": "2023-07-21"
+  },
+  "209003707": {
+   "global": "2023-07-27",
+   "name": "Gastronomist Quina",
+   "ours": "2024-08-22"
+  },
+  "210002607": {
+   "global": "2022-09-01",
+   "name": "Fabled Guardian Jecht",
+   "ours": "2022-09-02"
+  },
+  "210002807": {
+   "global": "2024-06-06",
+   "name": "Blitzball Legend Jecht",
+   "ours": "2024-08-22"
+  },
+  "210002907": {
+   "global": "2024-06-13",
+   "name": "Devoted Summoner Yuna",
+   "ours": "2024-08-22"
+  },
+  "210003007": {
+   "global": "2024-05-30",
+   "name": "Bewitching Black Mage Lulu",
+   "ours": "2024-08-22"
+  },
+  "211000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Shantotto",
+   "ours": "2017-09-15"
+  },
+  "211001607": {
+   "global": "2023-03-09",
+   "name": "Lady Shantotto",
+   "ours": "2023-03-17"
+  },
+  "211001707": {
+   "global": "2023-03-09",
+   "name": "Lion",
+   "ours": "2023-03-17"
+  },
+  "212000103": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Vaan",
+   "ours": "2017-07-07"
+  },
+  "212000403": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Penelo",
+   "ours": "2017-11-17"
+  },
+  "212000603": {
+   "bound": "launch roster",
+   "global": "2016-06-29",
+   "name": "Fran",
+   "ours": "2017-07-07"
+  },
+  "212002807": {
+   "global": "2024-05-30",
+   "name": "Spirited Friend Penelo",
+   "ours": "2024-08-22"
+  },
+  "212002907": {
+   "global": "2024-06-13",
+   "name": "Princess of Liberty Ashe",
+   "ours": "2024-08-22"
+  },
+  "213001707": {
+   "global": "2023-09-14",
+   "name": "Denial of Focus Vanille",
+   "ours": "2024-08-22"
+  },
+  "213001807": {
+   "global": "2023-09-14",
+   "name": "Loving Father Sazh",
+   "ours": "2024-08-22"
+  },
+  "213001907": {
+   "global": "2023-09-14",
+   "name": "Cid Raines",
+   "ours": "2024-08-22"
+  },
+  "214000605": {
+   "global": "2020-04-23",
+   "name": "Y'shtola, the Sorceress",
+   "ours": "2024-08-22"
+  },
+  "215003107": {
+   "global": "2024-01-04",
+   "name": "True King Noctis",
+   "ours": "2024-08-22"
+  },
+  "215003207": {
+   "global": "2024-01-18",
+   "name": "Chosen King's Shield Gladiolus",
+   "ours": "2024-08-22"
+  },
+  "215003307": {
+   "global": "2024-01-18",
+   "name": "Chosen King's Tactician Ignis",
+   "ours": "2024-08-22"
+  },
+  "215003407": {
+   "global": "2024-01-11",
+   "name": "Chosen King's Friend Prompto",
+   "ours": "2024-08-22"
+  },
+  "216000107": {
+   "global": "2024-07-11",
+   "name": "Clive Rosfield",
+   "ours": "2024-08-22"
+  },
+  "216000207": {
+   "global": "2024-07-11",
+   "name": "Jill Warrick",
+   "ours": "2024-08-22"
+  },
+  "216000307": {
+   "global": "2024-07-18",
+   "name": "Cidolfus Telamon",
+   "ours": "2024-08-22"
+  },
+  "216000407": {
+   "global": "2024-07-18",
+   "name": "Benedikta Harman",
+   "ours": "2024-08-22"
+  },
+  "250000105": {
+   "global": "2020-06-03",
+   "name": "Serah",
+   "ours": "2020-06-04"
+  },
+  "250000205": {
+   "global": "2020-06-03",
+   "name": "Lightning (FFXIII-2)",
+   "ours": "2020-06-04"
+  },
+  "250000305": {
+   "global": "2020-06-03",
+   "name": "Noel",
+   "ours": "2020-06-04"
+  },
+  "250000404": {
+   "global": "2020-06-03",
+   "name": "Hope (FFXIII-2)",
+   "ours": "2020-06-04"
+  },
+  "251000105": {
+   "global": "2020-08-27",
+   "name": "Tyro",
+   "ours": "2024-08-22"
+  },
+  "253001807": {
+   "global": "2023-12-07",
+   "name": "Unsung Hero Ramza",
+   "ours": "2024-08-22"
+  },
+  "253001907": {
+   "global": "2023-12-14",
+   "name": "Sword Saint Orlandeau",
+   "ours": "2024-08-22"
+  },
+  "253002007": {
+   "global": "2023-12-07",
+   "name": "Steadfast Knight Agrias",
+   "ours": "2024-08-22"
+  },
+  "253002107": {
+   "global": "2023-12-14",
+   "name": "Argath",
+   "ours": "2024-08-22"
+  },
+  "254002105": {
+   "global": "2020-07-09",
+   "name": "Steadfast Soldier Machina",
+   "ours": "2021-09-16"
+  },
+  "254002307": {
+   "global": "2023-06-15",
+   "name": "Vermilion Class Zero Ace",
+   "ours": "2023-06-18"
+  },
+  "254002507": {
+   "global": "2023-06-22",
+   "name": "Vermilion Class Zero Trey",
+   "ours": "2023-06-29"
+  },
+  "254002607": {
+   "global": "2023-06-15",
+   "name": "Vermilion Class Zero Deuce",
+   "ours": "2023-06-18"
+  },
+  "254002707": {
+   "global": "2023-06-22",
+   "name": "Qator",
+   "ours": "2024-08-22"
+  },
+  "258000305": {
+   "global": "2021-02-25",
+   "name": "Lumina",
+   "ours": "2024-08-22"
+  },
+  "304000503": {
+   "global": "2019-06-21",
+   "name": "Rabite",
+   "ours": "2024-08-22"
+  },
+  "304000607": {
+   "global": "2024-02-22",
+   "name": "Mana Sword Hero Randi",
+   "ours": "2024-08-22"
+  },
+  "304000707": {
+   "global": "2024-02-22",
+   "name": "Spirited Heart Primm",
+   "ours": "2024-08-22"
+  },
+  "304000807": {
+   "global": "2024-02-29",
+   "name": "Little Great Mage Popoi",
+   "ours": "2024-08-22"
+  },
+  "319000104": {
+   "global": "2018-07-27",
+   "name": "Reimi",
+   "ours": "2024-08-22"
+  },
+  "331000603": {
+   "global": "2019-03-29",
+   "name": "Chu-Chu",
+   "ours": "2019-04-26"
+  },
+  "331001307": {
+   "global": "2022-12-08",
+   "name": "Holy Mother Reborn Elly",
+   "ours": "2024-08-22"
+  },
+  "331001407": {
+   "global": "2022-12-08",
+   "name": "The Emperor's Emissary Citan",
+   "ours": "2024-08-22"
+  },
+  "331001507": {
+   "global": "2024-04-25",
+   "name": "Steel Wings of Bonds Maria",
+   "ours": "2024-08-22"
+  },
+  "331001607": {
+   "global": "2024-05-16",
+   "name": "Distant Promise Emeralda",
+   "ours": "2024-08-22"
+  },
+  "331001707": {
+   "global": "2024-05-09",
+   "name": "Slayer of God Fei",
+   "ours": "2024-08-22"
+  },
+  "331001807": {
+   "global": "2024-04-25",
+   "name": "Dunefaring King Bart",
+   "ours": "2024-08-22"
+  },
+  "337000905": {
+   "global": "2019-11-21",
+   "name": "Sylvando",
+   "ours": "2024-08-22"
+  },
+  "337001205": {
+   "global": "2019-11-21",
+   "name": "Jade",
+   "ours": "2024-08-22"
+  },
+  "337001305": {
+   "global": "2019-11-21",
+   "name": "Rab",
+   "ours": "2024-08-22"
+  },
+  "339000707": {
+   "global": "2023-08-03",
+   "name": "Jayden Rundall",
+   "ours": "2023-08-17"
+  },
+  "339000807": {
+   "global": "2023-08-03",
+   "name": "Flagbearer of Reform Glaciela",
+   "ours": "2023-08-17"
+  },
+  "339000907": {
+   "global": "2024-04-11",
+   "name": "Wing of Destiny Sterne",
+   "ours": "2024-08-22"
+  },
+  "342000307": {
+   "global": "2023-06-08",
+   "name": "Shiloh",
+   "ours": "2023-06-09"
+  },
+  "342000407": {
+   "global": "2023-06-08",
+   "name": "Serafina",
+   "ours": "2023-06-09"
+  },
+  "343000107": {
+   "global": "2022-10-06",
+   "name": "Lord of Light",
+   "ours": "2024-08-22"
+  },
+  "344000407": {
+   "global": "2022-06-02",
+   "name": "Beast King Crocodine",
+   "ours": "2022-06-09"
+  },
+  "344000807": {
+   "global": "2023-11-02",
+   "name": "Legendary Hero Avan",
+   "ours": "2024-08-22"
+  },
+  "344000907": {
+   "global": "2023-11-02",
+   "name": "Soul Heritor Hym",
+   "ours": "2024-08-22"
+  },
+  "344001007": {
+   "global": "2023-11-02",
+   "name": "Land Rider Larhart",
+   "ours": "2024-08-22"
+  },
+  "344001107": {
+   "global": "2023-11-09",
+   "name": "Twin Dragon Crests Dai",
+   "ours": "2024-08-22"
+  },
+  "344001207": {
+   "global": "2023-11-09",
+   "name": "True Dark King Vearn",
+   "ours": "2024-08-22"
+  },
+  "344001307": {
+   "global": "2023-11-09",
+   "name": "Disciple of Avan Leona",
+   "ours": "2024-08-22"
+  },
+  "345000107": {
+   "global": "2022-11-04",
+   "name": "Serge",
+   "ours": "2022-11-05"
+  },
+  "345000207": {
+   "global": "2022-11-04",
+   "name": "Kid",
+   "ours": "2022-11-05"
+  },
+  "345000307": {
+   "global": "2022-11-04",
+   "name": "Lynx",
+   "ours": "2022-11-05"
+  },
+  "401002304": {
+   "global": "2017-08-17",
+   "name": "Chic Ariana",
+   "ours": "2017-11-17"
+  },
+  "401002504": {
+   "global": "2017-11-17",
+   "name": "Sportive Ariana",
+   "ours": "2017-12-22"
+  },
+  "401004303": {
+   "global": "2018-06-22",
+   "name": "Teo",
+   "ours": "2018-08-24"
+  },
+  "401006305": {
+   "global": "2018-12-12",
+   "name": "Popstar Katy",
+   "ours": "2019-01-25"
+  },
+  "401006405": {
+   "global": "2018-12-08",
+   "name": "Aurora Fryevia",
+   "ours": "2019-02-22"
+  },
+  "401007905": {
+   "global": "2019-11-28",
+   "name": "Doctor Aiden",
+   "ours": "2019-12-02"
+  },
+  "401008205": {
+   "global": "2019-11-28",
+   "name": "Operative Zyrus",
+   "ours": "2019-12-02"
+  },
+  "401014007": {
+   "global": "2022-12-22",
+   "name": "Cheerful Caroler Ayaka",
+   "ours": "2023-01-19"
+  },
+  "401014407": {
+   "global": "2023-03-16",
+   "name": "Blade of Vengeance Ibara",
+   "ours": "2023-03-17"
+  },
+  "401014707": {
+   "global": "2023-06-15",
+   "name": "Radiant Smile Addison Rae",
+   "ours": "2023-06-29"
+  },
+  "401015007": {
+   "global": "2023-07-20",
+   "name": "Wings of Midnight Malphasie",
+   "ours": "2023-07-21"
+  },
+  "401015107": {
+   "global": "2023-08-10",
+   "name": "Arcane Scholar Kir",
+   "ours": "2023-08-17"
+  },
+  "401015207": {
+   "global": "2023-08-24",
+   "name": "Blood Dancer Ellesperis",
+   "ours": "2023-10-26"
+  },
+  "401015307": {
+   "global": "2023-09-21",
+   "name": "Aya Brea",
+   "ours": "2023-10-26"
+  },
+  "401015407": {
+   "global": "2023-09-07",
+   "name": "Cool Moves Addison Rae",
+   "ours": "2023-10-26"
+  },
+  "401015607": {
+   "global": "2023-11-23",
+   "name": "Hyoh & Panthera Ultimus",
+   "ours": "2024-08-22"
+  },
+  "401015707": {
+   "global": "2023-11-23",
+   "name": "Solitary Warrior Veritas of the Frost",
+   "ours": "2024-08-22"
+  },
+  "401015807": {
+   "global": "2023-12-21",
+   "name": "Ghost of Winter Past Beryl",
+   "ours": "2024-08-22"
+  },
+  "401015907": {
+   "global": "2024-01-25",
+   "name": "Chains of Fate Mirei",
+   "ours": "2024-08-22"
+  },
+  "401016007": {
+   "global": "2024-02-15",
+   "name": "Divine Archer Ang",
+   "ours": "2024-08-22"
+  },
+  "401016107": {
+   "global": "2024-03-21",
+   "name": "Blood Mage Zyrus",
+   "ours": "2024-08-22"
+  },
+  "401016207": {
+   "global": "2024-04-18",
+   "name": "Winged Officer Celeste",
+   "ours": "2024-08-22"
+  },
+  "401016307": {
+   "global": "2024-05-23",
+   "name": "Phantom Thief Xon",
+   "ours": "2024-08-22"
+  },
+  "401016407": {
+   "global": "2024-06-27",
+   "name": "Fundamental Force",
+   "ours": "2024-08-22"
+  },
+  "401016507": {
+   "global": "2024-06-27",
+   "name": "Eithne",
+   "ours": "2024-08-22"
+  },
+  "401016607": {
+   "global": "2024-07-25",
+   "name": "Imperial Shield Wilhelm",
+   "ours": "2024-08-22"
+  }
+ },
+ "launch": {
+  "date": "2016-06-29",
+  "source": "FFXIAH forum, \"Final Fantasy Brave Exvius\", Valefor.Prothescar, 2016-05-18: \"Currently the following characters are available to draw in Global\"",
+  "units": {
+   "100002103": "Clyne",
+   "100002203": "Anzelm",
+   "100002303": "Luna",
+   "100002403": "Bedile",
+   "100002503": "Duane",
+   "100002603": "Cerius",
+   "100002703": "Roselia",
+   "100003703": "Russell",
+   "100003803": "Miyuki",
+   "100003903": "Gilbert",
+   "100004003": "Xiao",
+   "100004103": "Rakshasa",
+   "201000203": "Garland",
+   "202000103": "Firion",
+   "202000203": "Maria",
+   "203000803": "Cloud of Darkness",
+   "204000103": "Cecil",
+   "204000203": "Kain",
+   "204000403": "Rydia",
+   "205000103": "Bartz",
+   "205000303": "Galuf",
+   "205000503": "Krile",
+   "205000703": "Exdeath",
+   "206000103": "Terra",
+   "206000303": "Edgar",
+   "206000403": "Sabin",
+   "206000503": "Shadow",
+   "206000603": "Cyan",
+   "206000703": "Celes",
+   "206001803": "Leo",
+   "209000103": "Zidane",
+   "209000203": "Vivi",
+   "209001003": "Kuja",
+   "211000103": "Shantotto",
+   "212000103": "Vaan",
+   "212000403": "Penelo",
+   "212000603": "Fran"
+  },
+  "unmatched": [
+   "Klein"
+  ]
+ },
+ "typos": {
+  "100030205": {
+   "global": "2020-07-15",
+   "name": "Nerine",
+   "ours": "2021-07-15"
+  },
+  "100034707": {
+   "global": "2020-07-15",
+   "name": "Lord of the Seas Nichol",
+   "ours": "2021-07-15"
+  },
+  "215003007": {
+   "global": "2020-05-06",
+   "name": "Vermilion Blade Ardyn",
+   "ours": "2021-05-06"
+  }
+ },
+ "undated": {
+  "100000115": "Hunter Rain (Hunter Rain/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "100000215": "Hunter Lasswell (Hunter Lasswell/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "100000324": "Hunter Fina (Hunter Fina/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "100000414": "Hunter Nichol (Hunter Nichol/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "100000513": "Hunter Lid (Hunter Lid/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "100000614": "Hunter Sakura (Hunter Sakura/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "100000713": "Hunter Jake (Hunter Jake/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "100002803": "Medius (Medius): no Global \"Unit\" line (acquisition: Rare Summon); first named 2016-12-21",
+  "100012104": "Emilia (Emilia): no Global \"Unit\" line (acquisition: Reward Units); first named 2019-04-18",
+  "100014405": "Reberta (JP) (Reberta/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "100014905": "Madam: no wiki page with this unit's id (asked Madam, Madam (Unit), Madam (), Madam/JP)",
+  "205000203": "Lenna (FFV) (Lenna (FFV)): no Global \"Unit\" line (acquisition: Rare Summon)",
+  "206000113": "Magitek Armor Terra (Magitek Armor Terra): no Global \"Unit\" line (acquisition: Star Quartz Units)",
+  "212001105": "Gabranth (Gabranth/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "301000103": "Samatha (Samatha/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "303000103": "Adel (Adel/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "309000105": "Julian (Julian/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "309000205": "Katarina (Katarina/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "309000304": "Harid (Khalid/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "309000403": "Robyn (Robin/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "311000105": "Hero (Hero/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "312000205": "Hawk: no wiki page with this unit's id (asked Hawk, Hawk (Unit), Hawk (), Hawk/JP)",
+  "312000305": "Kevin (Kevin/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "312000404": "Charlotte: no wiki page with this unit's id (asked Charlotte, Charlotte (Unit), Charlotte (), Charlotte/JP)",
+  "313000105": "Tiz (Tiz/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "313000205": "Agnès (Agnès/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "313000305": "Bravo Bunny Agnès (Bravo Bunny Agnès/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "314000104": "Yew (Yew/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "314000203": "Magnolia (Magnolia/JP): no Global \"Unit\" line (acquisition: Rare Summon, page is /JP)",
+  "315000104": "Rinne (Rinne/JP): no Global \"Unit\" line (acquisition: Reward Units, page is /JP)",
+  "341000105": "Young Xehanort (KHDR) (Young Xehanort (KHDR)): no Global \"Unit\" line (acquisition: Reward Units)",
+  "401016707": "Blade Breaker Esther (Blade Breaker Esther): no Global \"Unit\" line (acquisition: Rare Summon)"
+ },
+ "units": {
+  "100000115": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Hunter Rain/JP"
+  },
+  "100000215": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Hunter Lasswell/JP"
+  },
+  "100000315": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-06",
+   "limited": "No",
+   "page": "Dark Fina"
+  },
+  "100000324": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Hunter Fina/JP"
+  },
+  "100000403": {
+   "acquisition": "Story Units",
+   "global": "2016-11-24",
+   "limited": "",
+   "page": "Nichol"
+  },
+  "100000414": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Hunter Nichol/JP"
+  },
+  "100000503": {
+   "acquisition": "Story Units",
+   "global": "2016-09-23",
+   "limited": "",
+   "page": "Lid"
+  },
+  "100000513": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Hunter Lid/JP"
+  },
+  "100000603": {
+   "acquisition": "Story Units",
+   "global": "2017-04-27",
+   "limited": "",
+   "page": "Sakura"
+  },
+  "100000614": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Hunter Sakura/JP"
+  },
+  "100000703": {
+   "acquisition": "Story Units",
+   "global": "2017-02-23",
+   "limited": "",
+   "page": "Jake"
+  },
+  "100000713": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Hunter Jake/JP"
+  },
+  "100002103": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Clyne"
+  },
+  "100002203": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Anzelm"
+  },
+  "100002303": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Luna"
+  },
+  "100002403": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Bedile"
+  },
+  "100002503": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Duane"
+  },
+  "100002603": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-12-21",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Cerius"
+  },
+  "100002703": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-04-12",
+   "launch": "2016-06-29",
+   "limited": "No",
+   "page": "Roselia"
+  },
+  "100002803": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-12-21",
+   "limited": "No",
+   "page": "Medius"
+  },
+  "100003703": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "No",
+   "page": "Russell"
+  },
+  "100003803": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2018-01-11",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Miyuki"
+  },
+  "100003903": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-12-21",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Gilbert"
+  },
+  "100004003": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-01-27",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Xiao"
+  },
+  "100004103": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Rakshasa"
+  },
+  "100004203": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-23",
+   "limited": "",
+   "page": "Ludmille"
+  },
+  "100004303": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-23",
+   "limited": "",
+   "page": "Charlotte"
+  },
+  "100004403": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-22",
+   "limited": "",
+   "page": "Artemios"
+  },
+  "100004604": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-08",
+   "limited": "",
+   "page": "Chizuru"
+  },
+  "100004703": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-22",
+   "limited": "",
+   "page": "Hayate"
+  },
+  "100004903": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-06",
+   "limited": "",
+   "page": "Elle"
+  },
+  "100005004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-06",
+   "limited": "",
+   "page": "Luka"
+  },
+  "100005104": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-16",
+   "limited": "",
+   "page": "Mercedes"
+  },
+  "100005203": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-24",
+   "limited": "",
+   "page": "Lawrence"
+  },
+  "100005304": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-24",
+   "limited": "No",
+   "page": "Soleil"
+  },
+  "100005404": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-23",
+   "limited": "",
+   "page": "Shine"
+  },
+  "100005503": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-23",
+   "limited": "",
+   "page": "Shera"
+  },
+  "100005604": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-05",
+   "limited": "",
+   "page": "Sozhe"
+  },
+  "100005703": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-05",
+   "limited": "",
+   "page": "Heltich"
+  },
+  "100005805": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-10",
+   "limited": "No",
+   "page": "Marie"
+  },
+  "100005905": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-05",
+   "limited": "No",
+   "page": "Aileen"
+  },
+  "100006003": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-05",
+   "limited": "",
+   "page": "Ulrica"
+  },
+  "100006105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-26",
+   "limited": "No",
+   "page": "Wilhelm"
+  },
+  "100006204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-26",
+   "limited": "",
+   "page": "Grace"
+  },
+  "100006303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-26",
+   "limited": "",
+   "page": "Abel"
+  },
+  "100006404": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-06",
+   "limited": "No",
+   "page": "Goken"
+  },
+  "100006503": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-26",
+   "limited": "",
+   "page": "Jean"
+  },
+  "100006603": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-09",
+   "limited": "No",
+   "page": "Camille"
+  },
+  "100006704": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-09",
+   "limited": "",
+   "page": "Ilias"
+  },
+  "100006805": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-09",
+   "limited": "No",
+   "page": "Fohlen"
+  },
+  "100006904": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-04",
+   "limited": "",
+   "page": "Victoria"
+  },
+  "100007004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-09",
+   "limited": "",
+   "page": "Amelia"
+  },
+  "100007104": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-23",
+   "limited": "",
+   "page": "Beach Time Fina"
+  },
+  "100007205": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-23",
+   "limited": "No",
+   "page": "Seabreeze Dark Fina"
+  },
+  "100007303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-23",
+   "limited": "",
+   "page": "Summer Lid"
+  },
+  "100007404": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-14",
+   "limited": "",
+   "page": "Bran"
+  },
+  "100007505": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-14",
+   "limited": "No",
+   "page": "Lunera"
+  },
+  "100007603": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-14",
+   "limited": "No",
+   "page": "Ruggles"
+  },
+  "100007705": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-04",
+   "limited": "No",
+   "page": "Veritas of the Dark"
+  },
+  "100007804": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-25",
+   "limited": "No",
+   "page": "Veritas of the Heavens"
+  },
+  "100007904": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-25",
+   "limited": "No",
+   "page": "Veritas of the Waters"
+  },
+  "100008005": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-04",
+   "limited": "No",
+   "page": "Veritas of the Flame"
+  },
+  "100008104": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-04",
+   "limited": "No",
+   "page": "Veritas of the Earth"
+  },
+  "100008205": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-25",
+   "limited": "No",
+   "page": "Veritas of the Light"
+  },
+  "100008504": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-14",
+   "limited": "",
+   "page": "Helena"
+  },
+  "100008605": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-06",
+   "limited": "No",
+   "page": "Ayaka"
+  },
+  "100008703": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-04",
+   "limited": "",
+   "page": "Timothy"
+  },
+  "100008804": {
+   "acquisition": "Star Quartz Units",
+   "global": "2017-06-29",
+   "limited": "Yes",
+   "page": "Moogle"
+  },
+  "100008903": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-08",
+   "limited": "No",
+   "page": "Guromu"
+  },
+  "100009004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-08",
+   "limited": "No",
+   "page": "Aura"
+  },
+  "100009105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-03",
+   "limited": "No",
+   "page": "Loren"
+  },
+  "100009204": {
+   "acquisition": "Raid Summon",
+   "global": "2017-12-08",
+   "limited": "Yes",
+   "page": "Kupolkan"
+  },
+  "100009304": {
+   "acquisition": "Raid Summon",
+   "global": "2017-12-08",
+   "limited": "Yes",
+   "page": "Ashteroze"
+  },
+  "100009405": {
+   "acquisition": "Star Quartz Units",
+   "global": "2017-06-01",
+   "limited": "Yes",
+   "page": "Kelsus"
+  },
+  "100009504": {
+   "acquisition": "Raid Summon",
+   "global": "2017-12-08",
+   "limited": "Yes",
+   "page": "Nyalu"
+  },
+  "100009604": {
+   "acquisition": "Raid Summon",
+   "global": "2017-12-08",
+   "limited": "Yes",
+   "page": "Sandee"
+  },
+  "100009704": {
+   "acquisition": "Raid Summon",
+   "global": "2017-12-08",
+   "limited": "Yes",
+   "page": "Grinfield"
+  },
+  "100009805": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-15",
+   "limited": "No",
+   "page": "Elfreeda"
+  },
+  "100009903": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-15",
+   "limited": "No",
+   "page": "Conrad"
+  },
+  "100010005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-13",
+   "limited": "No",
+   "page": "Raegen"
+  },
+  "100010104": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-06",
+   "limited": "No",
+   "page": "Silvia"
+  },
+  "100010203": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-06",
+   "limited": "No",
+   "page": "Kamui"
+  },
+  "100010303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-06",
+   "limited": "No",
+   "page": "Yuri"
+  },
+  "100010405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-08",
+   "limited": "No",
+   "page": "Roy"
+  },
+  "100010504": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-15",
+   "limited": "",
+   "page": "William"
+  },
+  "100010604": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-03",
+   "limited": "No",
+   "page": "Chloe"
+  },
+  "100010703": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-03",
+   "limited": "No",
+   "page": "Amy"
+  },
+  "100010805": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-01",
+   "limited": "No",
+   "page": "Duke"
+  },
+  "100010904": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-01",
+   "limited": "No",
+   "page": "Olif"
+  },
+  "100011004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-01",
+   "limited": "No",
+   "page": "Mystea"
+  },
+  "100011103": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-01",
+   "limited": "No",
+   "page": "Charie"
+  },
+  "100011203": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-01",
+   "limited": "No",
+   "page": "Ryunan"
+  },
+  "100011305": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-12",
+   "limited": "No",
+   "page": "Jiraiya"
+  },
+  "100011404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-12",
+   "limited": "",
+   "page": "Kaede"
+  },
+  "100011504": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-12",
+   "limited": "No",
+   "page": "Ohga"
+  },
+  "100011603": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-12",
+   "limited": "No",
+   "page": "Otogiri"
+  },
+  "100011705": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-12",
+   "limited": "No",
+   "page": "Pyro Glacial Lasswell"
+  },
+  "100011805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-23",
+   "limited": "No",
+   "page": "Lotus Mage Fina"
+  },
+  "100011905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-18",
+   "limited": "No",
+   "page": "Heavenly Technician Lid"
+  },
+  "100012005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-13",
+   "limited": "No",
+   "page": "Nameless Gunner Jake"
+  },
+  "100012104": {
+   "acquisition": "Reward Units",
+   "bound": true,
+   "global": "2019-04-18",
+   "limited": "Yes",
+   "page": "Emilia"
+  },
+  "100012203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-13",
+   "limited": "No",
+   "page": "Riley"
+  },
+  "100012304": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-13",
+   "limited": "No",
+   "page": "Ozetta"
+  },
+  "100012405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-02",
+   "limited": "No",
+   "page": "Blossom Sage Sakura"
+  },
+  "100012505": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-15",
+   "limited": "No",
+   "page": "Maritime Strategist Nichol"
+  },
+  "100012605": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-23",
+   "limited": "No",
+   "page": "Kunshira"
+  },
+  "100012704": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-23",
+   "limited": "No",
+   "page": "Wadow"
+  },
+  "100013004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-02",
+   "limited": "No",
+   "page": "Verun"
+  },
+  "100013104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-02",
+   "limited": "No",
+   "page": "Cedona"
+  },
+  "100013203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-23",
+   "limited": "No",
+   "page": "Erwin"
+  },
+  "100013305": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-13",
+   "limited": "No",
+   "page": "Emperor Shera"
+  },
+  "100013404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-18",
+   "limited": "No",
+   "page": "Killian"
+  },
+  "100013504": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-11",
+   "limited": "No",
+   "page": "Shylt"
+  },
+  "100013704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-07",
+   "limited": "No",
+   "page": "Vesvia"
+  },
+  "100013805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-11",
+   "limited": "No",
+   "page": "Lila"
+  },
+  "100013903": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-11",
+   "limited": "No",
+   "page": "Mim"
+  },
+  "100014005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-20",
+   "limited": "No",
+   "page": "Mediena"
+  },
+  "100014104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-15",
+   "limited": "No",
+   "page": "Lexa"
+  },
+  "100014204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-15",
+   "limited": "No",
+   "page": "Elbis"
+  },
+  "100014303": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-15",
+   "limited": "No",
+   "page": "Merald"
+  },
+  "100014405": {
+   "acquisition": "Rare Summon",
+   "limited": "Yes",
+   "page": "Reberta/JP"
+  },
+  "100015005": {
+   "acquisition": "Star Quartz Units",
+   "global": "2018-07-18",
+   "limited": "Yes",
+   "page": "Vagrant Knight Rain"
+  },
+  "100015104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-13",
+   "limited": "No",
+   "page": "Ryumynui"
+  },
+  "100015204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-13",
+   "limited": "No",
+   "page": "Zile"
+  },
+  "100015303": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-13",
+   "limited": "No",
+   "page": "Lucille"
+  },
+  "100015405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-10",
+   "limited": "No",
+   "page": "Nalu"
+  },
+  "100015504": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-10",
+   "limited": "No",
+   "page": "Pecciotta"
+  },
+  "100015604": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-10",
+   "limited": "No",
+   "page": "Shinju"
+  },
+  "100015703": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-10",
+   "limited": "No",
+   "page": "Ryuka"
+  },
+  "100015805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-20",
+   "limited": "No",
+   "page": "Awakened Rain"
+  },
+  "100016205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-14",
+   "limited": "No",
+   "page": "Hyoh"
+  },
+  "100016304": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-14",
+   "limited": "No",
+   "page": "Shatal"
+  },
+  "100016403": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-14",
+   "limited": "No",
+   "page": "Domino"
+  },
+  "100016503": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-03",
+   "limited": "No",
+   "page": "Ramira"
+  },
+  "100016605": {
+   "acquisition": "Star Quartz Units",
+   "global": "2018-05-25",
+   "limited": "Yes",
+   "page": "Ukiyo"
+  },
+  "100016704": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-12",
+   "limited": "No",
+   "page": "Macmedi"
+  },
+  "100016803": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-12",
+   "limited": "No",
+   "page": "Lotti"
+  },
+  "100016905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-12",
+   "limited": "No",
+   "page": "Citra"
+  },
+  "100017105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-09",
+   "limited": "No",
+   "page": "Elephim"
+  },
+  "100017204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-09",
+   "limited": "No",
+   "page": "Leopold"
+  },
+  "100017304": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-09",
+   "limited": "No",
+   "page": "Magna"
+  },
+  "100017403": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-09",
+   "limited": "No",
+   "page": "Forelsket"
+  },
+  "100017505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-07",
+   "limited": "No",
+   "page": "Regina"
+  },
+  "100017605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-22",
+   "limited": "No",
+   "page": "Yuraisha"
+  },
+  "100017704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-22",
+   "limited": "No",
+   "page": "Franis"
+  },
+  "100017803": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-22",
+   "limited": "No",
+   "page": "Ishil"
+  },
+  "100017905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-07",
+   "limited": "No",
+   "page": "Sieghard"
+  },
+  "100018004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-07",
+   "limited": "No",
+   "page": "Dietlinde"
+  },
+  "100018104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-07",
+   "limited": "No",
+   "page": "Theobald"
+  },
+  "100018203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-07",
+   "limited": "No",
+   "page": "Cannon"
+  },
+  "100018305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-18",
+   "limited": "No",
+   "page": "Folka"
+  },
+  "100018403": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-18",
+   "limited": "No",
+   "page": "Ichor"
+  },
+  "100018504": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-18",
+   "limited": "No",
+   "page": "Yubel"
+  },
+  "100018604": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-18",
+   "limited": "No",
+   "page": "Kihana"
+  },
+  "100018705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-15",
+   "limited": "No",
+   "page": "Ignacio"
+  },
+  "100018804": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-15",
+   "limited": "No",
+   "page": "Suzume"
+  },
+  "100018904": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-15",
+   "limited": "No",
+   "page": "PNK-2"
+  },
+  "100019003": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-15",
+   "limited": "No",
+   "page": "Wayhem"
+  },
+  "100019105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-17",
+   "limited": "No",
+   "page": "Nagi"
+  },
+  "100019205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-17",
+   "limited": "No",
+   "page": "Yego"
+  },
+  "100019304": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-17",
+   "limited": "No",
+   "page": "Zolulu & Delulu"
+  },
+  "100019403": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-17",
+   "limited": "No",
+   "page": "Galas"
+  },
+  "100019505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-15",
+   "limited": "No",
+   "page": "Cid"
+  },
+  "100019604": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-15",
+   "limited": "No",
+   "page": "Melete"
+  },
+  "100019704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-15",
+   "limited": "No",
+   "page": "Nagflar"
+  },
+  "100019803": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-15",
+   "limited": "No",
+   "page": "Falma"
+  },
+  "100019905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-22",
+   "limited": "No",
+   "page": "Karlette"
+  },
+  "100020005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-10",
+   "limited": "No",
+   "page": "Akstar"
+  },
+  "100020104": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-10",
+   "limited": "No",
+   "page": "Gravey"
+  },
+  "100020204": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-10",
+   "limited": "No",
+   "page": "Tomoe"
+  },
+  "100020303": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-10",
+   "limited": "No",
+   "page": "Majora"
+  },
+  "100020505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-31",
+   "limited": "No",
+   "page": "Summer Fina & Lid"
+  },
+  "100020605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-12",
+   "limited": "No",
+   "page": "Crimson"
+  },
+  "100020704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-12",
+   "limited": "No",
+   "page": "Kyanos"
+  },
+  "100020803": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-12",
+   "limited": "No",
+   "page": "Mirfas"
+  },
+  "100020905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-31",
+   "limited": "No",
+   "page": "Summer Folka & Citra"
+  },
+  "100021203": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-05",
+   "limited": "",
+   "page": "Gudon of the Xi Star"
+  },
+  "100021304": {
+   "acquisition": "Reward Units",
+   "global": "2019-06-30",
+   "limited": "Yes",
+   "page": "Chocobo Rain"
+  },
+  "100021405": {
+   "acquisition": "Rare Summon",
+   "global": "2021-01-14",
+   "limited": "No",
+   "page": "Hess Sage Rowen"
+  },
+  "100021504": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-07",
+   "limited": "No",
+   "page": "Amber"
+  },
+  "100021603": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-07",
+   "limited": "No",
+   "page": "Krowa"
+  },
+  "100021705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-05",
+   "limited": "No",
+   "page": "Sacred Shield Charlotte"
+  },
+  "100021803": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-05",
+   "limited": "No",
+   "page": "Shepard"
+  },
+  "100021905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-28",
+   "limited": "No",
+   "page": "Kimono Ayaka"
+  },
+  "100022005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-28",
+   "limited": "No",
+   "page": "Dressy Aileen"
+  },
+  "100022104": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-05",
+   "limited": "No",
+   "page": "Friese"
+  },
+  "100022205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-17",
+   "limited": "No",
+   "page": "Chocobo Fina"
+  },
+  "100022305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-13",
+   "limited": "No",
+   "page": "Sol"
+  },
+  "100022404": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-13",
+   "limited": "No",
+   "page": "Heliarc"
+  },
+  "100022504": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-13",
+   "limited": "No",
+   "page": "Eclipsa"
+  },
+  "100022603": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-13",
+   "limited": "No",
+   "page": "Pertira"
+  },
+  "100022705": {
+   "acquisition": "Star Quartz Units",
+   "global": "2019-12-23",
+   "limited": "Yes",
+   "page": "Holy Night Amelia & Emilia"
+  },
+  "100022805": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-05",
+   "limited": "No",
+   "page": "Physalis"
+  },
+  "100022904": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-05",
+   "limited": "No",
+   "page": "Juraga of the Nu Star"
+  },
+  "100023005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-16",
+   "limited": "No",
+   "page": "Hess King Lasswell"
+  },
+  "100023205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-07",
+   "limited": "No",
+   "page": "Aldore King Rain"
+  },
+  "100023305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-26",
+   "limited": "No",
+   "page": "White Lily Dark Fina"
+  },
+  "100023404": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-30",
+   "limited": "",
+   "page": "Atlie"
+  },
+  "100023503": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-30",
+   "limited": "No",
+   "page": "Tessen"
+  },
+  "100023605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-27",
+   "limited": "No",
+   "page": "Madam Edel"
+  },
+  "100023704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-14",
+   "limited": "No",
+   "page": "Neisha"
+  },
+  "100023804": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-27",
+   "limited": "No",
+   "page": "Almaz"
+  },
+  "100023903": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-02-27",
+   "limited": "Yes",
+   "page": "Winkel"
+  },
+  "100024003": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-14",
+   "limited": "No",
+   "page": "Latyl"
+  },
+  "100024105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-13",
+   "limited": "No",
+   "page": "Sweet Nichol"
+  },
+  "100024205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-13",
+   "limited": "No",
+   "page": "Sweet Luka"
+  },
+  "100024305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-26",
+   "limited": "No",
+   "page": "Kimono Fina"
+  },
+  "100024404": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-07",
+   "limited": "No",
+   "page": "Diezell"
+  },
+  "100024503": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-07",
+   "limited": "No",
+   "page": "Maisie"
+  },
+  "100024805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-30",
+   "limited": "No",
+   "page": "Fina & Dark Fina"
+  },
+  "100025104": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-16",
+   "limited": "No",
+   "page": "Scartio"
+  },
+  "100025203": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-16",
+   "limited": "No",
+   "page": "Sister"
+  },
+  "100025705": {
+   "acquisition": "Story Units",
+   "global": "2020-01-30",
+   "limited": "No",
+   "page": "Blue Mage Fina"
+  },
+  "100025805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-09",
+   "limited": "No",
+   "page": "Sakura of the Delta Star"
+  },
+  "100025905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-09",
+   "limited": "No",
+   "page": "Nichol of the Epsilon Star"
+  },
+  "100026004": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-09",
+   "limited": "No",
+   "page": "Colundo"
+  },
+  "100026103": {
+   "acquisition": "Reward Units",
+   "global": "2020-04-09",
+   "limited": "Yes",
+   "page": "Caroline"
+  },
+  "100026205": {
+   "acquisition": "Reward Units",
+   "global": "2020-11-05",
+   "limited": "Yes",
+   "page": "Alhena"
+  },
+  "100027105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-16",
+   "limited": "No",
+   "page": "Infernal Fire Rain"
+  },
+  "100027205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-16",
+   "limited": "No",
+   "page": "Draconian Princess Fina"
+  },
+  "100027305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-16",
+   "limited": "No",
+   "page": "Dark Spirit Sol"
+  },
+  "100027405": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-16",
+   "limited": "",
+   "page": "Supreme Deva Akstar"
+  },
+  "100027505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-14",
+   "limited": "No",
+   "page": "Hallowed Aegis Charlotte"
+  },
+  "100027605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-14",
+   "limited": "No",
+   "page": "Mystical Ice Lasswell"
+  },
+  "100027705": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-21",
+   "limited": "No",
+   "page": "War Hero Raegen"
+  },
+  "100027805": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-05-21",
+   "limited": "Yes",
+   "page": "Untamed Wolf Edel"
+  },
+  "100027905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-21",
+   "limited": "",
+   "page": "Four Winds Physalis"
+  },
+  "100028205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-30",
+   "limited": "No",
+   "page": "Zenaida"
+  },
+  "100028305": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-17",
+   "limited": "No",
+   "page": "Daisy"
+  },
+  "100028705": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-27",
+   "limited": "No",
+   "page": "Kalmia"
+  },
+  "100029305": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-22",
+   "limited": "No",
+   "page": "Poppy"
+  },
+  "100029905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-16",
+   "limited": "No",
+   "page": "Umbral Dragon Dark Fina"
+  },
+  "100030005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-16",
+   "limited": "No",
+   "page": "Healing Avatar Lid"
+  },
+  "100030105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-16",
+   "limited": "No",
+   "page": "Flame of Rebirth Jake"
+  },
+  "100030205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-15",
+   "limited": "No",
+   "page": "Nerine"
+  },
+  "100030705": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-26",
+   "limited": "No",
+   "page": "Cleome"
+  },
+  "100031007": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-27",
+   "limited": "No",
+   "page": "Rain -Neo Vision-"
+  },
+  "100031105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-10",
+   "limited": "No",
+   "page": "Lively Steward Shinju"
+  },
+  "100031205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-27",
+   "limited": "No",
+   "page": "Bruce"
+  },
+  "100031305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-27",
+   "limited": "No",
+   "page": "Rinora"
+  },
+  "100031405": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-09-10",
+   "limited": "Yes",
+   "page": "Stylish Steward Pecciotta"
+  },
+  "100031507": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-10",
+   "limited": "No",
+   "page": "Awakened Dragon Akstar"
+  },
+  "100031607": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-05",
+   "limited": "No",
+   "page": "Sol -Neo Vision-"
+  },
+  "100031707": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-12",
+   "limited": "No",
+   "page": "Shoreline Fina & Daisy"
+  },
+  "100031805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-12",
+   "limited": "No",
+   "page": "Mineur"
+  },
+  "100031907": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-15",
+   "limited": "No",
+   "page": "Madam Edel -Neo Vision-"
+  },
+  "100032005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-15",
+   "limited": "",
+   "page": "Relentless Might Elbis"
+  },
+  "100032105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-15",
+   "limited": "",
+   "page": "Blossomed Mage Lexa"
+  },
+  "100032207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-03",
+   "limited": "No",
+   "page": "Physalis -Neo Vision-"
+  },
+  "100032305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-03",
+   "limited": "No",
+   "page": "Knightly Paragon Lawrence"
+  },
+  "100032607": {
+   "acquisition": "Rare Summon",
+   "global": "2021-01-14",
+   "limited": "No",
+   "page": "Lasswell -Neo Vision-"
+  },
+  "100032707": {
+   "acquisition": "Rare Summon",
+   "global": "2021-01-21",
+   "limited": "No",
+   "page": "Rain & Fina"
+  },
+  "100032807": {
+   "acquisition": "Rare Summon",
+   "global": "2021-01-28",
+   "limited": "No",
+   "page": "Lasswell & Raegen"
+  },
+  "100032907": {
+   "acquisition": "Reward Units",
+   "global": "2021-02-01",
+   "limited": "Yes",
+   "page": "Charlotte & Physalis"
+  },
+  "100033007": {
+   "acquisition": "Rare Summon",
+   "global": "2021-02-04",
+   "limited": "No",
+   "page": "Dark Fina & Sol"
+  },
+  "100033107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-02-18",
+   "limited": "No",
+   "page": "Akstar & Cleome"
+  },
+  "100033207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-04",
+   "limited": "No",
+   "page": "Mazurka"
+  },
+  "100033305": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-04",
+   "limited": "No",
+   "page": "Trot"
+  },
+  "100033407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-08",
+   "limited": "No",
+   "page": "Melo"
+  },
+  "100033505": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-08",
+   "limited": "No",
+   "page": "Freesia"
+  },
+  "100033907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-10",
+   "limited": "No",
+   "page": "Chorale"
+  },
+  "100034107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-10",
+   "limited": "No",
+   "page": "Diverti"
+  },
+  "100034205": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-10",
+   "limited": "No",
+   "page": "Conche"
+  },
+  "100034307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-08",
+   "limited": "No",
+   "page": "Guardian Blade Charlotte"
+  },
+  "100034407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-08",
+   "limited": "No",
+   "page": "Emperor Vlad"
+  },
+  "100034707": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-15",
+   "limited": "No",
+   "page": "Lord of the Seas Nichol"
+  },
+  "100035107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-10-07",
+   "limited": "No",
+   "page": "Roca"
+  },
+  "100035307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-10-14",
+   "limited": "No",
+   "page": "Paus"
+  },
+  "100035507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-09",
+   "limited": "No",
+   "page": "Summer Sniper Physalis"
+  },
+  "100035807": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-23",
+   "limited": "No",
+   "page": "Sage of Thunder Sakura"
+  },
+  "100035907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-01-06",
+   "limited": "No",
+   "page": "Taivas"
+  },
+  "100037107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-09",
+   "limited": "No",
+   "page": "Magic Mermaid Freesia"
+  },
+  "100037207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-09",
+   "limited": "No",
+   "page": "Beach Buoy Shinju"
+  },
+  "100037307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-01-13",
+   "limited": "No",
+   "page": "Tulien"
+  },
+  "100037407": {
+   "acquisition": "Story Units",
+   "global": "2022-03-10",
+   "limited": "No",
+   "page": "Runda"
+  },
+  "100037507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-10",
+   "limited": "No",
+   "page": "Lehftia"
+  },
+  "100037607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-10",
+   "limited": "No",
+   "page": "Haveh"
+  },
+  "100037707": {
+   "acquisition": "Reward Units",
+   "global": "2022-03-17",
+   "limited": "No",
+   "page": "Golden Rizer"
+  },
+  "100037807": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-17",
+   "limited": "No",
+   "page": "Dark Rain"
+  },
+  "100037907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-17",
+   "limited": "No",
+   "page": "Raegen -The Return-"
+  },
+  "100038007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-31",
+   "limited": "No",
+   "page": "Akstar -The Return-"
+  },
+  "100038107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-07",
+   "limited": "No",
+   "page": "Fina -The Return-"
+  },
+  "100038207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-14",
+   "limited": "No",
+   "page": "Nichol -The Return-"
+  },
+  "100038307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-14",
+   "limited": "No",
+   "page": "Sakura -The Return-"
+  },
+  "100038407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-14",
+   "limited": "No",
+   "page": "Lasswell -FFIV Form-"
+  },
+  "100038507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-12",
+   "limited": "No",
+   "page": "Rain -FFI Form-"
+  },
+  "100038607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-28",
+   "limited": "No",
+   "page": "Knights of Grandshelt"
+  },
+  "100038807": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-23",
+   "limited": "No",
+   "page": "Yshe"
+  },
+  "100038907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-23",
+   "limited": "No",
+   "page": "Kall"
+  },
+  "100039007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-23",
+   "limited": "No",
+   "page": "Ilmatalle"
+  },
+  "100039107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-29",
+   "limited": "No",
+   "page": "Silent Knight Charlotte"
+  },
+  "100039307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-07",
+   "limited": "No",
+   "page": "Rain -Warrior's Prayer-"
+  },
+  "100039407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-07",
+   "limited": "No",
+   "page": "Dark Fina -Warrior's Prayer-"
+  },
+  "100039507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-14",
+   "limited": "No",
+   "page": "Poppy -Warrior's Prayer-"
+  },
+  "100039607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-14",
+   "limited": "No",
+   "page": "Lehftia -Warrior's Prayer-"
+  },
+  "100039807": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-28",
+   "limited": "No",
+   "page": "Rhus"
+  },
+  "100039907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-28",
+   "limited": "No",
+   "page": "Neilikka"
+  },
+  "100040007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-13",
+   "limited": "No",
+   "page": "Ultimate Regina"
+  },
+  "100040107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-13",
+   "limited": "No",
+   "page": "Vanharma"
+  },
+  "100040207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-13",
+   "limited": "No",
+   "page": "Ihana"
+  },
+  "100040307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-01",
+   "limited": "No",
+   "page": "Taivas & Yshe"
+  },
+  "100040407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-02-02",
+   "limited": "No",
+   "page": "Vacation Voyager Fina"
+  },
+  "100040507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-02-02",
+   "limited": "No",
+   "page": "Marine-Type Runda"
+  },
+  "100040607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-23",
+   "limited": "No",
+   "page": "Dioxus"
+  },
+  "100040707": {
+   "acquisition": "Reward Units",
+   "global": "2023-03-30",
+   "limited": "No",
+   "page": "Raegen -Dark Lineage-"
+  },
+  "100040807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-30",
+   "limited": "",
+   "page": "Lasswell -Dark Lineage-"
+  },
+  "100040907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-30",
+   "limited": "",
+   "page": "Roca -Dark Lineage-"
+  },
+  "100041007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-06",
+   "limited": "No",
+   "page": "Veritas of the Frost"
+  },
+  "100041107": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-06",
+   "limited": "No",
+   "page": "Sakura -Dark Lineage-"
+  },
+  "100041207": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-13",
+   "limited": "No",
+   "page": "Flaring Aether Rain"
+  },
+  "100041307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-13",
+   "limited": "No",
+   "page": "Fina -Dark Lineage-"
+  },
+  "100041407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-02-23",
+   "limited": "No",
+   "page": "Mid"
+  },
+  "100041607": {
+   "acquisition": "Reward Units",
+   "global": "2023-08-31",
+   "limited": "No",
+   "page": "Sheratan"
+  },
+  "100041707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-11",
+   "limited": "No",
+   "page": "Blades of Black Flame Raegen"
+  },
+  "100041807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-11",
+   "limited": "No",
+   "page": "Red-Eyed Sage Sol"
+  },
+  "100041907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-06",
+   "limited": "No",
+   "page": "Snovlinka"
+  },
+  "100042007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-06",
+   "limited": "No",
+   "page": "Riddar"
+  },
+  "100042107": {
+   "acquisition": "Reward Units",
+   "global": "2023-09-28",
+   "limited": "No",
+   "page": "Dark Dragon Buffon"
+  },
+  "100042307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-31",
+   "limited": "",
+   "page": "Grand Couture Ayaka"
+  },
+  "100042407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-05",
+   "limited": "",
+   "page": "Deity of War Taivas"
+  },
+  "100042507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-28",
+   "limited": "",
+   "page": "Cursebringer Neilikka"
+  },
+  "100042607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-05",
+   "limited": "",
+   "page": "Petite Jewel Lehftia"
+  },
+  "100042707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-28",
+   "limited": "",
+   "page": "Voidmage Roca"
+  },
+  "100042807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-12",
+   "limited": "No",
+   "page": "Dragonlord Rhus"
+  },
+  "100042907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-12",
+   "limited": "",
+   "page": "Bewitching Warrior Yshe"
+  },
+  "100043007": {
+   "acquisition": "Rare Summon",
+   "global": "2024-03-07",
+   "limited": "",
+   "page": "Rain -Esper of Destruction-"
+  },
+  "100043107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-03-14",
+   "limited": "",
+   "page": "Lasswell -Esper of Destruction-"
+  },
+  "100043207": {
+   "acquisition": "Rare Summon",
+   "global": "2024-03-07",
+   "limited": "",
+   "page": "Fina -Esper of Destruction-"
+  },
+  "100043507": {
+   "acquisition": "Reward Units",
+   "global": "2024-03-28",
+   "limited": "No",
+   "page": "Charlotte -Esper of Destruction-"
+  },
+  "100043607": {
+   "acquisition": "Rare Summon",
+   "global": "2024-03-28",
+   "limited": "",
+   "page": "Dark Fina -Esper of Destruction-"
+  },
+  "100043807": {
+   "acquisition": "Rare Summon",
+   "global": "2024-04-04",
+   "limited": "",
+   "page": "Sophie"
+  },
+  "100044107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-08",
+   "limited": "",
+   "page": "Magic Markswoman Physalis"
+  },
+  "100044207": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-08",
+   "limited": "",
+   "page": "Metze"
+  },
+  "100044807": {
+   "acquisition": "Rare Summon",
+   "global": "2024-08-01",
+   "limited": "",
+   "page": "Crimson Knight Rain"
+  },
+  "100044907": {
+   "acquisition": "Rare Summon",
+   "global": "2024-08-08",
+   "limited": "",
+   "page": "Azure Knight Lasswell"
+  },
+  "100045007": {
+   "acquisition": "Rare Summon",
+   "global": "2024-08-01",
+   "limited": "",
+   "page": "Hero Resurrected Taivas"
+  },
+  "100045107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-08-15",
+   "limited": "",
+   "page": "Azure and Crimson Blades Rhus"
+  },
+  "201000104": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-05",
+   "limited": "",
+   "page": "Warrior of Light"
+  },
+  "201000203": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-06-29",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Garland"
+  },
+  "201000405": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-02",
+   "limited": "No",
+   "page": "Awakened Warrior of Light"
+  },
+  "201000505": {
+   "acquisition": "Reward Units",
+   "global": "2020-01-02",
+   "limited": "Yes",
+   "page": "Immortal Knight Garland"
+  },
+  "201000607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-19",
+   "limited": "No",
+   "page": "Fledgling Warrior"
+  },
+  "201000707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-19",
+   "limited": "No",
+   "page": "Marilith"
+  },
+  "201000807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-19",
+   "limited": "",
+   "page": "Princess of Cornelia Sarah"
+  },
+  "202000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-02-17",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Firion"
+  },
+  "202000203": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-02-17",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Maria"
+  },
+  "202000303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-17",
+   "limited": "No",
+   "page": "Guy"
+  },
+  "202000404": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-17",
+   "limited": "",
+   "page": "Leon"
+  },
+  "202000505": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-17",
+   "limited": "No",
+   "page": "Emperor"
+  },
+  "202001605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-04",
+   "limited": "No",
+   "page": "Wild Rose Firion"
+  },
+  "202001705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-04",
+   "limited": "No",
+   "page": "Dark Knight Leon"
+  },
+  "202001907": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-08",
+   "limited": "No",
+   "page": "Firion -Neo Vision-"
+  },
+  "202002105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-08",
+   "limited": "No",
+   "page": "Thoughtful Sister Maria"
+  },
+  "202002205": {
+   "acquisition": "Reward Units",
+   "global": "2020-10-08",
+   "limited": "Yes",
+   "page": "Minwu"
+  },
+  "202002307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-16",
+   "limited": "No",
+   "page": "Emperor of Palamecia"
+  },
+  "202002407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-16",
+   "limited": "No",
+   "page": "Ricard & Wyvern"
+  },
+  "203000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-01",
+   "limited": "No",
+   "page": "Onion Knight"
+  },
+  "203000205": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-04",
+   "limited": "No",
+   "page": "Luneth"
+  },
+  "203000303": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-04",
+   "limited": "No",
+   "page": "Arc"
+  },
+  "203000404": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-04",
+   "limited": "No",
+   "page": "Refia"
+  },
+  "203000503": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-04",
+   "limited": "",
+   "page": "Ingus"
+  },
+  "203000604": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-08",
+   "limited": "No",
+   "page": "Doga"
+  },
+  "203000704": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-01",
+   "limited": "",
+   "page": "Desch"
+  },
+  "203000803": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-11-04",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Cloud of Darkness"
+  },
+  "203000904": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-01",
+   "limited": "No",
+   "page": "Aria"
+  },
+  "203001003": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-01",
+   "limited": "",
+   "page": "Sara"
+  },
+  "203001305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-08",
+   "limited": "No",
+   "page": "Onion Knight Refia"
+  },
+  "203001405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-08",
+   "limited": "No",
+   "page": "Dark Knight Luneth"
+  },
+  "203001503": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-08",
+   "limited": "No",
+   "page": "Unei"
+  },
+  "203001605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-20",
+   "limited": "No",
+   "page": "Awakened Onion Knight"
+  },
+  "203001805": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-02-20",
+   "limited": "Yes",
+   "page": "Xande"
+  },
+  "203001905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-20",
+   "limited": "No",
+   "page": "Hein"
+  },
+  "203004207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-19",
+   "limited": "No",
+   "page": "Onion Knight -Neo Vision-"
+  },
+  "203004305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-19",
+   "limited": "No",
+   "page": "Black Mage Arc"
+  },
+  "203004407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-10",
+   "limited": "No",
+   "page": "Red Mage Ingus"
+  },
+  "203004507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-19",
+   "limited": "",
+   "page": "Evoker"
+  },
+  "204000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-10-14",
+   "launch": "2016-06-29",
+   "limited": "No",
+   "page": "Cecil"
+  },
+  "204000115": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-14",
+   "limited": "No",
+   "page": "Dark Knight Cecil"
+  },
+  "204000203": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-10-14",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Kain"
+  },
+  "204000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-14",
+   "limited": "",
+   "page": "Rosa"
+  },
+  "204000403": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-10-14",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Rydia"
+  },
+  "204000503": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-05",
+   "limited": "",
+   "page": "Tellah"
+  },
+  "204000603": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-08",
+   "limited": "No",
+   "page": "Edward"
+  },
+  "204000704": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-08",
+   "limited": "No",
+   "page": "Yang"
+  },
+  "204001004": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-06",
+   "limited": "No",
+   "page": "Cid (FFIV)"
+  },
+  "204001103": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-14",
+   "limited": "",
+   "page": "Edge"
+  },
+  "204001403": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-08",
+   "limited": "",
+   "page": "Golbez"
+  },
+  "204001505": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-08",
+   "limited": "No",
+   "page": "Pure Summoner Rydia"
+  },
+  "204001605": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-08",
+   "limited": "No",
+   "page": "Atoning Dragoon Kain"
+  },
+  "204001705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-03",
+   "limited": "No",
+   "page": "Black Mage Golbez"
+  },
+  "204002205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-06",
+   "limited": "No",
+   "page": "Paladin Cecil"
+  },
+  "204002405": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-02-06",
+   "limited": "Yes",
+   "page": "White Mage Rosa"
+  },
+  "204002605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-06",
+   "limited": "No",
+   "page": "Palom & Porom"
+  },
+  "204002907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-02-17",
+   "limited": "No",
+   "page": "Dragoon Kain"
+  },
+  "204003007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-02-17",
+   "limited": "No",
+   "page": "Summoner Rydia"
+  },
+  "204003107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-03",
+   "limited": "No",
+   "page": "Ninja Edge"
+  },
+  "204003207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-20",
+   "limited": "No",
+   "page": "The Red Wings's Cecil"
+  },
+  "204003307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-20",
+   "limited": "No",
+   "page": "White Mage of Benediction Rosa"
+  },
+  "205000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-11-24",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Bartz"
+  },
+  "205000203": {
+   "acquisition": "Rare Summon",
+   "limited": "",
+   "page": "Lenna (FFV)"
+  },
+  "205000303": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-11-24",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Galuf"
+  },
+  "205000403": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-24",
+   "limited": "",
+   "page": "Faris"
+  },
+  "205000503": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-11-24",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Krile"
+  },
+  "205000703": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2016-11-24",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Exdeath"
+  },
+  "205000805": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-24",
+   "limited": "No",
+   "page": "Gilgamesh (FFV)"
+  },
+  "205000905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-11",
+   "limited": "No",
+   "page": "Dark Mage Exdeath"
+  },
+  "205001005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-11",
+   "limited": "No",
+   "page": "Warrior of Dawn Galuf"
+  },
+  "205001105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-30",
+   "limited": "No",
+   "page": "Warrior of Light Bartz"
+  },
+  "205001205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-30",
+   "limited": "No",
+   "page": "Warrior of Light Lenna"
+  },
+  "205001305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-11",
+   "limited": "No",
+   "page": "Warrior of Light Krile"
+  },
+  "205001407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-18",
+   "limited": "No",
+   "page": "Faris -Neo Vision-"
+  },
+  "205001505": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-18",
+   "limited": "No",
+   "page": "Xezat"
+  },
+  "205001607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-01-20",
+   "limited": "No",
+   "page": "Summoner Lenna"
+  },
+  "205001707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-01-20",
+   "limited": "No",
+   "page": "Warrior of Dawn Dorgann"
+  },
+  "205001807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-01-26",
+   "limited": "No",
+   "page": "World Wayfarer Bartz"
+  },
+  "205001907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-01-26",
+   "limited": "No",
+   "page": "White Mage Krile"
+  },
+  "205002007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-02-09",
+   "limited": "No",
+   "page": "World's Hero Gilgamesh"
+  },
+  "205002107": {
+   "acquisition": "Reward Units",
+   "global": "2023-02-09",
+   "limited": "No",
+   "page": "Kelger"
+  },
+  "205002207": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-30",
+   "limited": "",
+   "page": "King of Bal Galuf"
+  },
+  "206000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-04-20",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Terra"
+  },
+  "206000113": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "page": "Magitek Armor Terra"
+  },
+  "206000125": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-20",
+   "limited": "No",
+   "page": "Trance Terra"
+  },
+  "206000203": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-22",
+   "limited": "",
+   "page": "Locke"
+  },
+  "206000303": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Edgar"
+  },
+  "206000403": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Sabin"
+  },
+  "206000503": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Shadow"
+  },
+  "206000603": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Cyan"
+  },
+  "206000703": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Celes"
+  },
+  "206000804": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-20",
+   "limited": "",
+   "page": "Setzer"
+  },
+  "206000905": {
+   "acquisition": "Reward Units",
+   "global": "2020-12-10",
+   "limited": "Yes",
+   "page": "Strago"
+  },
+  "206001005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-10",
+   "limited": "No",
+   "page": "Relm"
+  },
+  "206001103": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-20",
+   "limited": "No",
+   "page": "Gau"
+  },
+  "206001703": {
+   "acquisition": "Rare Summon",
+   "global": "2016-07-08",
+   "limited": "No",
+   "page": "Kefka"
+  },
+  "206001803": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Leo"
+  },
+  "206001905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-24",
+   "limited": "No",
+   "page": "King Edgar of Figaro"
+  },
+  "206002005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-24",
+   "limited": "No",
+   "page": "Monk Sabin of Kolts"
+  },
+  "206002105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-14",
+   "limited": "No",
+   "page": "Magitek Warrior Terra"
+  },
+  "206002205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-14",
+   "limited": "",
+   "page": "Adventurer Locke"
+  },
+  "206002305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-31",
+   "limited": "No",
+   "page": "Archmage Kefka"
+  },
+  "206002405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-31",
+   "limited": "No",
+   "page": "Assassin Shadow"
+  },
+  "206002507": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-10",
+   "limited": "No",
+   "page": "Terra -Neo Vision-"
+  },
+  "206002607": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-17",
+   "limited": "No",
+   "page": "Locke -Neo Vision-"
+  },
+  "206002705": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-17",
+   "limited": "No",
+   "page": "Dashing Gambler Setzer"
+  },
+  "206002807": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-19",
+   "limited": "No",
+   "page": "Triumphant General Celes"
+  },
+  "206002907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-02",
+   "limited": "No",
+   "page": "Doma Samurai Cyan"
+  },
+  "206003005": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-19",
+   "limited": "No",
+   "page": "Moogle of Narshe Mog"
+  },
+  "206003105": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-19",
+   "limited": "No",
+   "page": "Yeti of Narshe Umaro"
+  },
+  "206003207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-17",
+   "limited": "No",
+   "page": "Embracer of Duty Edgar"
+  },
+  "206003307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-17",
+   "limited": "No",
+   "page": "Embracer of Freedom Sabin"
+  },
+  "206003407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-30",
+   "limited": "",
+   "page": "Treasure Hunter Locke"
+  },
+  "206003507": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-01",
+   "limited": "",
+   "page": "Fastest in the Skies Setzer"
+  },
+  "207000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-15",
+   "limited": "No",
+   "page": "Cloud"
+  },
+  "207000204": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-11",
+   "limited": "No",
+   "page": "Barret"
+  },
+  "207000305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-11",
+   "limited": "No",
+   "page": "Tifa"
+  },
+  "207000405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-12",
+   "limited": "No",
+   "page": "Aerith"
+  },
+  "207000505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-12",
+   "limited": "No",
+   "page": "Red XIII"
+  },
+  "207000605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-12",
+   "limited": "No",
+   "page": "Yuffie"
+  },
+  "207000703": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-11",
+   "limited": "No",
+   "page": "Cait Sith"
+  },
+  "207000805": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-11",
+   "limited": "No",
+   "page": "Vincent"
+  },
+  "207001005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-05-11",
+   "limited": "No",
+   "page": "Sephiroth"
+  },
+  "207001105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-12",
+   "limited": "No",
+   "page": "Zack"
+  },
+  "207001205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-03",
+   "limited": "No",
+   "page": "Rufus Shinra (FFVII REMAKE)"
+  },
+  "207001305": {
+   "acquisition": "Reward Units",
+   "global": "2020-08-20",
+   "limited": "No",
+   "page": "Reno (FFVII REMAKE)"
+  },
+  "207001405": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-22",
+   "limited": "No",
+   "page": "Avalanche's Jessie"
+  },
+  "207001507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-22",
+   "limited": "No",
+   "page": "Cetra Descendant Aerith"
+  },
+  "207001605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-07",
+   "limited": "No",
+   "page": "Cloud (FFVII: AC)"
+  },
+  "207001705": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-07",
+   "limited": "No",
+   "page": "Tifa (FFVII: AC)"
+  },
+  "207001805": {
+   "acquisition": "Reward Units",
+   "global": "2020-05-07",
+   "limited": "Yes",
+   "page": "Kadaj"
+  },
+  "207001904": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-07",
+   "limited": "No",
+   "page": "Yazoo & Loz"
+  },
+  "207002007": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-20",
+   "limited": "No",
+   "page": "Cloud (FFVII REMAKE)"
+  },
+  "207002105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-20",
+   "limited": "No",
+   "page": "Barret (FFVII REMAKE)"
+  },
+  "207002207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-03",
+   "limited": "No",
+   "page": "Aerith (FFVII REMAKE)"
+  },
+  "207002307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-29",
+   "limited": "No",
+   "page": "Avalanche's Tifa"
+  },
+  "207002407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-05",
+   "limited": "No",
+   "page": "Legendary Hero Sephiroth"
+  },
+  "207002505": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-05",
+   "limited": "No",
+   "page": "Avalanche's Biggs & Wedge"
+  },
+  "207002607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-04",
+   "limited": "No",
+   "page": "Young Hero Zack"
+  },
+  "207002707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-04",
+   "limited": "No",
+   "page": "Angeal"
+  },
+  "207002807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-27",
+   "limited": "No",
+   "page": "Genesis"
+  },
+  "207002907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-01-12",
+   "limited": "No",
+   "page": "Materia Hunter Yuffie"
+  },
+  "207003007": {
+   "acquisition": "Reward Units",
+   "global": "2023-01-12",
+   "limited": "No",
+   "page": "Sonon"
+  },
+  "207003107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-15",
+   "limited": "No",
+   "page": "Cloud Strife"
+  },
+  "207003207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-15",
+   "limited": "No",
+   "page": "Avalanche's Barret"
+  },
+  "207003307": {
+   "acquisition": "Reward Units",
+   "global": "2023-04-27",
+   "limited": "No",
+   "page": "Cissnei"
+  },
+  "208000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-03",
+   "limited": "No",
+   "page": "Squall"
+  },
+  "208000205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-03",
+   "limited": "No",
+   "page": "Rinoa"
+  },
+  "208000305": {
+   "acquisition": "Reward Units",
+   "global": "2020-06-18",
+   "limited": "Yes",
+   "page": "Quistis"
+  },
+  "208000404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-03",
+   "limited": "No",
+   "page": "Zell"
+  },
+  "208000505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-25",
+   "limited": "No",
+   "page": "Selphie"
+  },
+  "208000605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-25",
+   "limited": "No",
+   "page": "Irvine"
+  },
+  "208001005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-18",
+   "limited": "No",
+   "page": "Seifer"
+  },
+  "208001304": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-25",
+   "limited": "No",
+   "page": "Edea"
+  },
+  "208001505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-18",
+   "limited": "No",
+   "page": "Lone Lion Squall"
+  },
+  "208001604": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-18",
+   "limited": "No",
+   "page": "Fujin & Raijin"
+  },
+  "208002107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-28",
+   "limited": "No",
+   "page": "Rinoa & Angelo"
+  },
+  "208002207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-06",
+   "limited": "No",
+   "page": "Laguna"
+  },
+  "208002307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-06",
+   "limited": "No",
+   "page": "Kiros & Ward"
+  },
+  "208002507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-01",
+   "limited": "No",
+   "page": "Sorceress's Knight Squall"
+  },
+  "208002607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-01",
+   "limited": "No",
+   "page": "SeeD's Blue Mage Quistis"
+  },
+  "208002707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-25",
+   "limited": "No",
+   "page": "Expert Sharpshooter Irvine"
+  },
+  "208002807": {
+   "acquisition": "Reward Units",
+   "global": "2023-05-25",
+   "limited": "No",
+   "page": "Sorceress of the Present Edea"
+  },
+  "209000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2018-03-01",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Zidane"
+  },
+  "209000203": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2018-03-01",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Vivi"
+  },
+  "209000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-26",
+   "limited": "No",
+   "page": "Garnet"
+  },
+  "209000404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-02",
+   "limited": "No",
+   "page": "Steiner"
+  },
+  "209000503": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-26",
+   "limited": "",
+   "page": "Freya"
+  },
+  "209000705": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-02",
+   "limited": "No",
+   "page": "Eiko"
+  },
+  "209000803": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-19",
+   "limited": "No",
+   "page": "Amarant"
+  },
+  "209000903": {
+   "acquisition": "Rare Summon",
+   "global": "2016-08-19",
+   "limited": "",
+   "page": "Lani"
+  },
+  "209001003": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-04-12",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Kuja"
+  },
+  "209001105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-02",
+   "limited": "No",
+   "page": "Beatrix"
+  },
+  "209001203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-02",
+   "limited": "No",
+   "page": "Black Waltz 3"
+  },
+  "209001405": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-02",
+   "limited": "No",
+   "page": "Black Mage Vivi"
+  },
+  "209001505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-02",
+   "limited": "No",
+   "page": "Rakish Thief Zidane"
+  },
+  "209001705": {
+   "acquisition": "Star Quartz Units",
+   "global": "2020-04-02",
+   "limited": "Yes",
+   "page": "Strange Gourmand Quina"
+  },
+  "209001805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-02",
+   "limited": "No",
+   "page": "Dragon Knight Freya"
+  },
+  "209001904": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-02",
+   "limited": "No",
+   "page": "Sir Iron-tail Fratley"
+  },
+  "209002004": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-02",
+   "limited": "No",
+   "page": "Court Jesters Zorn & Thorn"
+  },
+  "209002105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-06",
+   "limited": "No",
+   "page": "Angel of Death Kuja"
+  },
+  "209002205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-06",
+   "limited": "No",
+   "page": "Garland (FFIX)"
+  },
+  "209002305": {
+   "acquisition": "Reward Units",
+   "global": "2020-08-06",
+   "limited": "Yes",
+   "page": "Knight of Pluto Zidane"
+  },
+  "209002404": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-06",
+   "limited": "No",
+   "page": "Mikoto"
+  },
+  "209002807": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-20",
+   "limited": "No",
+   "page": "Lightning-Fast Zidane"
+  },
+  "209002907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-03",
+   "limited": "No",
+   "page": "Pure-Hearted Vivi"
+  },
+  "209003005": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-03",
+   "limited": "No",
+   "page": "Loyal Knight Steiner"
+  },
+  "209003107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-29",
+   "limited": "No",
+   "page": "Determined Dagger"
+  },
+  "209003207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-29",
+   "limited": "No",
+   "page": "Planet Destroyer Kuja"
+  },
+  "209003407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-13",
+   "limited": "No",
+   "page": "Thief of Tantalus Zidane"
+  },
+  "209003507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-27",
+   "limited": "",
+   "page": "Knights of Pluto Captain Steiner"
+  },
+  "209003607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-13",
+   "limited": "No",
+   "page": "Little Summoner Eiko"
+  },
+  "209003707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-27",
+   "limited": "",
+   "page": "Gastronomist Quina"
+  },
+  "210000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-29",
+   "limited": "No",
+   "page": "Tidus"
+  },
+  "210000205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-06",
+   "limited": "No",
+   "page": "Yuna"
+  },
+  "210000303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-29",
+   "limited": "No",
+   "page": "Wakka"
+  },
+  "210000405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-06",
+   "limited": "No",
+   "page": "Lulu"
+  },
+  "210000505": {
+   "acquisition": "Reward Units",
+   "global": "2020-03-12",
+   "limited": "Yes",
+   "page": "Kimahri"
+  },
+  "210000605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-01",
+   "limited": "No",
+   "page": "Auron"
+  },
+  "210000704": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-29",
+   "limited": "",
+   "page": "Rikku"
+  },
+  "210000804": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-06",
+   "limited": "No",
+   "page": "Seymour"
+  },
+  "210000905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-12",
+   "limited": "No",
+   "page": "Yunalesca"
+  },
+  "210001005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-01",
+   "limited": "No",
+   "page": "Jecht"
+  },
+  "210001105": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-02",
+   "limited": "No",
+   "page": "High Summoner Braska"
+  },
+  "210001503": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-01",
+   "limited": "No",
+   "page": "Brother"
+  },
+  "210001704": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-12",
+   "limited": "No",
+   "page": "Isaaru"
+  },
+  "210001805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-12",
+   "limited": "No",
+   "page": "Star Player Tidus"
+  },
+  "210001904": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-01",
+   "limited": "No",
+   "page": "Belgemine"
+  },
+  "210002107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-11-25",
+   "limited": "No",
+   "page": "Summoner Yuna"
+  },
+  "210002207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-11-29",
+   "limited": "No",
+   "page": "Al Bhed Girl Rikku"
+  },
+  "210002307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-02",
+   "limited": "No",
+   "page": "Legendary Guardian Auron"
+  },
+  "210002407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-25",
+   "limited": "No",
+   "page": "New Guardian Tidus"
+  },
+  "210002507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-25",
+   "limited": "No",
+   "page": "Besaid Mage Lulu"
+  },
+  "210002607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-01",
+   "limited": "No",
+   "page": "Fabled Guardian Jecht"
+  },
+  "210002707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-08",
+   "limited": "No",
+   "page": "Ronso Warrior Kimahri"
+  },
+  "210002807": {
+   "acquisition": "Rare Summon",
+   "global": "2024-06-06",
+   "limited": "",
+   "page": "Blitzball Legend Jecht"
+  },
+  "210002907": {
+   "acquisition": "Rare Summon",
+   "global": "2024-06-13",
+   "limited": "",
+   "page": "Devoted Summoner Yuna"
+  },
+  "210003007": {
+   "acquisition": "Rare Summon",
+   "global": "2024-05-30",
+   "limited": "",
+   "page": "Bewitching Black Mage Lulu"
+  },
+  "211000103": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Shantotto"
+  },
+  "211000204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-15",
+   "limited": "",
+   "page": "Werei"
+  },
+  "211000303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-15",
+   "limited": "",
+   "page": "Kupipi"
+  },
+  "211000405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-09-15",
+   "limited": "No",
+   "page": "Prishe"
+  },
+  "211000805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-31",
+   "limited": "No",
+   "page": "Livid Shantotto"
+  },
+  "211000905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-31",
+   "limited": "No",
+   "page": "Shadow Lord"
+  },
+  "211001004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-31",
+   "limited": "No",
+   "page": "Joachim"
+  },
+  "211001205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-05",
+   "limited": "No",
+   "page": "Wizardess Shantotto"
+  },
+  "211001305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-05",
+   "limited": "No",
+   "page": "Lilisette"
+  },
+  "211001404": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-05",
+   "limited": "No",
+   "page": "Zeid"
+  },
+  "211001507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-24",
+   "limited": "No",
+   "page": "Royal Puppeteer Aphmau"
+  },
+  "211001607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-09",
+   "limited": "No",
+   "page": "Lady Shantotto"
+  },
+  "211001707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-09",
+   "limited": "No",
+   "page": "Lion"
+  },
+  "212000103": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-07-06",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Vaan"
+  },
+  "212000204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-07",
+   "limited": "",
+   "page": "Ashe"
+  },
+  "212000403": {
+   "acquisition": "Rare Summon",
+   "bound": true,
+   "global": "2017-07-06",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Penelo"
+  },
+  "212000505": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-19",
+   "limited": "No",
+   "page": "Balthier"
+  },
+  "212000603": {
+   "acquisition": "Rare Summon",
+   "launch": "2016-06-29",
+   "limited": "",
+   "page": "Fran"
+  },
+  "212000905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-19",
+   "limited": "No",
+   "page": "Basch"
+  },
+  "212001004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-07",
+   "limited": "",
+   "page": "Rasler"
+  },
+  "212001105": {
+   "acquisition": "Rare Summon",
+   "limited": "No",
+   "page": "Gabranth/JP"
+  },
+  "212001204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-19",
+   "limited": "No",
+   "page": "Vayne"
+  },
+  "212001303": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-19",
+   "limited": "No",
+   "page": "Larsa"
+  },
+  "212001404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-19",
+   "limited": "No",
+   "page": "Drace"
+  },
+  "212001505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-23",
+   "limited": "No",
+   "page": "Seeker of Freedom Vaan"
+  },
+  "212001605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-23",
+   "limited": "No",
+   "page": "Dancing Heart Penelo"
+  },
+  "212001705": {
+   "acquisition": "Reward Units",
+   "global": "2020-07-23",
+   "limited": "No",
+   "page": "Blue Sky Belle Fran"
+  },
+  "212001804": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-23",
+   "limited": "No",
+   "page": "Reks"
+  },
+  "212001905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-13",
+   "limited": "No",
+   "page": "Dethroned Heroine Ashe"
+  },
+  "212002005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-13",
+   "limited": "No",
+   "page": "Vossler"
+  },
+  "212002104": {
+   "acquisition": "Rare Summon",
+   "global": "2020-08-13",
+   "limited": "No",
+   "page": "Bergan"
+  },
+  "212002207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-01",
+   "limited": "No",
+   "page": "Gabranth -Neo Vision-"
+  },
+  "212002305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-01",
+   "limited": "No",
+   "page": "Ray of Hope Larsa"
+  },
+  "212002407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-04",
+   "limited": "No",
+   "page": "Fleetfooted Sky Pirate Balthier"
+  },
+  "212002507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-04",
+   "limited": "No",
+   "page": "Dynast-King's Scion Ashe"
+  },
+  "212002607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-12",
+   "limited": "No",
+   "page": "Youth from Rabanastre Vaan"
+  },
+  "212002807": {
+   "acquisition": "Reward Units",
+   "global": "2024-05-30",
+   "limited": "Yes",
+   "page": "Spirited Friend Penelo"
+  },
+  "212002907": {
+   "acquisition": "Reward Units",
+   "global": "2024-06-13",
+   "limited": "Yes",
+   "page": "Princess of Liberty Ashe"
+  },
+  "213000105": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-23",
+   "limited": "No",
+   "page": "Lightning"
+  },
+  "213000204": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-02",
+   "limited": "",
+   "page": "Snow"
+  },
+  "213000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-02",
+   "limited": "",
+   "page": "Vanille"
+  },
+  "213000403": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-02",
+   "limited": "",
+   "page": "Sazh"
+  },
+  "213000504": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-09",
+   "limited": "",
+   "page": "Hope"
+  },
+  "213000603": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-09",
+   "limited": "",
+   "page": "Fang"
+  },
+  "213001005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-31",
+   "limited": "No",
+   "page": "Radiant Lightning"
+  },
+  "213001105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-31",
+   "limited": "No",
+   "page": "Neverending Hope"
+  },
+  "213001205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-28",
+   "limited": "No",
+   "page": "Daughter of Destiny Vanille"
+  },
+  "213001305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-28",
+   "limited": "No",
+   "page": "Graceful Champion Fang"
+  },
+  "213001407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-17",
+   "limited": "No",
+   "page": "Wondrous Flash Lightning"
+  },
+  "213001507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-17",
+   "limited": "",
+   "page": "Challenger of Fate Hope"
+  },
+  "213001707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-14",
+   "limited": "",
+   "page": "Denial of Focus Vanille"
+  },
+  "213001807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-14",
+   "limited": "",
+   "page": "Loving Father Sazh"
+  },
+  "213001907": {
+   "acquisition": "Reward Units",
+   "global": "2023-09-14",
+   "limited": "No",
+   "page": "Cid Raines"
+  },
+  "214000105": {
+   "acquisition": "Raid Summon",
+   "global": "2017-03-17",
+   "limited": "Collaboration",
+   "page": "Y'shtola"
+  },
+  "214000203": {
+   "acquisition": "Raid Summon",
+   "global": "2017-03-17",
+   "limited": "Collaboration",
+   "page": "Thancred"
+  },
+  "214000304": {
+   "acquisition": "Raid Summon",
+   "global": "2017-03-17",
+   "limited": "Collaboration",
+   "page": "Minfilia"
+  },
+  "214000404": {
+   "acquisition": "Raid Summon",
+   "global": "2017-06-02",
+   "limited": "Collaboration",
+   "page": "Yda"
+  },
+  "214000504": {
+   "acquisition": "Raid Summon",
+   "global": "2017-06-02",
+   "limited": "Collaboration",
+   "page": "Papalymo"
+  },
+  "214000605": {
+   "acquisition": "Reward Units",
+   "global": "2020-04-23",
+   "limited": "Collaboration",
+   "page": "Y'shtola, the Sorceress"
+  },
+  "215000105": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-16",
+   "limited": "No",
+   "page": "Noctis"
+  },
+  "215000205": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-24",
+   "limited": "No",
+   "page": "Gladiolus"
+  },
+  "215000304": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-24",
+   "limited": "No",
+   "page": "Cor"
+  },
+  "215000403": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-24",
+   "limited": "No",
+   "page": "Iris"
+  },
+  "215000505": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-05",
+   "limited": "No",
+   "page": "Ignis"
+  },
+  "215000605": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-23",
+   "limited": "No",
+   "page": "Aranea"
+  },
+  "215000705": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-23",
+   "limited": "No",
+   "page": "Prompto"
+  },
+  "215000805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-09",
+   "limited": "No",
+   "page": "Ardyn"
+  },
+  "215001004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-05",
+   "limited": "No",
+   "page": "Ravus"
+  },
+  "215001105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-13",
+   "limited": "No",
+   "page": "Nyx"
+  },
+  "215001204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-13",
+   "limited": "No",
+   "page": "Glauca"
+  },
+  "215001304": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-13",
+   "limited": "No",
+   "page": "Crowe"
+  },
+  "215001403": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-13",
+   "limited": "No",
+   "page": "Libertus"
+  },
+  "215002005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-12",
+   "limited": "No",
+   "page": "Crown Prince Noctis"
+  },
+  "215002105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-12",
+   "limited": "No",
+   "page": "Lunafreya"
+  },
+  "215002305": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-15",
+   "limited": "No",
+   "page": "Cindy"
+  },
+  "215002407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-29",
+   "limited": "No",
+   "page": "Oracle Maiden Lunafreya"
+  },
+  "215002605": {
+   "acquisition": "Reward Units",
+   "global": "2019-12-12",
+   "limited": "Yes",
+   "page": "Gentiana"
+  },
+  "215002705": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-09",
+   "limited": "No",
+   "page": "Regis"
+  },
+  "215002804": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-12",
+   "limited": "No",
+   "page": "Kenny Crow"
+  },
+  "215002907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-15",
+   "limited": "No",
+   "page": "Cobalt Blade Noctis"
+  },
+  "215003007": {
+   "acquisition": "Rare Summon",
+   "global": "2020-05-06",
+   "limited": "No",
+   "page": "Vermilion Blade Ardyn"
+  },
+  "215003107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-01-04",
+   "limited": "",
+   "page": "True King Noctis"
+  },
+  "215003207": {
+   "acquisition": "Reward Units",
+   "global": "2024-01-18",
+   "limited": "Yes",
+   "page": "Chosen King's Shield Gladiolus"
+  },
+  "215003307": {
+   "acquisition": "Rare Summon",
+   "global": "2024-01-18",
+   "limited": "",
+   "page": "Chosen King's Tactician Ignis"
+  },
+  "215003407": {
+   "acquisition": "Rare Summon",
+   "global": "2024-01-11",
+   "limited": "",
+   "page": "Chosen King's Friend Prompto"
+  },
+  "216000107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-07-11",
+   "limited": "",
+   "page": "Clive Rosfield"
+  },
+  "216000207": {
+   "acquisition": "Reward Units",
+   "global": "2024-07-11",
+   "limited": "Yes",
+   "page": "Jill Warrick"
+  },
+  "216000307": {
+   "acquisition": "Rare Summon",
+   "global": "2024-07-18",
+   "limited": "",
+   "page": "Cidolfus Telamon"
+  },
+  "216000407": {
+   "acquisition": "Rare Summon",
+   "global": "2024-07-18",
+   "limited": "",
+   "page": "Benedikta Harman"
+  },
+  "249000105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-19",
+   "limited": "No",
+   "page": "Yuna (FFX-2)"
+  },
+  "249000205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-19",
+   "limited": "No",
+   "page": "Rikku (FFX-2)"
+  },
+  "249000305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-19",
+   "limited": "No",
+   "page": "Paine"
+  },
+  "249000407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-22",
+   "limited": "No",
+   "page": "Songstress Yuna"
+  },
+  "249000507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-22",
+   "limited": "No",
+   "page": "Berserker Rikku"
+  },
+  "249000607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-22",
+   "limited": "No",
+   "page": "Dark Knight Paine"
+  },
+  "250000105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-03",
+   "limited": "No",
+   "page": "Serah"
+  },
+  "250000205": {
+   "acquisition": "Reward Units",
+   "global": "2020-06-03",
+   "limited": "Yes",
+   "page": "Lightning (FFXIII-2)"
+  },
+  "250000305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-03",
+   "limited": "No",
+   "page": "Noel"
+  },
+  "250000404": {
+   "acquisition": "Rare Summon",
+   "global": "2020-06-03",
+   "limited": "No",
+   "page": "Hope (FFXIII-2)"
+  },
+  "251000105": {
+   "acquisition": "Reward Units",
+   "global": "2020-08-27",
+   "limited": "Collaboration",
+   "page": "Tyro"
+  },
+  "253000105": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-07",
+   "limited": "No",
+   "page": "Ramza"
+  },
+  "253000115": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-28",
+   "limited": "No",
+   "page": "Mercenary Ramza"
+  },
+  "253000205": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-30",
+   "limited": "No",
+   "page": "Delita"
+  },
+  "253000215": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-28",
+   "limited": "No",
+   "page": "Knight Delita"
+  },
+  "253000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-07",
+   "limited": "",
+   "page": "Agrias"
+  },
+  "253000403": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-30",
+   "limited": "",
+   "page": "Alma"
+  },
+  "253000504": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-30",
+   "limited": "",
+   "page": "Gaffgarion"
+  },
+  "253000603": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-07",
+   "limited": "",
+   "page": "Mustadio"
+  },
+  "253000704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-05",
+   "limited": "No",
+   "page": "Reis"
+  },
+  "253000805": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-24",
+   "limited": "No",
+   "page": "Orlandeau"
+  },
+  "253000904": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-28",
+   "limited": "No",
+   "page": "Meliadoul"
+  },
+  "253001005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-05",
+   "limited": "No",
+   "page": "Beowulf"
+  },
+  "253001103": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-24",
+   "limited": "",
+   "page": "Ovelia"
+  },
+  "253001204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-28",
+   "limited": "No",
+   "page": "Orran"
+  },
+  "253001305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-05",
+   "limited": "No",
+   "page": "High Seraph Ultima"
+  },
+  "253001403": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-05",
+   "limited": "No",
+   "page": "Construct 8"
+  },
+  "253001807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-12-07",
+   "limited": "",
+   "page": "Unsung Hero Ramza"
+  },
+  "253001907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-12-14",
+   "limited": "",
+   "page": "Sword Saint Orlandeau"
+  },
+  "253002007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-12-07",
+   "limited": "",
+   "page": "Steadfast Knight Agrias"
+  },
+  "253002107": {
+   "acquisition": "Reward Units",
+   "global": "2023-12-14",
+   "limited": "No",
+   "page": "Argath"
+  },
+  "254000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-13",
+   "limited": "No",
+   "page": "Ace"
+  },
+  "254000205": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-03",
+   "limited": "No",
+   "page": "Queen"
+  },
+  "254000304": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-03",
+   "limited": "",
+   "page": "Nine"
+  },
+  "254000403": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-13",
+   "limited": "",
+   "page": "Trey"
+  },
+  "254000503": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-03",
+   "limited": "",
+   "page": "Cinque"
+  },
+  "254000603": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-13",
+   "limited": "",
+   "page": "Jack"
+  },
+  "254000704": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-13",
+   "limited": "",
+   "page": "Seven"
+  },
+  "254000905": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-19",
+   "limited": "No",
+   "page": "Rem"
+  },
+  "254001003": {
+   "acquisition": "Rare Summon",
+   "global": "2017-03-03",
+   "limited": "",
+   "page": "Eight"
+  },
+  "254001103": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-02",
+   "limited": "No",
+   "page": "Cater"
+  },
+  "254001204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-19",
+   "limited": "",
+   "page": "King"
+  },
+  "254001403": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-19",
+   "limited": "",
+   "page": "Sice"
+  },
+  "254001505": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-09",
+   "limited": "No",
+   "page": "Wild Card Ace"
+  },
+  "254001605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-09",
+   "limited": "No",
+   "page": "Benevolent Beauty Rem"
+  },
+  "254001704": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-09",
+   "limited": "No",
+   "page": "Celestia"
+  },
+  "254001805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-02",
+   "limited": "No",
+   "page": "Machina"
+  },
+  "254001905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-02",
+   "limited": "No",
+   "page": "Kurasame"
+  },
+  "254002004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-02",
+   "limited": "No",
+   "page": "Deuce"
+  },
+  "254002105": {
+   "acquisition": "Reward Units",
+   "global": "2020-07-09",
+   "limited": "Yes",
+   "page": "Steadfast Soldier Machina"
+  },
+  "254002207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-16",
+   "limited": "No",
+   "page": "Ice Reaper Kurasame"
+  },
+  "254002307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-15",
+   "limited": "No",
+   "page": "Vermilion Class Zero Ace"
+  },
+  "254002507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-22",
+   "limited": "No",
+   "page": "Vermilion Class Zero Trey"
+  },
+  "254002607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-15",
+   "limited": "",
+   "page": "Vermilion Class Zero Deuce"
+  },
+  "254002707": {
+   "acquisition": "Reward Units",
+   "global": "2023-06-22",
+   "limited": "No",
+   "page": "Qator"
+  },
+  "255000104": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-09",
+   "limited": "Collaboration",
+   "page": "Juggler"
+  },
+  "255000204": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-09",
+   "limited": "Collaboration",
+   "page": "Thief"
+  },
+  "255000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-09-09",
+   "limited": "Collaboration",
+   "page": "Fencer"
+  },
+  "258000107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-11",
+   "limited": "No",
+   "page": "Solitary Patron Snow"
+  },
+  "258000207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-02-25",
+   "limited": "No",
+   "page": "Savior of Souls Lightning"
+  },
+  "258000305": {
+   "acquisition": "Star Quartz Units",
+   "global": "2021-02-25",
+   "limited": "No",
+   "page": "Lumina"
+  },
+  "301000103": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Samatha/JP"
+  },
+  "302000104": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-11",
+   "limited": "Collaboration",
+   "page": "Tilith"
+  },
+  "302000204": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-11",
+   "limited": "Collaboration",
+   "page": "Karl"
+  },
+  "302000304": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-11",
+   "limited": "Collaboration",
+   "page": "Seria"
+  },
+  "302000405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-06-16",
+   "limited": "Collaboration",
+   "page": "Vargas"
+  },
+  "302000505": {
+   "acquisition": "Reward Units",
+   "global": "2016-11-18",
+   "limited": "Collaboration",
+   "page": "Maxwell"
+  },
+  "302000605": {
+   "acquisition": "Rare Summon",
+   "global": "2016-11-11",
+   "limited": "Collaboration",
+   "page": "Elza"
+  },
+  "302000705": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-23",
+   "limited": "Seasonal",
+   "page": "White Knight Noel"
+  },
+  "302000804": {
+   "acquisition": "Rare Summon",
+   "global": "2016-12-23",
+   "limited": "Seasonal",
+   "page": "Santa Roselia"
+  },
+  "302000905": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-27",
+   "limited": "Seasonal",
+   "page": "Yun"
+  },
+  "302001004": {
+   "acquisition": "Rare Summon",
+   "global": "2017-01-27",
+   "limited": "Seasonal",
+   "page": "Ling"
+  },
+  "302001104": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-10",
+   "limited": "Seasonal",
+   "page": "Cupid Artemios"
+  },
+  "302001203": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-10",
+   "limited": "Seasonal",
+   "page": "Cupid Luna"
+  },
+  "302001305": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-23",
+   "limited": "No",
+   "page": "Olive"
+  },
+  "302001405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-06",
+   "limited": "No",
+   "page": "Fryevia"
+  },
+  "302001504": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-06",
+   "limited": "",
+   "page": "Xon"
+  },
+  "302001603": {
+   "acquisition": "Rare Summon",
+   "global": "2017-04-06",
+   "limited": "",
+   "page": "Aiden"
+  },
+  "303000103": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Adel/JP"
+  },
+  "304000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-03",
+   "limited": "Collaboration",
+   "page": "Randi"
+  },
+  "304000204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-03",
+   "limited": "Collaboration",
+   "page": "Primm"
+  },
+  "304000303": {
+   "acquisition": "Rare Summon",
+   "global": "2017-02-03",
+   "limited": "Collaboration",
+   "page": "Popoi"
+  },
+  "304000405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-06-21",
+   "limited": "Collaboration",
+   "page": "Flammie"
+  },
+  "304000503": {
+   "acquisition": "Raid Summon",
+   "global": "2019-06-21",
+   "limited": "Collaboration",
+   "page": "Rabite"
+  },
+  "304000607": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-22",
+   "limited": "Collaboration",
+   "page": "Mana Sword Hero Randi"
+  },
+  "304000707": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-22",
+   "limited": "Collaboration",
+   "page": "Spirited Heart Primm"
+  },
+  "304000807": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-29",
+   "limited": "Collaboration",
+   "page": "Little Great Mage Popoi"
+  },
+  "306000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Dragonlord"
+  },
+  "306000204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Orochi"
+  },
+  "306000303": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Robbin' 'Ood"
+  },
+  "306000404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Killing Machine"
+  },
+  "306000503": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Golem (Unit)"
+  },
+  "306000603": {
+   "acquisition": "Reward Units, Raid Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Slime"
+  },
+  "306000804": {
+   "acquisition": "Rare Summon",
+   "global": "2018-04-27",
+   "limited": "Collaboration",
+   "page": "Liquid Metal Slime"
+  },
+  "306000905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-07",
+   "limited": "Collaboration",
+   "page": "Estark"
+  },
+  "306001005": {
+   "acquisition": "Raid Summon",
+   "global": "2018-09-07",
+   "limited": "Collaboration",
+   "page": "Marquis de Léon"
+  },
+  "306001104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-07",
+   "limited": "Collaboration",
+   "page": "Überkilling Machine"
+  },
+  "306001204": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-07",
+   "limited": "Collaboration",
+   "page": "Slime Knight"
+  },
+  "306001303": {
+   "acquisition": "Raid Summon",
+   "global": "2018-09-07",
+   "limited": "Collaboration",
+   "page": "Dracky"
+  },
+  "306001407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-16",
+   "limited": "Collaboration",
+   "page": "Alena & Marquis de Léon"
+  },
+  "306001507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-16",
+   "limited": "Collaboration",
+   "page": "King of Destruction Zoma"
+  },
+  "309000105": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Julian/JP"
+  },
+  "309000205": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Katarina/JP"
+  },
+  "309000304": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Khalid/JP"
+  },
+  "309000403": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Robin/JP"
+  },
+  "310000105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "2B"
+  },
+  "310000204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "9S"
+  },
+  "310000304": {
+   "acquisition": "Raid Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "Adam"
+  },
+  "310000403": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "21O"
+  },
+  "311000105": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Hero/JP"
+  },
+  "312000305": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Kevin/JP"
+  },
+  "312001007": {
+   "acquisition": "Rare Summon",
+   "global": "2021-11-04",
+   "limited": "Collaboration",
+   "page": "Ninja Master Hawkeye"
+  },
+  "313000105": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Tiz/JP"
+  },
+  "313000205": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Agnès/JP"
+  },
+  "313000305": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Bravo Bunny Agnès/JP"
+  },
+  "314000104": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Yew/JP"
+  },
+  "314000203": {
+   "acquisition": "Rare Summon",
+   "limited": "Collaboration",
+   "page": "Magnolia/JP"
+  },
+  "315000104": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Rinne/JP"
+  },
+  "316000103": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-27",
+   "limited": "Collaboration",
+   "page": "Roddick"
+  },
+  "317000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-27",
+   "limited": "Collaboration",
+   "page": "Rena"
+  },
+  "318000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-27",
+   "limited": "Collaboration",
+   "page": "Fayt"
+  },
+  "319000104": {
+   "acquisition": "Raid Summon",
+   "global": "2018-07-27",
+   "limited": "Collaboration",
+   "page": "Reimi"
+  },
+  "320000104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-07-27",
+   "limited": "Collaboration",
+   "page": "Fidel"
+  },
+  "330000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-26",
+   "limited": "Collaboration",
+   "page": "Lenneth"
+  },
+  "330000205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-26",
+   "limited": "Collaboration",
+   "page": "Freya (VP)"
+  },
+  "330000305": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-26",
+   "limited": "Collaboration",
+   "page": "Arngrim"
+  },
+  "330000404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-26",
+   "limited": "Collaboration",
+   "page": "Lucian"
+  },
+  "330000503": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-26",
+   "limited": "Collaboration",
+   "page": "Jelanda"
+  },
+  "330000605": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-30",
+   "limited": "Collaboration",
+   "page": "Lezard Valeth"
+  },
+  "330000805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-30",
+   "limited": "Collaboration",
+   "page": "Mystina"
+  },
+  "330000904": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-30",
+   "limited": "Collaboration",
+   "page": "Aelia"
+  },
+  "331000105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Fei"
+  },
+  "331000205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Elly"
+  },
+  "331000304": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Emeralda"
+  },
+  "331000405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Bart"
+  },
+  "331000503": {
+   "acquisition": "Rare Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Rico"
+  },
+  "331000603": {
+   "acquisition": "Raid Summon",
+   "global": "2019-03-29",
+   "limited": "Collaboration",
+   "page": "Chu-Chu"
+  },
+  "331000705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-26",
+   "limited": "Collaboration",
+   "page": "Citan"
+  },
+  "331000805": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-26",
+   "limited": "Collaboration",
+   "page": "Maria (Xenogears)"
+  },
+  "331000904": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-26",
+   "limited": "Collaboration",
+   "page": "Billy"
+  },
+  "331001007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-02-10",
+   "limited": "Collaboration",
+   "page": "Id"
+  },
+  "331001107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-02-10",
+   "limited": "Collaboration",
+   "page": "Grahf"
+  },
+  "331001307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-08",
+   "limited": "Collaboration",
+   "page": "Holy Mother Reborn Elly"
+  },
+  "331001407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-08",
+   "limited": "Collaboration",
+   "page": "The Emperor's Emissary Citan"
+  },
+  "331001507": {
+   "acquisition": "Rare Summon",
+   "global": "2024-04-25",
+   "limited": "Collaboration",
+   "page": "Steel Wings of Bonds Maria"
+  },
+  "331001607": {
+   "acquisition": "Rare Summon",
+   "global": "2024-05-16",
+   "limited": "Collaboration",
+   "page": "Distant Promise Emeralda"
+  },
+  "331001707": {
+   "acquisition": "Rare Summon",
+   "global": "2024-05-09",
+   "limited": "Collaboration",
+   "page": "Slayer of God Fei"
+  },
+  "331001807": {
+   "acquisition": "Rare Summon",
+   "global": "2024-04-25",
+   "limited": "Collaboration",
+   "page": "Dunefaring King Bart"
+  },
+  "334000105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-23",
+   "limited": "Collaboration",
+   "page": "Primrose"
+  },
+  "334000205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-23",
+   "limited": "Collaboration",
+   "page": "Olberic"
+  },
+  "334000304": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-23",
+   "limited": "Collaboration",
+   "page": "Therion"
+  },
+  "334000403": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-23",
+   "limited": "Collaboration",
+   "page": "Tressa"
+  },
+  "335000105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-28",
+   "limited": "Collaboration",
+   "page": "Sora"
+  },
+  "335000205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-28",
+   "limited": "Collaboration",
+   "page": "Cloud (KH)"
+  },
+  "335000305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-20",
+   "limited": "Collaboration",
+   "page": "Sephiroth (KH)"
+  },
+  "335000405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-20",
+   "limited": "Collaboration",
+   "page": "Riku"
+  },
+  "337000105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-27",
+   "limited": "Collaboration",
+   "page": "Eleven"
+  },
+  "337000205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-27",
+   "limited": "Collaboration",
+   "page": "Veronica"
+  },
+  "337000305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-27",
+   "limited": "Collaboration",
+   "page": "Serena"
+  },
+  "337000405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "Erik"
+  },
+  "337000505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-27",
+   "limited": "Collaboration",
+   "page": "Mordegon"
+  },
+  "337000605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "Jasper Unbound"
+  },
+  "337000704": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-27",
+   "limited": "Collaboration",
+   "page": "Great Dragon"
+  },
+  "337000805": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "The Lord of Shadows"
+  },
+  "337000905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "Sylvando"
+  },
+  "337001205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "Jade"
+  },
+  "337001305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-21",
+   "limited": "Collaboration",
+   "page": "Rab"
+  },
+  "338000105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-26",
+   "limited": "Collaboration",
+   "page": "Edward Elric"
+  },
+  "338000205": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-26",
+   "limited": "Collaboration",
+   "page": "Alphonse Elric"
+  },
+  "338000305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-30",
+   "limited": "Collaboration",
+   "page": "Roy Mustang"
+  },
+  "338000404": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-26",
+   "limited": "Collaboration",
+   "page": "Riza Hawkeye"
+  },
+  "338000503": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-26",
+   "limited": "Collaboration",
+   "page": "Winry Rockbell"
+  },
+  "338000607": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-13",
+   "limited": "Collaboration",
+   "page": "Edward & Alphonse Elric"
+  },
+  "338000805": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-13",
+   "limited": "Collaboration",
+   "page": "Envy"
+  },
+  "338000905": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-13",
+   "limited": "Collaboration",
+   "page": "Greed"
+  },
+  "339000105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-04-13",
+   "limited": "Collaboration",
+   "page": "Gilgamesh (WOTV FFBE)"
+  },
+  "339000205": {
+   "acquisition": "Reward Units",
+   "global": "2020-07-02",
+   "limited": "Collaboration",
+   "page": "Mont Leonis"
+  },
+  "339000305": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-02",
+   "limited": "Collaboration",
+   "page": "Sterne Leonis"
+  },
+  "339000405": {
+   "acquisition": "Rare Summon",
+   "global": "2020-07-02",
+   "limited": "Collaboration",
+   "page": "Kitone"
+  },
+  "339000607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-12",
+   "limited": "Collaboration",
+   "page": "King of Leonis Mont"
+  },
+  "339000707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-03",
+   "limited": "Collaboration",
+   "page": "Jayden Rundall"
+  },
+  "339000807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-03",
+   "limited": "Collaboration",
+   "page": "Flagbearer of Reform Glaciela"
+  },
+  "339000907": {
+   "acquisition": "Reward Units",
+   "global": "2024-04-11",
+   "limited": "Collaboration",
+   "page": "Wing of Destiny Sterne"
+  },
+  "340000107": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-26",
+   "limited": "Collaboration",
+   "page": "Sora (KHIII)"
+  },
+  "340000207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-26",
+   "limited": "Collaboration",
+   "page": "Riku (KHIII)"
+  },
+  "340000307": {
+   "acquisition": "Rare Summon",
+   "global": "2020-11-26",
+   "limited": "Collaboration",
+   "page": "Kairi (KHIII)"
+  },
+  "341000105": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "page": "Young Xehanort (KHDR)"
+  },
+  "342000107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-06",
+   "limited": "Collaboration",
+   "page": "Elazul"
+  },
+  "342000207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-06",
+   "limited": "Collaboration",
+   "page": "Pearl"
+  },
+  "342000307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-08",
+   "limited": "Collaboration",
+   "page": "Shiloh"
+  },
+  "342000407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-08",
+   "limited": "Collaboration",
+   "page": "Serafina"
+  },
+  "343000107": {
+   "acquisition": "Reward Units",
+   "global": "2022-10-06",
+   "limited": "Collaboration",
+   "page": "Lord of Light"
+  },
+  "344000107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-02",
+   "limited": "Collaboration",
+   "page": "Hero Dai"
+  },
+  "344000207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-02",
+   "limited": "Collaboration",
+   "page": "Mage Popp"
+  },
+  "344000307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-02",
+   "limited": "Collaboration",
+   "page": "Martial Artist Maam"
+  },
+  "344000407": {
+   "acquisition": "Reward Units",
+   "global": "2022-06-02",
+   "limited": "Collaboration",
+   "page": "Beast King Crocodine"
+  },
+  "344000507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-09",
+   "limited": "Collaboration",
+   "page": "Dragon Knight Baran"
+  },
+  "344000607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-09",
+   "limited": "Collaboration",
+   "page": "Immortal Hyunckel"
+  },
+  "344000707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-09",
+   "limited": "Collaboration",
+   "page": "Superior Being Hadlar"
+  },
+  "344000807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-02",
+   "limited": "Collaboration",
+   "page": "Legendary Hero Avan"
+  },
+  "344000907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-02",
+   "limited": "Collaboration",
+   "page": "Soul Heritor Hym"
+  },
+  "344001007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-02",
+   "limited": "Collaboration",
+   "page": "Land Rider Larhart"
+  },
+  "344001107": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-09",
+   "limited": "Collaboration",
+   "page": "Twin Dragon Crests Dai"
+  },
+  "344001207": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-09",
+   "limited": "Collaboration",
+   "page": "True Dark King Vearn"
+  },
+  "344001307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-09",
+   "limited": "Collaboration",
+   "page": "Disciple of Avan Leona"
+  },
+  "345000107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-04",
+   "limited": "Collaboration",
+   "page": "Serge"
+  },
+  "345000207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-04",
+   "limited": "Collaboration",
+   "page": "Kid"
+  },
+  "345000307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-04",
+   "limited": "Collaboration",
+   "page": "Lynx"
+  },
+  "401000104": {
+   "acquisition": "Reward Units",
+   "global": "2017-01-19",
+   "limited": "Collaboration",
+   "page": "Dangerous Ariana"
+  },
+  "401000205": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-21",
+   "limited": "Seasonal",
+   "page": "Demon Rain"
+  },
+  "401000305": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-21",
+   "limited": "Seasonal",
+   "page": "Dracu Lasswell"
+  },
+  "401000404": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-21",
+   "limited": "Seasonal",
+   "page": "White Witch Fina"
+  },
+  "401000503": {
+   "acquisition": "Rare Summon",
+   "global": "2016-10-21",
+   "limited": "Seasonal",
+   "page": "Black Cat Lid"
+  },
+  "401000604": {
+   "acquisition": "Reward Units",
+   "global": "2017-07-08",
+   "limited": "Yes",
+   "page": "Artisan Lid"
+  },
+  "401000704": {
+   "acquisition": "Star Quartz Units",
+   "global": "2017-09-09",
+   "limited": "Yes",
+   "page": "Swordsman Lasswell"
+  },
+  "401000804": {
+   "acquisition": "Reward Units",
+   "global": "2017-10-06",
+   "limited": "Yes",
+   "page": "Cheerleader Fina"
+  },
+  "401000904": {
+   "acquisition": "Reward Units",
+   "global": "2017-11-17",
+   "limited": "Yes",
+   "page": "Maiden Sakura"
+  },
+  "401001004": {
+   "acquisition": "Reward Units",
+   "global": "2017-12-09",
+   "limited": "Yes",
+   "page": "Cowboy Jake"
+  },
+  "401001105": {
+   "acquisition": "Rare Summon",
+   "global": "2017-07-07",
+   "limited": "No",
+   "page": "Zargabaath"
+  },
+  "401001205": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "A2"
+  },
+  "401001304": {
+   "acquisition": "Rare Summon",
+   "global": "2017-08-11",
+   "limited": "Collaboration",
+   "page": "Eve"
+  },
+  "401001405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-10",
+   "limited": "No",
+   "page": "Barbariccia"
+  },
+  "401001504": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-10",
+   "limited": "No",
+   "page": "Rubicante"
+  },
+  "401001604": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-10",
+   "limited": "No",
+   "page": "Cagnazzo"
+  },
+  "401001705": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-12",
+   "limited": "No",
+   "page": "Reberta"
+  },
+  "401001804": {
+   "acquisition": "Rare Summon",
+   "global": "2017-05-12",
+   "limited": "",
+   "page": "Zyrus"
+  },
+  "401001903": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-10",
+   "limited": "No",
+   "page": "Scarmiglione"
+  },
+  "401002005": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-20",
+   "limited": "Seasonal",
+   "page": "Grim Lord Sakura"
+  },
+  "401002104": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-20",
+   "limited": "Seasonal",
+   "page": "Illusionist Nichol"
+  },
+  "401002204": {
+   "acquisition": "Rare Summon",
+   "global": "2017-10-20",
+   "limited": "Seasonal",
+   "page": "Pirate Jake"
+  },
+  "401002304": {
+   "acquisition": "Reward Units",
+   "global": "2017-08-17",
+   "limited": "Collaboration",
+   "page": "Chic Ariana"
+  },
+  "401002405": {
+   "acquisition": "Rare Summon",
+   "global": "2017-11-17",
+   "limited": "Collaboration",
+   "page": "Charming Kitty Ariana"
+  },
+  "401002504": {
+   "acquisition": "Reward Units",
+   "global": "2017-11-17",
+   "limited": "Collaboration",
+   "page": "Sportive Ariana"
+  },
+  "401002605": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-22",
+   "limited": "Seasonal",
+   "page": "Christine"
+  },
+  "401002705": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-22",
+   "limited": "Seasonal",
+   "page": "Kryla"
+  },
+  "401002804": {
+   "acquisition": "Rare Summon",
+   "global": "2017-12-22",
+   "limited": "Seasonal",
+   "page": "Tinkerer Carrie"
+  },
+  "401002905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-05",
+   "limited": "Collaboration",
+   "page": "Ray Jack"
+  },
+  "401003004": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-05",
+   "limited": "Collaboration",
+   "page": "Barusa"
+  },
+  "401003104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-05",
+   "limited": "Collaboration",
+   "page": "Kaliva"
+  },
+  "401003203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-01-05",
+   "limited": "Collaboration",
+   "page": "Toby"
+  },
+  "401003303": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-09",
+   "limited": "Collaboration",
+   "page": "Pharaoh Abel"
+  },
+  "401003404": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-09",
+   "limited": "Collaboration",
+   "page": "Divine Soleil"
+  },
+  "401003505": {
+   "acquisition": "Rare Summon",
+   "global": "2018-03-09",
+   "limited": "Collaboration",
+   "page": "Explorer Aileen"
+  },
+  "401003605": {
+   "acquisition": "Reward Units",
+   "global": "2018-03-09",
+   "limited": "Collaboration",
+   "page": "Lara Croft"
+  },
+  "401003704": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-09",
+   "limited": "Seasonal",
+   "page": "Yan"
+  },
+  "401003805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-09",
+   "limited": "Seasonal",
+   "page": "Chow"
+  },
+  "401003905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-02-09",
+   "limited": "Seasonal",
+   "page": "Ang"
+  },
+  "401004005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-22",
+   "limited": "Collaboration",
+   "page": "Rico Rodriguez"
+  },
+  "401004104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-22",
+   "limited": "Yes",
+   "page": "Mario Frigo"
+  },
+  "401004203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-06-22",
+   "limited": "Collaboration",
+   "page": "Annika Svennson"
+  },
+  "401004303": {
+   "acquisition": "Raid Summon",
+   "global": "2018-06-22",
+   "limited": "Collaboration",
+   "page": "Teo"
+  },
+  "401004405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-28",
+   "limited": "No",
+   "page": "Circe"
+  },
+  "401004505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-22",
+   "limited": "No",
+   "page": "Myra"
+  },
+  "401004605": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-28",
+   "limited": "No",
+   "page": "Malphasie"
+  },
+  "401004705": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-16",
+   "limited": "No",
+   "page": "Ellesperis"
+  },
+  "401004805": {
+   "acquisition": "Rare Summon",
+   "global": "2018-11-16",
+   "limited": "No",
+   "page": "Beryl"
+  },
+  "401004905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-24",
+   "limited": "Collaboration",
+   "page": "Adam Jensen"
+  },
+  "401005005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-24",
+   "limited": "Collaboration",
+   "page": "Viktor Marchenko"
+  },
+  "401005104": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-24",
+   "limited": "Collaboration",
+   "page": "Václav Koller"
+  },
+  "401005203": {
+   "acquisition": "Rare Summon",
+   "global": "2018-08-24",
+   "limited": "Collaboration",
+   "page": "Frank Pritchard"
+  },
+  "401005305": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-21",
+   "limited": "No",
+   "page": "Aloha Lasswell"
+  },
+  "401005405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-21",
+   "limited": "No",
+   "page": "Seaside Nichol"
+  },
+  "401005504": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-21",
+   "limited": "No",
+   "page": "Summertime Luka"
+  },
+  "401005603": {
+   "acquisition": "Rare Summon",
+   "global": "2018-09-21",
+   "limited": "No",
+   "page": "Tide Rider Skaha"
+  },
+  "401005705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-19",
+   "limited": "Seasonal",
+   "page": "Lucas"
+  },
+  "401005905": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-19",
+   "limited": "Seasonal",
+   "page": "Lilith"
+  },
+  "401006005": {
+   "acquisition": "Rare Summon",
+   "global": "2018-10-19",
+   "limited": "Seasonal",
+   "page": "Lucius"
+  },
+  "401006105": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-21",
+   "limited": "Seasonal",
+   "page": "Felix"
+  },
+  "401006205": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-21",
+   "limited": "Seasonal",
+   "page": "Tiana"
+  },
+  "401006305": {
+   "acquisition": "Reward Units",
+   "global": "2018-12-12",
+   "limited": "Collaboration",
+   "page": "Popstar Katy"
+  },
+  "401006405": {
+   "acquisition": "Rare Summon",
+   "global": "2018-12-08",
+   "limited": "No",
+   "page": "Aurora Fryevia"
+  },
+  "401006505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-01-25",
+   "limited": "Collaboration",
+   "page": "Sophia"
+  },
+  "401006605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-08",
+   "limited": "Seasonal",
+   "page": "Qin"
+  },
+  "401006705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-02-08",
+   "limited": "Seasonal",
+   "page": "Bai Hu & Zhu Que"
+  },
+  "401006805": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-19",
+   "limited": "No",
+   "page": "Esther"
+  },
+  "401006905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-04-19",
+   "limited": "No",
+   "page": "Sylvie"
+  },
+  "401007005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-19",
+   "limited": "No",
+   "page": "Morgana"
+  },
+  "401007105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-16",
+   "limited": "No",
+   "page": "Tsukiko"
+  },
+  "401007205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-24",
+   "limited": "Seasonal",
+   "page": "Karten"
+  },
+  "401007305": {
+   "acquisition": "Reward Units",
+   "global": "2019-06-12",
+   "limited": "Collaboration",
+   "page": "Immortal Flame Katy"
+  },
+  "401007405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-09-19",
+   "limited": "Collaboration",
+   "page": "A.I. Katy"
+  },
+  "401007505": {
+   "acquisition": "Reward Units",
+   "global": "2019-09-19",
+   "limited": "Collaboration",
+   "page": "Lovely Katy"
+  },
+  "401007605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-05-10",
+   "limited": "No",
+   "page": "Zeno of the Beta Star"
+  },
+  "401007705": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-26",
+   "limited": "No",
+   "page": "Rivera"
+  },
+  "401007905": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-28",
+   "limited": "No",
+   "page": "Doctor Aiden"
+  },
+  "401008005": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-28",
+   "limited": "No",
+   "page": "Agent Olive"
+  },
+  "401008105": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-28",
+   "limited": "No",
+   "page": "Mastermind Xon"
+  },
+  "401008205": {
+   "acquisition": "Rare Summon",
+   "global": "2019-11-28",
+   "limited": "No",
+   "page": "Operative Zyrus"
+  },
+  "401008305": {
+   "acquisition": "Rare Summon",
+   "global": "2019-12-19",
+   "limited": "Seasonal",
+   "page": "Levinson"
+  },
+  "401008405": {
+   "acquisition": "Rare Summon",
+   "global": "2019-07-19",
+   "limited": "No",
+   "page": "Elena"
+  },
+  "401008505": {
+   "acquisition": "Rare Summon",
+   "global": "2019-08-16",
+   "limited": "No",
+   "page": "Kaito"
+  },
+  "401008605": {
+   "acquisition": "Rare Summon",
+   "global": "2019-10-24",
+   "limited": "Seasonal",
+   "page": "Godrea"
+  },
+  "401008705": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-23",
+   "limited": "Seasonal",
+   "page": "Emperor Foo"
+  },
+  "401008805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-01-23",
+   "limited": "Seasonal",
+   "page": "Xuan Wu & Qing Long"
+  },
+  "401008905": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-13",
+   "limited": "Seasonal",
+   "page": "Sieghard & Ignacio"
+  },
+  "401009005": {
+   "acquisition": "Rare Summon",
+   "global": "2020-02-13",
+   "limited": "Seasonal",
+   "page": "Sakura & Ayaka"
+  },
+  "401009105": {
+   "acquisition": "Rare Summon",
+   "global": "2020-03-30",
+   "limited": "Collaboration",
+   "page": "King Bradley"
+  },
+  "401009805": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-17",
+   "limited": "No",
+   "page": "Itachi"
+  },
+  "401009907": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-24",
+   "limited": "No",
+   "page": "Starlight Elena"
+  },
+  "401010007": {
+   "acquisition": "Rare Summon",
+   "global": "2020-09-17",
+   "limited": "No",
+   "page": "Yoshikiri"
+  },
+  "401010107": {
+   "acquisition": "Rare Summon",
+   "global": "2020-10-22",
+   "limited": "Seasonal",
+   "page": "Ibara"
+  },
+  "401010207": {
+   "acquisition": "Rare Summon",
+   "global": "2020-12-24",
+   "limited": "Seasonal",
+   "page": "Eldryn"
+  },
+  "401010407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-06-17",
+   "limited": "No",
+   "page": "Noppy"
+  },
+  "401010507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-26",
+   "limited": "No",
+   "page": "Ygni"
+  },
+  "401010607": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-09",
+   "limited": "No",
+   "page": "Cressnik"
+  },
+  "401010707": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-09",
+   "limited": "No",
+   "page": "Bulwark & the Melodic Mascots"
+  },
+  "401010807": {
+   "acquisition": "Rare Summon",
+   "global": "2021-05-27",
+   "limited": "No",
+   "page": "Kaktiria"
+  },
+  "401010907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-22",
+   "limited": "No",
+   "page": "King Behemy"
+  },
+  "401011207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-02-11",
+   "limited": "Seasonal",
+   "page": "Shui Yu"
+  },
+  "401011307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-04-01",
+   "limited": "No",
+   "page": "Melia"
+  },
+  "401011407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-03-26",
+   "limited": "Collaboration",
+   "page": "Vinera Fennes"
+  },
+  "401011607": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-01",
+   "limited": "No",
+   "page": "Louise"
+  },
+  "401011707": {
+   "acquisition": "Rare Summon",
+   "global": "2021-07-01",
+   "limited": "No",
+   "page": "White Dragon Ling"
+  },
+  "401011907": {
+   "acquisition": "Rare Summon",
+   "global": "2021-08-12",
+   "limited": "No",
+   "page": "Skye"
+  },
+  "401012007": {
+   "acquisition": "Rare Summon",
+   "global": "2021-09-30",
+   "limited": "Collaboration",
+   "page": "Lara Croft -Neo Vision-"
+  },
+  "401012107": {
+   "acquisition": "Rare Summon",
+   "global": "2021-10-21",
+   "limited": "No",
+   "page": "Olivera"
+  },
+  "401012207": {
+   "acquisition": "Rare Summon",
+   "global": "2021-10-28",
+   "limited": "Seasonal",
+   "page": "Full Moon Karten"
+  },
+  "401012307": {
+   "acquisition": "Rare Summon",
+   "global": "2021-11-18",
+   "limited": "No",
+   "page": "Maeve"
+  },
+  "401012407": {
+   "acquisition": "Rare Summon",
+   "global": "2021-11-11",
+   "limited": "Collaboration",
+   "page": "Riesz"
+  },
+  "401012507": {
+   "acquisition": "Rare Summon",
+   "global": "2021-12-23",
+   "limited": "Seasonal",
+   "page": "Whimsical Winter Tiana"
+  },
+  "401012707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-01-27",
+   "limited": "Seasonal",
+   "page": "Divine Beast Chow"
+  },
+  "401012807": {
+   "acquisition": "Rare Summon",
+   "global": "2022-02-24",
+   "limited": "No",
+   "page": "Storm Seeker Esther"
+  },
+  "401012907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-03-24",
+   "limited": "No",
+   "page": "Reberta & Ignitos"
+  },
+  "401013007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-04-21",
+   "limited": "No",
+   "page": "Frostblade Fryevia"
+  },
+  "401013107": {
+   "acquisition": "Rare Summon",
+   "global": "2022-05-26",
+   "limited": "No",
+   "page": "Tide Bringer Kaito"
+  },
+  "401013207": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-30",
+   "limited": "No",
+   "page": "Wylk"
+  },
+  "401013307": {
+   "acquisition": "Rare Summon",
+   "global": "2022-06-30",
+   "limited": "No",
+   "page": "Paladin Sylvie"
+  },
+  "401013407": {
+   "acquisition": "Rare Summon",
+   "global": "2022-07-21",
+   "limited": "No",
+   "page": "Samurai Chizuru"
+  },
+  "401013507": {
+   "acquisition": "Rare Summon",
+   "global": "2022-08-18",
+   "limited": "No",
+   "page": "Beach Blaster Olive"
+  },
+  "401013607": {
+   "acquisition": "Rare Summon",
+   "global": "2022-09-15",
+   "limited": "No",
+   "page": "Shrine Maiden Tsukiko"
+  },
+  "401013707": {
+   "acquisition": "Rare Summon",
+   "global": "2022-10-27",
+   "limited": "Seasonal",
+   "page": "Elegant Temptress Lilith"
+  },
+  "401013807": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-24",
+   "limited": "Collaboration",
+   "page": "2B -Neo Vision-"
+  },
+  "401013907": {
+   "acquisition": "Rare Summon",
+   "global": "2022-11-24",
+   "limited": "Collaboration",
+   "page": "A2 -Neo Vision-"
+  },
+  "401014007": {
+   "acquisition": "Rare Summon",
+   "global": "2022-12-22",
+   "limited": "Seasonal",
+   "page": "Cheerful Caroler Ayaka"
+  },
+  "401014107": {
+   "acquisition": "Rare Summon",
+   "global": "2023-01-19",
+   "limited": "Seasonal",
+   "page": "Lunar Festival Cleome"
+  },
+  "401014207": {
+   "acquisition": "Rare Summon",
+   "global": "2023-02-16",
+   "limited": "No",
+   "page": "Master Machinist Abigail"
+  },
+  "401014307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-02",
+   "limited": "No",
+   "page": "Curse of Immunity Melissa"
+  },
+  "401014407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-03-16",
+   "limited": "No",
+   "page": "Blade of Vengeance Ibara"
+  },
+  "401014507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-04-20",
+   "limited": "No",
+   "page": "Dark Knight Duane"
+  },
+  "401014607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-05-18",
+   "limited": "No",
+   "page": "Ruin Explorer Nora"
+  },
+  "401014707": {
+   "acquisition": "Reward Units",
+   "global": "2023-06-15",
+   "limited": "Collaboration",
+   "page": "Radiant Smile Addison Rae"
+  },
+  "401014807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-29",
+   "limited": "No",
+   "page": "Eternal Radiance Elena"
+  },
+  "401014907": {
+   "acquisition": "Rare Summon",
+   "global": "2023-06-29",
+   "limited": "No",
+   "page": "Richt"
+  },
+  "401015007": {
+   "acquisition": "Rare Summon",
+   "global": "2023-07-20",
+   "limited": "No",
+   "page": "Wings of Midnight Malphasie"
+  },
+  "401015107": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-10",
+   "limited": "",
+   "page": "Arcane Scholar Kir"
+  },
+  "401015207": {
+   "acquisition": "Rare Summon",
+   "global": "2023-08-24",
+   "limited": "",
+   "page": "Blood Dancer Ellesperis"
+  },
+  "401015307": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-21",
+   "limited": "Collaboration",
+   "page": "Aya Brea"
+  },
+  "401015407": {
+   "acquisition": "Rare Summon",
+   "global": "2023-09-07",
+   "limited": "Collaboration",
+   "page": "Cool Moves Addison Rae"
+  },
+  "401015507": {
+   "acquisition": "Rare Summon",
+   "global": "2023-10-26",
+   "limited": "Seasonal",
+   "page": "Guardian of the Underworld Chow"
+  },
+  "401015607": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-23",
+   "limited": "",
+   "page": "Hyoh & Panthera Ultimus"
+  },
+  "401015707": {
+   "acquisition": "Rare Summon",
+   "global": "2023-11-23",
+   "limited": "",
+   "page": "Solitary Warrior Veritas of the Frost"
+  },
+  "401015807": {
+   "acquisition": "Rare Summon",
+   "global": "2023-12-21",
+   "limited": "Seasonal",
+   "page": "Ghost of Winter Past Beryl"
+  },
+  "401015907": {
+   "acquisition": "Rare Summon",
+   "global": "2024-01-25",
+   "limited": "",
+   "page": "Chains of Fate Mirei"
+  },
+  "401016007": {
+   "acquisition": "Rare Summon",
+   "global": "2024-02-15",
+   "limited": "",
+   "page": "Divine Archer Ang"
+  },
+  "401016107": {
+   "acquisition": "Rare Summon",
+   "global": "2024-03-21",
+   "limited": "",
+   "page": "Blood Mage Zyrus"
+  },
+  "401016207": {
+   "acquisition": "Rare Summon",
+   "global": "2024-04-18",
+   "limited": "",
+   "page": "Winged Officer Celeste"
+  },
+  "401016307": {
+   "acquisition": "Rare Summon",
+   "global": "2024-05-23",
+   "limited": "",
+   "page": "Phantom Thief Xon"
+  },
+  "401016407": {
+   "acquisition": "Rare Summon",
+   "global": "2024-06-27",
+   "limited": "",
+   "page": "Fundamental Force"
+  },
+  "401016507": {
+   "acquisition": "Rare Summon",
+   "global": "2024-06-27",
+   "limited": "",
+   "page": "Eithne"
+  },
+  "401016607": {
+   "acquisition": "Rare Summon",
+   "global": "2024-07-25",
+   "limited": "",
+   "page": "Imperial Shield Wilhelm"
+  },
+  "401016707": {
+   "acquisition": "Rare Summon",
+   "limited": "",
+   "page": "Blade Breaker Esther"
+  }
+ }
+}

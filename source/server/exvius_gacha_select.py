@@ -33,6 +33,12 @@ def _execute(spec, req, prism=False):
     iid = str(node.get('tL6G9egd' if prism else '3HriTp6B', ''))
     table = _mst('F_GACHA_SELECT_PRISM_MST.ndjson' if prism else 'F_GACHA_SELECT_UNIT_MST.ndjson',
                  'tL6G9egd' if prism else '3HriTp6B')
+    from engine_profile import current_profile
+    from revival_update import settings as update_settings
+    update = update_settings(player.data) if current_profile().name == 'ios-revival' else None
+    if not prism and update and update['select_limited']:
+        from revival_select import extra_rows
+        table = dict(table, **{r['3HriTp6B']: r for r in extra_rows(_mst('F_UNIT_MST.ndjson', '3HriTp6B'), table)})
     row = table.get(iid)
     today = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     first, last = ('Tx6MGkJ1', '2CL6pZmE') if prism else ('VjJQ51uG', 'm8ivD4NX')

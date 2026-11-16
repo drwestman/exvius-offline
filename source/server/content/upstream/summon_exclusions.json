@@ -1,0 +1,905 @@
+{
+ "_provenance": "A rarity tier with no unit list draws every base unit of its rarity (player_state.expand_pool), which also\nhanded out Global's story cast (Rain, Lasswell, Fina, Nichol, Lid, Sakura, Jake), story NPCs and reward\nunits. The units Global's unit table marks `Fzmtn2Q5 = 0` (below 7 stars, with an English name) are checked\nagainst the FFBE wiki's Unit Infobox `acquisition` (research/wiki/units/):\n  * \"Story Units\", \"Reward Units\", \"Star Quartz Units\" or \"Raid Summon\" only: left out of those tiers (a\n    banner that features one still has it, and a Raid Summon's own list is untouched);\n  * \"Rare Summon\" or \"Standard Summon\": stay;\n  * anything else: stays, listed for the operator.\nThe story units' copies a player already owns stay; every rarity row of their families whose sell price\n(`u18nfD7p`, the client's UnitMst amountSell; GameUtils::canSellUnit needs it above 0) is 0 gets the usual\nprice for its rarity, served in the client's unit table (ios_tables.py), so extra copies can be sold.\nWrites source/server/content/summon_exclusions.json and ios-server/research/SUMMON_EXCLUSIONS.md.",
+ "excluded": {
+  "100000102": {
+   "acquisition": "Story Units",
+   "limited": "No",
+   "name": "Rain",
+   "page": "Rain",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100000202": {
+   "acquisition": "Story Units",
+   "limited": "",
+   "name": "Lasswell",
+   "page": "Lasswell",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100000215": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Hunter Lasswell",
+   "page": "Hunter Lasswell/JP",
+   "rarity": 5,
+   "region": "jp"
+  },
+  "100000302": {
+   "acquisition": "Story Units",
+   "limited": "No",
+   "name": "Fina",
+   "page": "Fina",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100000403": {
+   "acquisition": "Story Units",
+   "limited": "",
+   "name": "Nichol",
+   "page": "Nichol",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100000503": {
+   "acquisition": "Story Units",
+   "limited": "",
+   "name": "Lid",
+   "page": "Lid",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100000603": {
+   "acquisition": "Story Units",
+   "limited": "",
+   "name": "Sakura",
+   "page": "Sakura",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100000614": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Hunter Sakura",
+   "page": "Hunter Sakura/JP",
+   "rarity": 4,
+   "region": "jp"
+  },
+  "100000703": {
+   "acquisition": "Story Units",
+   "limited": "",
+   "name": "Jake",
+   "page": "Jake",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100000713": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Hunter Jake",
+   "page": "Hunter Jake/JP",
+   "rarity": 3,
+   "region": "jp"
+  },
+  "100008804": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Moogle",
+   "page": "Moogle",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100009204": {
+   "acquisition": "Raid Summon",
+   "limited": "Yes",
+   "name": "Kupolkan",
+   "page": "Kupolkan",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100009304": {
+   "acquisition": "Raid Summon",
+   "limited": "Yes",
+   "name": "Ashteroze",
+   "page": "Ashteroze",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100009405": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Kelsus",
+   "page": "Kelsus",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100009504": {
+   "acquisition": "Raid Summon",
+   "limited": "Yes",
+   "name": "Nyalu",
+   "page": "Nyalu",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100009604": {
+   "acquisition": "Raid Summon",
+   "limited": "Yes",
+   "name": "Sandee",
+   "page": "Sandee",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100009704": {
+   "acquisition": "Raid Summon",
+   "limited": "Yes",
+   "name": "Grinfield",
+   "page": "Grinfield",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100012104": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Emilia",
+   "page": "Emilia",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100015005": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Vagrant Knight Rain",
+   "page": "Vagrant Knight Rain",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100016605": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Ukiyo",
+   "page": "Ukiyo",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100021304": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Chocobo Rain",
+   "page": "Chocobo Rain",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100023903": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Winkel",
+   "page": "Winkel",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100025705": {
+   "acquisition": "Story Units",
+   "limited": "No",
+   "name": "Blue Mage Fina",
+   "page": "Blue Mage Fina",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100026103": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Caroline",
+   "page": "Caroline",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100026205": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Alhena",
+   "page": "Alhena",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100027805": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Untamed Wolf Edel",
+   "page": "Untamed Wolf Edel",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "100031405": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Stylish Steward Pecciotta",
+   "page": "Stylish Steward Pecciotta",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "199000101": {
+   "acquisition": "Battle NPC (story, Kolobos; no wiki page)",
+   "limited": "",
+   "name": "Emma (Battle NPC)",
+   "page": "",
+   "rarity": 1,
+   "region": ""
+  },
+  "202002205": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Minwu",
+   "page": "Minwu",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "203001805": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Xande",
+   "page": "Xande",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "204002405": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "White Mage Rosa",
+   "page": "White Mage Rosa",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "206000113": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Magitek Armor Terra",
+   "page": "Magitek Armor Terra",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "206000905": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Strago",
+   "page": "Strago",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "207001305": {
+   "acquisition": "Reward Units",
+   "limited": "No",
+   "name": "Reno (FFVII REMAKE)",
+   "page": "Reno (FFVII REMAKE)",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "207001805": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Kadaj",
+   "page": "Kadaj",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "208000305": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Quistis",
+   "page": "Quistis",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "209001705": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Strange Gourmand Quina",
+   "page": "Strange Gourmand Quina",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "209002305": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Knight of Pluto Zidane",
+   "page": "Knight of Pluto Zidane",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "210000505": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Kimahri",
+   "page": "Kimahri",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "212001705": {
+   "acquisition": "Reward Units",
+   "limited": "No",
+   "name": "Blue Sky Belle Fran",
+   "page": "Blue Sky Belle Fran",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "214000105": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Y'shtola",
+   "page": "Y'shtola",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "214000203": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Thancred",
+   "page": "Thancred",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "214000304": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Minfilia",
+   "page": "Minfilia",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "214000404": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Yda",
+   "page": "Yda",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "214000504": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Papalymo",
+   "page": "Papalymo",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "215002605": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Gentiana",
+   "page": "Gentiana",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "250000205": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Lightning (FFXIII-2)",
+   "page": "Lightning (FFXIII-2)",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "251000105": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Tyro",
+   "page": "Tyro",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "254002105": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Steadfast Soldier Machina",
+   "page": "Steadfast Soldier Machina",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "258000305": {
+   "acquisition": "Star Quartz Units",
+   "limited": "No",
+   "name": "Lumina",
+   "page": "Lumina",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "301000103": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Samatha",
+   "page": "Samatha/JP",
+   "rarity": 3,
+   "region": "jp"
+  },
+  "302000505": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Maxwell",
+   "page": "Maxwell",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "303000103": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Adel",
+   "page": "Adel/JP",
+   "rarity": 3,
+   "region": "jp"
+  },
+  "303000204": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Demigod Adel",
+   "page": "Demigod Adel/JP",
+   "rarity": 4,
+   "region": "jp"
+  },
+  "304000503": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Rabite",
+   "page": "Rabite",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "306000603": {
+   "acquisition": "Reward Units, Raid Summon",
+   "limited": "Collaboration",
+   "name": "Slime",
+   "page": "Slime",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "306001005": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Marquis de Léon",
+   "page": "Marquis de Léon",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "306001303": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Dracky",
+   "page": "Dracky",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "310000304": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Adam",
+   "page": "Adam",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "311000105": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Hero",
+   "page": "Hero/JP",
+   "rarity": 5,
+   "region": "jp"
+  },
+  "313000305": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Bravo Bunny Agnès",
+   "page": "Bravo Bunny Agnès/JP",
+   "rarity": 5,
+   "region": "jp"
+  },
+  "315000104": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Rinne",
+   "page": "Rinne/JP",
+   "rarity": 4,
+   "region": "jp"
+  },
+  "319000104": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Reimi",
+   "page": "Reimi",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "331000603": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Chu-Chu",
+   "page": "Chu-Chu",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "339000205": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Mont Leonis",
+   "page": "Mont Leonis",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "341000105": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Young Xehanort (KHDR)",
+   "page": "Young Xehanort (KHDR)",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "401000104": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Dangerous Ariana",
+   "page": "Dangerous Ariana",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401000604": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Artisan Lid",
+   "page": "Artisan Lid",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401000704": {
+   "acquisition": "Star Quartz Units",
+   "limited": "Yes",
+   "name": "Swordsman Lasswell",
+   "page": "Swordsman Lasswell",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401000804": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Cheerleader Fina",
+   "page": "Cheerleader Fina",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401000904": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Maiden Sakura",
+   "page": "Maiden Sakura",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401001004": {
+   "acquisition": "Reward Units",
+   "limited": "Yes",
+   "name": "Cowboy Jake",
+   "page": "Cowboy Jake",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401002304": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Chic Ariana",
+   "page": "Chic Ariana",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401002504": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Sportive Ariana",
+   "page": "Sportive Ariana",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401003605": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Lara Croft",
+   "page": "Lara Croft",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "401004303": {
+   "acquisition": "Raid Summon",
+   "limited": "Collaboration",
+   "name": "Teo",
+   "page": "Teo",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "401006305": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Popstar Katy",
+   "page": "Popstar Katy",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "401007505": {
+   "acquisition": "Reward Units",
+   "limited": "Collaboration",
+   "name": "Lovely Katy",
+   "page": "Lovely Katy",
+   "rarity": 5,
+   "region": "gl"
+  }
+ },
+ "kept": {
+  "100000901": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Rizer",
+   "page": "Rizer",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001001": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Leah",
+   "page": "Leah",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001101": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Tronn",
+   "page": "Tronn",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001201": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Eldin",
+   "page": "Eldin",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001301": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Baurg",
+   "page": "Baurg",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001401": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Gimlee",
+   "page": "Gimlee",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001501": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Maxell",
+   "page": "Maxell",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001601": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Liza",
+   "page": "Liza",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100001702": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Shiki",
+   "page": "Shiki",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100001802": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Mizell",
+   "page": "Mizell",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100001902": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Ronaldo",
+   "page": "Ronaldo",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100002002": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Mel",
+   "page": "Mel",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100002901": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Sarai",
+   "page": "Sarai",
+   "rarity": 1,
+   "region": "gl"
+  },
+  "100003002": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Paula",
+   "page": "Paula",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100003202": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Kenyu",
+   "page": "Kenyu",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100003302": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Ollie",
+   "page": "Ollie",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100003402": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Carrie",
+   "page": "Carrie",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100003502": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Skaha",
+   "page": "Skaha",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100003602": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Montana",
+   "page": "Montana",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "100025104": {
+   "acquisition": "Rare Summon",
+   "limited": "No",
+   "name": "Scartio",
+   "page": "Scartio",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "100025203": {
+   "acquisition": "Rare Summon",
+   "limited": "No",
+   "name": "Sister",
+   "page": "Sister",
+   "rarity": 3,
+   "region": "gl"
+  },
+  "100028205": {
+   "acquisition": "Rare Summon",
+   "limited": "No",
+   "name": "Zenaida",
+   "page": "Zenaida",
+   "rarity": 5,
+   "region": "gl"
+  },
+  "201000302": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Sarah",
+   "page": "Sarah",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "202001402": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Paul",
+   "page": "Paul",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "204001302": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "King Giott",
+   "page": "King Giott",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "206001502": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Wedge",
+   "page": "Wedge",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "206001602": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Biggs",
+   "page": "Biggs",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "212000702": {
+   "acquisition": "Standard Summon",
+   "limited": "",
+   "name": "Anastasis",
+   "page": "Anastasis",
+   "rarity": 2,
+   "region": "gl"
+  },
+  "302001004": {
+   "acquisition": "Rare Summon",
+   "limited": "Seasonal",
+   "name": "Ling",
+   "page": "Ling",
+   "rarity": 4,
+   "region": "gl"
+  },
+  "401008505": {
+   "acquisition": "Rare Summon",
+   "limited": "No",
+   "name": "Kaito",
+   "page": "Kaito",
+   "rarity": 5,
+   "region": "gl"
+  }
+ },
+ "sell_prices": {
+  "100000102": 500,
+  "100000103": 800,
+  "100000104": 1500,
+  "100000105": 3000,
+  "100000106": 4500,
+  "100000202": 500,
+  "100000203": 800,
+  "100000204": 1500,
+  "100000205": 3000,
+  "100000206": 4500,
+  "100000302": 500,
+  "100000303": 800,
+  "100000304": 1500,
+  "100000305": 3000,
+  "100000306": 4500,
+  "100000403": 800,
+  "100000404": 1500,
+  "100000405": 3000,
+  "100000503": 800,
+  "100000504": 1500,
+  "100000505": 3000,
+  "100000603": 800,
+  "100000604": 1500,
+  "100000605": 3000,
+  "100000703": 800,
+  "100000704": 1500,
+  "100000705": 3000,
+  "100025705": 3000,
+  "100025706": 4500,
+  "100025707": 6000,
+  "100025717": 6000
+ },
+ "unsure": {}
+}

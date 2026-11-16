@@ -264,6 +264,10 @@ def _action(fn):
         except Refused as exc:
             State.player.data, State.player.dirty = before, dirty
             _note(fn.__name__ + ": refused: " + str(exc))
+            from engine_profile import current_profile
+            if current_profile().name == 'ios-revival' and fn.__name__ in ('unit_nv_class_up', 'unit_nvp_class_up', 'unit_ex_class_up'):
+                from revival_messages import refuse
+                refuse("The awakening couldn't be completed (" + str(exc) + "). Nothing was used.")
             # Refresh optimistic balances, but never fabricate a success result row.
             out = _reply(spec)
             for tag in ("oh5yce1m", "6U5w20zk", "sWc7EH69", "14vWb7kX", "0T5wP98d", "0eDvu2N3",

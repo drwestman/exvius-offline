@@ -8,6 +8,13 @@ acceptance and full bulk-pack installation validation remain pending.
 
 The reference is revival commit `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
+The remaining `d6e8858` update is being ported in explicit checkpoints. See the
+[implementation ledger](../../plans/IOS_REVIVAL_UPDATE_IMPLEMENTATION.md) for
+implemented commands, pending capabilities and validation. The new
+`plan-campaign-upgrade` query and digest-checked `upgrade-campaign` command keep
+existing campaigns on their recorded policy until an explicit upgrade; they do
+not establish full upstream parity or physical-device acceptance.
+
 ## Available commands
 
 First-time setup, from the repository root:

@@ -32,7 +32,7 @@ def clock():
 
 
 @lru_cache(maxsize=1)
-def catalogue():
+def catalogue(updated=False):
     """Same override order as ffbe_gacha; no process flags or player-state imports."""
     by_id = {}
     for name in ('catalogue', 'community', 'named', 'authored'):
@@ -44,6 +44,10 @@ def catalogue():
     for banner in _standard():
         if banner.get('serve', True):
             by_id.setdefault(str(banner['id']), banner)
+    if updated:
+        from revival_history import late_banners, apply
+        by_id.update((str(b['id']), b) for b in late_banners())
+        apply(by_id)
     return tuple(apply_printed(banner) for banner in by_id.values())
 
 
@@ -53,13 +57,17 @@ def _standard():
 
 
 @lru_cache(maxsize=1)
-def unit_dates():
+def unit_dates(updated=False):
     # Fail visibly for damaged metadata rather than silently opening every future unit.
     try:
         rows = json.loads((HERE / 'unit_release.json').read_text(encoding='utf-8'))['units']
         if not isinstance(rows, dict) or not rows:
             raise ValueError('the unit date map is empty or malformed')
-        return {str(uid): date.fromisoformat(day).isoformat() for uid, day in rows.items()}
+        dates = {str(uid): date.fromisoformat(day).isoformat() for uid, day in rows.items()}
+        if updated:
+            from revival_history import unit_dates as corrected
+            dates = corrected(dates)
+        return dates
     except (KeyError, AttributeError, TypeError, ValueError) as exc:
         raise ValueError(f'Invalid pinned unit-release metadata: {exc}') from exc
 
@@ -102,7 +110,11 @@ def unit_allowed(banner, unit_id):
         if isinstance(pool, dict) else set()
     featured.update(str(u) for u in (banner.get('community') or {}).get('unit_ids', []))
     featured.update(rule['featured'])
-    day = unit_dates().get(uid)
+    if banner.get('_revival_update'):
+        from revival_update import document
+        if uid in document('summon_exclusions.json')['excluded'] and uid not in featured:
+            return False
+    day = unit_dates(bool(banner.get("_revival_update"))).get(uid)
     return uid in featured or day is None or day <= rule['cutoff']
 
 
@@ -230,6 +242,8 @@ class SummonPlan:
     by_id: dict
     holiday: str | None
     holiday_sets: dict
+    updated: bool = False
+    all_summons: bool = False
 
     @property
     def ids(self):
@@ -243,8 +257,9 @@ class SummonPlan:
             if isinstance(pool, dict) else []
         featured += [str(u) for u in (banner.get('community') or {}).get('unit_ids', [])]
         original = self.by_id.get(str(banner['id']), banner)
-        cutoff = None if self.finished or full_pool(original) else \
+        cutoff = None if self.finished or self.all_summons or full_pool(original) else \
             (date.fromisoformat(self.window['to']) - timedelta(days=1)).isoformat()
+        configured['_revival_update'] = bool(getattr(self, 'updated', False))
         configured['_replay_pool'] = {'cutoff': cutoff, 'featured': featured}
         configured['_replay_timezone'] = self.window.get('timezone', 'America/New_York')
         configured['_replay_window'] = {
@@ -274,9 +289,12 @@ def plan(data, now=None, *, banners=None, families=None):
     window = calendar['windows'][0]
     window['timezone'] = settings.timezone
     week = rotation_week(now, settings)
-    last = max(max(unit_dates().values()), '2024-08-22')
+    from revival_update import settings as update_settings
+    update = update_settings(data)
+    updated = update is not None
+    last = max(max(unit_dates(updated).values()), '2024-10-30' if updated else '2024-08-22')
     finished = window['from'] > last
-    banners = catalogue() if banners is None else banners
+    banners = catalogue(updated and update['late_banners']) if banners is None else banners
     families = {str(b['id']) for b in _standard()} if families is None else families
     by_id = {str(b['id']): b for b in banners}
     aliases = {str(alias) for b in banners for alias in b.get('alias_ids', []) if str(alias) != str(b['id'])}
@@ -318,6 +336,12 @@ def plan(data, now=None, *, banners=None, families=None):
             featured.append((key, ids))
     chosen = _pick(special, 1, week.number, 'special') + _pick(featured, 2, week.number, 'featured') if finished else \
         sorted(entry for entry in special + featured if window['from'] <= entry[0] < window['to'])
+    if update and update['full_runs'] and not finished:
+        from revival_history import banner_run, overlaps
+        chosen = [(key, running) for key, ids in sorted(special + featured)
+                  if (running := [bid for bid in ids if overlaps(banner_run(by_id[bid]), window['from'], window['to'])])]
+    if update and update['summon_mode'] == 'all':
+        chosen = sorted(special + featured)
     holiday = _holiday_this_week(week.starts, week.ends)
     shown = None
     if holiday and holiday[0] in holidays:
@@ -335,7 +359,22 @@ def plan(data, now=None, *, banners=None, families=None):
         if picked:
             shown = name
             chosen = picked + [entry for entry in chosen if entry[0] not in {key for key, _ids in picked}]
-    return SummonPlan(calendar['anchored'], window, finished, tuple(fixed), tuple(chosen), by_id, shown, holidays)
+    if update:
+        held = {(str(r['item_type']), str(r['item_id'])) for r in data.get('inventory', {}).get('items', [])
+                if int(r.get('count', 0)) > 0}
+        identities = set()
+        for bid, b in sorted(by_id.items(), key=lambda pair: (str(released(pair[1]) or '9999'), pair[0])):
+            cost = b.get('cost')
+            cost = cost[0] if isinstance(cost, list) and cost else cost
+            if not isinstance(cost, dict) or b.get('deal') not in (None, 'ticket'):
+                continue
+            item_kind = {'item': '20', 'important': '23'}.get(cost.get('kind'))
+            identity = json.dumps([cost, b.get('pool'), b.get('draws'), b.get('type')], sort_keys=True)
+            if item_kind and (item_kind, str(cost.get('item_id'))) in held and identity not in identities:
+                fixed.append(bid)
+                identities.add(identity)
+        fixed = list(dict.fromkeys(fixed))
+    return SummonPlan(calendar['anchored'], window, finished, tuple(fixed), tuple(chosen), by_id, shown, holidays, updated, bool(update and update['summon_mode'] == 'all'))
 
 
 def event_context(data, now=None, event_keys=None, *, selected=None):

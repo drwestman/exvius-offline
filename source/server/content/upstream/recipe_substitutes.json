@@ -1,0 +1,14 @@
+{
+ "source": "Recipe rewards whose recipe-book row is missing from the shipped tables (Global deleted them), so the recipe can't be granted or crafted. exvius_rewards.parse pays the item the recipe crafted instead (operator's request, 2026-11-09). Built by hand from a search of every reward field the server pays (first clears, challenges of served quests, town quests, exchanges, Parade/raid rewards): the item a recipe crafted comes from an older snapshot of Global's recipes.json (aEnigmatic/ffbe history) where it survives, else from the equipment of the same name; where two exist, the version Global's later re-release recipe crafts. The '+' festival items aren't in the tables at all, so the plain version stands in. Missing recipes in content this server doesn't serve (152 challenge rewards of quests Global never ran, the season-event 'collab' rows) are not listed.",
+ "recipes": {
+  "903000400": {"reward": "21:305001100", "name": "Vorpal Axe", "basis": "Global recipes.json history", "used_by": "first clear 7020102"},
+  "903000570": {"reward": "21:308001600", "name": "Gae Bolg", "basis": "Global recipes.json history", "used_by": "first clear 7020104"},
+  "904001800": {"reward": "21:409012600", "name": "Evening Glove", "basis": "same name; Global re-release recipe 1000000015 crafts 409012600", "used_by": "Dangerous Woman Tour first clears"},
+  "903001290": {"reward": "21:316000900", "name": "Microphone", "basis": "same name; Global re-release recipe 1000000014", "used_by": "Dangerous Woman Tour first clears"},
+  "904001810": {"reward": "21:403042600", "name": "Bunny Mask", "basis": "same name; Global re-release recipe 1000000016", "used_by": "Dangerous Woman Tour first clears"},
+  "904001820": {"reward": "21:405002900", "name": "Stylish Black Dress", "basis": "same name; Global re-release recipe 1000000017", "used_by": "Dangerous Woman Tour first clears"},
+  "904001710": {"reward": "21:405001600", "name": "Festival Robe (for Festival Robe+)", "basis": "the '+' item isn't in the tables; plain version", "used_by": "town quest 1901015"},
+  "904001720": {"reward": "21:403041200", "name": "Festival Cap (for Festival Cap+)", "basis": "the '+' item isn't in the tables; plain version", "used_by": "town quest 1901016"},
+  "1000000385": {"reward": "21:1100000698", "name": "(recipe 1000000385)", "basis": "Global recipes.json history", "used_by": "exchange row 230103 (currency 1209001756)"}
+ }
+}

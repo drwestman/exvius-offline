@@ -87,6 +87,8 @@ def collect(config):
             if name not in rules.CLIENT_REGISTRY['unregistered_localized']:
                 raise ValueError('Unmapped localized index entry: ' + str(name))
             unregistered.append(name)
+    from revival_update import document as update_document, settings as update_settings
+    update = update_settings(_saved(config) or {})
     documents, document_records = {}, {}
     for name in DOCUMENTS:
         path = HERE / name
@@ -120,6 +122,13 @@ def collect(config):
     context = {'economy': policy, 'labels': coverage, 'coverage': {
         'registered': len(registrations), 'masters': sum(not t.localized for t in rules.TABLES),
         'english': len(localized), 'unregistered_localized': sorted(unregistered)}}
+    if update:
+        from revival_update import HERE as update_root, REVISION as update_revision
+        provenance_rows = json.loads((update_root / 'provenance.json').read_bytes())
+        for name, checksum in provenance_rows['documents'].items():
+            update_document(name)
+            document_records['upstream/' + name] = checksum
+        context['update'] = {'revision': update_revision, 'settings': update}
     provenance = {'tables': records, 'documents': document_records, 'registry': {
         'versions': registrations, 'sha256': _sha(version_raw), 'definition_sha256': rules.REGISTRY_SHA256}}
     raw = json.dumps({'pipeline': rules.PIPELINE_VERSION, 'reference': REVIVAL_COMMIT,

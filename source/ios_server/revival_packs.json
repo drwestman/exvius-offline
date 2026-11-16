@@ -1,0 +1,12 @@
+{
+  "revision": "d6e8858861969a2764e31345884453dde79fc71f",
+  "packs": [
+    {
+      "id": "summon-art",
+      "url": "https://github.com/CreamySeaman6/Data/releases/download/data-r10/exvius-summon-art-r10.zip",
+      "size": 306714637,
+      "unpackedSize": 306428065,
+      "sha256": "41277b62bd4da7efc0fae02f0462019ec74c9f0f2aedd7a84fab3663064bc837"
+    }
+  ]
+}

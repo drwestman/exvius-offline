@@ -131,8 +131,12 @@ def _validate_sources(manifest, registry):
     from revival_economy import settings
     context = manifest['preparation']
     policy = context['economy']
+    update_context = {'update'} if 'update' in context else set()
+    if update_context:
+        from revival_update import settings as update_settings
+        update_settings({'ios_revival_update': dict(context['update'], version=1)})
     if (set(context) != ({'economy', 'labels'} if version == 2 else
-            {'economy', 'labels', 'coverage'} | optional)
+            {'economy', 'labels', 'coverage'} | optional | update_context)
             or set(policy) != {'source', 'slot', 'settings'}
             or policy['source'] not in ('provisional', 'campaign')
             or not re.fullmatch(r'[A-Za-z0-9_-]+', policy['slot'])):
@@ -337,7 +341,7 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
             from ios_server import native_sounds
             generation = native_sounds.advance(generation, sound, current.manifest.get('sounds') if current else None)
         outputs, versions, changes = rules.build(sources, generation, labels=labels,
-            economy=context['economy']['settings'], floors=floors)
+            economy=context['economy']['settings'], floors=floors, update=context.get('update'))
         from ios_server.upfront_resources import CHECKSUM, project
         changes[CHECKSUM] += project(records['upfront'], outputs)
         packs = {}

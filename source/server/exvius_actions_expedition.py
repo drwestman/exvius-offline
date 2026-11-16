@@ -581,6 +581,11 @@ def mission_update(spec, req):
             saved[sid] = {'Z34jU7ue': qid, '7Svg2kdT': sid,
                           '4kcAD9fW': '2' if completed else '1', '0G7J2vfD': old.get('0G7J2vfD', '')}
             if completed:
+                from engine_profile import current_profile
+                if current_profile().name == 'ios-revival':
+                    switches = _csv(step.get('dIPkNn61'))
+                    _require(all(switch_position(v) is not None for v in switches), 'invalid quest completion switch')
+                    spec = _switches(spec, switches)
                 quest_steps = [r for r in steps.values() if r['Z34jU7ue'] == qid]
                 if all(saved.get(r['7Svg2kdT'], {}).get('4kcAD9fW') == '2' for r in quest_steps):
                     if qid not in block.setdefault('rewarded', []):

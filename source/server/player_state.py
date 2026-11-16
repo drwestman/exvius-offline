@@ -395,9 +395,19 @@ _NV_CARDS = None
 NV_DEFAULT_VISION_CARD = "900020101"
 
 
-def nv_vision_card(unit_id) -> str:
+def nv_vision_card(unit_id, data=None) -> str:
     """The Vision Card a summoned NV unit came with (`nv_vision_cards.json`, built from the wiki's /JP unit
     pages by `source/exvius/build_nv_vision_cards.py`); the default card for an NV the table does not list."""
+    if current_profile().name == 'ios-revival' and data is not None:
+        from revival_update import settings as update_settings, document
+        if update_settings(data) is not None:
+            from revival_summons import plan
+            cutoff = max(plan(data).window['to'], '2020-08-20')
+            pool = [str(c['id']) for c in document('nv_random_vision_cards.json')['cards']
+                    if c['joined'] <= cutoff and vision_card_mst(c['id']) is not None]
+            if not pool:
+                raise ValueError('No eligible Global NV Vision Card is installed')
+            return random.choice(pool)
     global _NV_CARDS
     if _NV_CARDS is None:
         try:
@@ -1012,6 +1022,20 @@ def named_unit_ids() -> set:
 
 def _only_named(rows: list) -> list:
     """Drop pool rows whose unit has no shipped name row (see `named_unit_ids`). No-op if that set is empty."""
+    if current_profile().name == 'ios-revival':
+        from revival_unit_rules import summon_unit
+        units = _load_ndjson('F_UNIT_MST.ndjson', '3HriTp6B')
+        clean = {}
+        for row in rows:
+            uid = str(row.get('unit_id') or '')
+            if not uid:
+                continue
+            uid = summon_unit(uid, units)
+            if uid in clean:
+                clean[uid]['rate'] = float(clean[uid].get('rate') or 0) + float(row.get('rate') or 0)
+            else:
+                clean[uid] = dict(row, unit_id=uid, rarity=(units.get(uid) or {}).get('9fW0TePj', row.get('rarity')))
+        rows = list(clean.values())
     names = named_unit_ids()
     if not names:
         return rows
@@ -1182,6 +1206,10 @@ def expand_pool(banner: dict) -> list:
     if is_revival:
         if '_replay_pool' not in banner:
             raise ValueError('An iOS summon pool requires its replay policy context.')
+        from revival_unit_rules import summon_unit
+        masters = _load_ndjson('F_UNIT_MST.ndjson', '3HriTp6B')
+        banner = dict(banner, _replay_pool=dict(banner['_replay_pool'],
+            featured=list(dict.fromkeys(summon_unit(str(u), masters) for u in banner['_replay_pool']['featured']))))
         allowed = lambda uid: summon_unit_allowed(banner, uid)
     else:
         allowed = lambda uid: True
@@ -1194,6 +1222,12 @@ def expand_pool(banner: dict) -> list:
     cost = cost[0] if isinstance(cost, list) and cost else cost
     keep_materials = isinstance(cost, dict) and str(cost.get("kind")) == "friend_point"
     tiers = (pool or {}).get("tiers") or []
+    if is_revival:
+        from revival_unit_rules import summon_unit
+        masters = _load_ndjson('F_UNIT_MST.ndjson', '3HriTp6B')
+        tiers = [dict(t, **{k: list(dict.fromkeys(summon_unit(str(u), masters) for u in t[k]))
+                           for k in ('featured', 'units') if t.get(k)}) for t in tiers]
+
     # A community banner names its rate-up units (`community.unit_ids`) without placing them in a tier:
     # they are the "Rate up for the featured units!" of its art, so they share the top tier's rate.
     rate_up = [str(u) for u in ((banner.get("community") or {}).get("unit_ids") or [])]
@@ -2375,6 +2409,11 @@ class PlayerState:
         """A mutation is applied unless the policy is `frozen`. Marks dirty for the `live` writer."""
         if self.mode == "frozen":
             return False
+        if current_profile().name == 'ios-revival':
+            from revival_update import settings as update_settings
+            if update_settings(self.data) is not None:
+                from revival_guide import register_holdings
+                register_holdings(self)
         self.dirty = True
         return True
 
@@ -3047,6 +3086,12 @@ class PlayerState:
         `Qy5EvcK1` = itemNum). Zero-count rows are omitted: mode 1 reads `0` as a delete and a zero row draws
         nothing, and `spend_item` can leave a zero row behind.
         """
+        if current_profile().name == 'ios-revival':
+            from revival_carry import counts
+            carried = counts(self.data.get('inventory', {}).get('carry_items', []))
+            return [{'tL6G9egd': str(it['item_id']), 'Qy5EvcK1': str(max(0, int(it['count']) - carried[str(it['item_id'])]))}
+                    for it in self._items() if str(it.get('item_type')) == str(BAG_ITEM_TYPE)
+                    and int(it['count']) > carried[str(it['item_id'])]]
         return [{"tL6G9egd": str(it.get("item_id")), "Qy5EvcK1": str(it.get("count", 0))}
                 for it in self._items()
                 if str(it.get("item_type")) == str(BAG_ITEM_TYPE) and int(it.get("count", 0)) > 0]
@@ -3114,6 +3159,9 @@ class PlayerState:
                               "count": int(e["count"])})
             except (KeyError, TypeError, ValueError):
                 continue
+        if current_profile().name == 'ios-revival':
+            from revival_carry import fit
+            clean = fit(clean, {str(r['item_id']): int(r['count']) for r in self._items() if str(r['item_type']) == '20'})
         self._carry_items()[:] = clean
         return clean
 
@@ -4527,7 +4575,7 @@ class PlayerState:
                             "level": int((unit or {}).get("level") or 1)})
             # A summoned Neo Vision unit comes with its Vision Card (GachaExeResponse eb2ANT1m).
             if str((unit_mst(a["unit_id"]) or {}).get("9fW0TePj")) == "7":
-                vc_id = nv_vision_card(a["unit_id"])
+                vc_id = nv_vision_card(a["unit_id"], self.data)
                 if vision_card_mst(vc_id) is not None:
                     key = str((unit or {}).get("instance_id") or f"{vc_id}{len(nv_cards)}")
                     self.data.setdefault("vision_cards", []).append({"user_vc_id": key, "vc_id": vc_id, "level": 1})
@@ -4896,9 +4944,17 @@ class PlayerState:
                               for iid, count in sorted(medal.get('counts', {}).items(),
                                                        key=lambda entry: int(entry[0]))
                               if int(count) > 0]
+        if current_profile().name == 'ios-revival':
+            from revival_update import settings as update_settings
+            if update_settings(self.data) is not None:
+                from revival_guide import rows as guide_rows
+                out.update(guide_rows(self))
         quests = self.data.get('exvius_map', {}).get('quests')
         if quests is not None:
             out['hQKAwj18'] = list(quests.values())
+            if current_profile().name == 'ios-revival':
+                from revival_quests import report
+                out['XoPQ5Rs3'] = report(quests, _load_ndjson('F_QUEST_SUB_MST.ndjson', '7Svg2kdT'))
             quest_rows = self.quest_info_rows()
             if quest_rows:
                 # Quest Report reads UserQuestInfoList before resolving each
@@ -4906,7 +4962,7 @@ class PlayerState:
                 # that main list empty, so accepted quests never appear.
                 out['mk5fza4r'] = quest_rows
             else:
-                out['XoPQ5Rs3'] = []
+                out.setdefault('XoPQ5Rs3', [])
         slots = self.data.get('exvius_party_register', {}).get('slots')
         if slots is not None:
             out['dEA91X0o'] = [{**{k: str(v) for k, v in slot.items()
@@ -5070,6 +5126,11 @@ class PlayerState:
             # `9Tbns0eI`, the last key that commits the object (schema §3.3).
             if _serve_unit_history() and u.get("first_get_unit_id") is not None:
                 row["Z06cK4Qi"] = str(u["first_get_unit_id"])
+            if current_profile().name == 'ios-revival':
+                from revival_unit_rules import awakened_flag
+                flag = awakened_flag(unit_mst(u['master_id']) or {})
+                if flag:
+                    row['k9GFaWm1'] = flag
             # NV EX level (token #21): served only under SERVE_NV_EX, from the state, and only when the unit
             # HAS one -- an absent token leaves the client's default (0), so a unit without EX keeps the exact
             # row it had before. Like every other key it must precede the commit tail.

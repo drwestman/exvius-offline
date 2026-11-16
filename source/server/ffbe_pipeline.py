@@ -176,6 +176,8 @@ PIPELINE: tuple = (
          "global", "LAST_DROPS", "rolls each mission's candidate drop list; claims the mission's own slot"),
     # The result screen reads its OWN channels, not the wave drop list, so mirror this battle's roll into
     # the drops channel of 09HRWXDf. (No-op for any reply without that tag.)
+    Step("prepare_revival_update_attempt", lambda c: __import__('revival_battle_updates').prepare(c.spec, c.mid, c.is_battle_bundle, State),
+         "state", "State.player.exvius_repeat.attempt.ios_update", "record collection RNG and reward sources at load"),
     Step("apply_result_drops", lambda c: apply_result_drops(c.spec, mid=c.mid),
          "spec", "09HRWXDf", "mirrors THIS mission's roll into the result screen's drops channel"),
     # The summon's award is SERVER-AUTHORITATIVE: grant it into the roster (once) and serve the effect
@@ -340,6 +342,8 @@ PIPELINE: tuple = (
     # is a connection error, measured live 2026-09-30); `apply_emblem_setting` records the *Set* press.
     # Both sit immediately before the projection: the setting writes `player_emblem_id`, and the reply it
     # builds carries `3oU9Ktb7` so the projection is what actually fills it in.
+    Step("synchronize_revival_boot", lambda c: __import__('revival_boot').synchronize(c.spec, c.reply_id, c.plaintext, State, st.STATE_FILE, st.STATE_PERSIST),
+         "state", "State.player.ios_native_boot", "login/home commands; early advertisement is read-only"),
     Step("serve_emblem_info", lambda c: serve_emblem_info(c.spec, c.reply_id), "spec", EMBLEM_GROUP),
     Step("apply_emblem_setting", lambda c: apply_emblem_setting(c.plaintext, c.spec),
          "spec", f"State.player.profile / {EMBLEM_GROUP}"),
@@ -392,6 +396,10 @@ PIPELINE: tuple = (
          "spec", "8J1R5PXG", "publish switches after normal and special-mode settlements"),
     Step("serve_feature_state", lambda c: serve_feature_state(c.spec, c.reply_id),
          "spec", "offline feature state", "restore crafting, gifts, points and Trust Coin stock"),
+    Step("settle_revival_update_rewards", lambda c: __import__('revival_battle_updates').settle(c.spec, c.mid, c.plaintext, State),
+         "state", "State.player.ios_reward_claims", "settle first clears, collection points, Gil and LB EXP once"),
+    Step("settle_revival_carry", lambda c: __import__('revival_carry').step(c.spec, c.reply_id, c.plaintext, State, c.mid),
+         "state", "State.player.inventory.carry_items", "settle attempt-bound consumption before projecting ownership"),
     Step("apply_to_reply", lambda c: State.player.apply_to_reply(c.spec, reply_id=c.reply_id),
          "spec", "12 player groups", "the PROJECTION: rebuilt from the one player state"),
     # Persist what this request changed. One small file under out/; see the STATE_FILE block for why it
@@ -416,6 +424,11 @@ PIPELINE: tuple = (
          "spec", "earned reward amounts", "normalize only the wire copy after recording raw reward facts"),
 )
 PIPELINE_EDGES: tuple = (
+    Edge("roll_drops", "prepare_revival_update_attempt", "State.player.exvius_repeat.attempt", "record rewards against the loaded attempt"),
+    Edge("credit_mission_lapis", "settle_revival_update_rewards", "State.player.exvius_repeat.attempt", "require durable successful completion"),
+    Edge("settle_revival_update_rewards", "apply_to_reply", "State.player", "project credited rewards"),
+    Edge("settle_revival_carry", "apply_to_reply", "State.player.inventory", "item consumption precedes bag projection"),
+    Edge("serve_version_table", "synchronize_revival_boot", "c1qYg84Q", "record the exact prepared function-table version"),
     Edge("initialize_revival_campaign", "synchronize_revival_daily", "State.player.ios_economy",
          "record policy before freezing the day's selection and rewards"),
     Edge("synchronize_revival_daily", "apply_progress", "State.player.daily_quest",
@@ -571,8 +584,12 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
             st._note(f'Replay event closed: mission {mid}; no load or mutation')
             return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
-    if (current_profile().replay is not None and str(reply_id) == 'x5Unqg2d'
-            and mid and isinstance(spec, dict) and RESULT_TAG in spec):
+    roster_command = (str(reply_id) in ({'UiSC9y8R', 'zf49XKg8', '7tWdn9zH', 'x94MnujU',
+        'Pf5C8xjJ', 'V8GtMQ2q', 'xio14KrL', 'bgast6dR', 'UM7hA0Zd', 'j5JHKq6S', 'G1hQM8Dr', 'jnw49dUq'}
+        | __import__('revival_carry').ENDS)
+        and st.STATE_PERSIST and State.player is not None and State.player.mode == 'live')
+    if (current_profile().replay is not None and
+            (roster_command or (str(reply_id) == 'x5Unqg2d' and mid and isinstance(spec, dict) and RESULT_TAG in spec))):
         if not st.STATE_PERSIST or State.player is None or State.player.mode != 'live':
             raise ValueError('iOS battle settlement requires live persistence.')
         # Explicit period synchronization is its own transaction. Everything

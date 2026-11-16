@@ -1,0 +1,1097 @@
+{
+ "_provenance": "Run from source/server with MST_DIR/TEXT_DIR set:\n    python3 ../../ios-server/devtools/build_reward_overrides.py",
+ "added_challenges": [
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111501010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150101"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111501011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150101"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111501012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150101"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111501013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150101"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111501020",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150102"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111501021",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150102"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111501022",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150102"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111501023",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150102"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111501030",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:106210500:30",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150103"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111501031",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:30",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150103"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111501032",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:30",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150103"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111501033",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106210400:30",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150103"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111502010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150201"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111502011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150201"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111502012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150201"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111502013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150201"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111502020",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150202"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111502021",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150202"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111502022",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150202"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111502023",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150202"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111502030",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:106210300:30",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150203"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111502031",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:30",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150203"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111502032",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:30",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150203"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111502033",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106210900:30",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150203"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111503010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150301"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111503011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150301"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111503012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150301"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111503013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150301"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111503020",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150302"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111503021",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150302"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111503022",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150302"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111503023",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150302"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111503030",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:106210600:30",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150303"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111503031",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:30",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150303"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111503032",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:30",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150303"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111503033",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106210800:30",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150303"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111504010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:1209001469:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150401"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111504011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150401"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111504012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150401"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111504013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150401"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111504020",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "22:1500000176:1",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150402"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111504021",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150402"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111504022",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150402"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111504023",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150402"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "111504030",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:106210700:30",
+   "name": "Complete the quest",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150403"
+  },
+  {
+   "Pzn5h0Ga": "34:0",
+   "V36ygRYs": "111504031",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:30",
+   "name": "Party of 1 or more (Companion included)",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150403"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "111504032",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:30",
+   "name": "Clear without an ally being KO'd",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150403"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "111504033",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106211000:30",
+   "name": "No continues",
+   "page": "Chamber_of_Supercite.wiki",
+   "qo3PECw6": "11150403"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "328201010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "50:1:40",
+   "name": "Complete the quest",
+   "page": "Esper_of_Destruction.wiki",
+   "qo3PECw6": "32820101"
+  },
+  {
+   "Pzn5h0Ga": "1",
+   "V36ygRYs": "328201011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:20",
+   "name": "No items",
+   "page": "Esper_of_Destruction.wiki",
+   "qo3PECw6": "32820101"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "328201012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:20",
+   "name": "No continues",
+   "page": "Esper_of_Destruction.wiki",
+   "qo3PECw6": "32820101"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "328201013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:20",
+   "name": "Clear without an ally being KO'd",
+   "page": "Esper_of_Destruction.wiki",
+   "qo3PECw6": "32820101"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "104801010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "50:1:150",
+   "name": "Complete the quest",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480101"
+  },
+  {
+   "Pzn5h0Ga": "1",
+   "V36ygRYs": "104801011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "23:110003:50",
+   "name": "No items",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480101"
+  },
+  {
+   "Pzn5h0Ga": "75:1:10",
+   "V36ygRYs": "104801012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "20:1209001336:5000",
+   "name": "Defeat the cyan malboro's party within 10 turns",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480101"
+  },
+  {
+   "Pzn5h0Ga": "16",
+   "V36ygRYs": "104801013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106213100:1",
+   "name": "Use a limit burst",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480101"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "104801030",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "50:1:150",
+   "name": "Complete the quest",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480103"
+  },
+  {
+   "Pzn5h0Ga": "1",
+   "V36ygRYs": "104801031",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "23:110003:50",
+   "name": "No items",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480103"
+  },
+  {
+   "Pzn5h0Ga": "75:1:10",
+   "V36ygRYs": "104801032",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "20:1209001336:7000",
+   "name": "Defeat the malboro matriarch's party within 10 turns",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480103"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "104801033",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "20:106213100:1",
+   "name": "Clear without an ally being KO'd",
+   "page": "Sprouts_of_Devouring.wiki",
+   "qo3PECw6": "10480103"
+  },
+  {
+   "Pzn5h0Ga": "68",
+   "V36ygRYs": "97201010",
+   "Z0EN6jSh": "0",
+   "dX6cor8j": "20:101000200:1",
+   "name": "Complete the quest",
+   "page": "The_Fighting_Pits.wiki",
+   "qo3PECw6": "9720101"
+  },
+  {
+   "Pzn5h0Ga": "1",
+   "V36ygRYs": "97201011",
+   "Z0EN6jSh": "1",
+   "dX6cor8j": "50:1:10",
+   "name": "No items",
+   "page": "The_Fighting_Pits.wiki",
+   "qo3PECw6": "9720101"
+  },
+  {
+   "Pzn5h0Ga": "33",
+   "V36ygRYs": "97201012",
+   "Z0EN6jSh": "2",
+   "dX6cor8j": "50:1:10",
+   "name": "Clear without an ally being KO'd",
+   "page": "The_Fighting_Pits.wiki",
+   "qo3PECw6": "9720101"
+  },
+  {
+   "Pzn5h0Ga": "38",
+   "V36ygRYs": "97201013",
+   "Z0EN6jSh": "3",
+   "dX6cor8j": "50:1:10",
+   "name": "No continues",
+   "page": "The_Fighting_Pits.wiki",
+   "qo3PECw6": "9720101"
+  }
+ ],
+ "missions": {
+  "10110101": {
+   "area": "1011",
+   "challenges": {
+    "101101012": "20:106305500:10000"
+   },
+   "event": "Desert Despair",
+   "first_run_only": false
+  },
+  "10120101": {
+   "area": "1012",
+   "challenges": {
+    "101201012": "20:106305700:10000"
+   },
+   "event": "The Crimson Gear",
+   "first_run_only": false
+  },
+  "10130101": {
+   "area": "1013",
+   "challenges": {
+    "101301012": "20:1209000880:10000"
+   },
+   "event": "Strike of the URGA Mstitel",
+   "first_run_only": false
+  },
+  "10140101": {
+   "area": "1014",
+   "challenges": {
+    "101401012": "20:106304900:10000"
+   },
+   "event": "Tower of Lezard Valeth",
+   "first_run_only": false
+  },
+  "10150101": {
+   "area": "1015",
+   "challenges": {
+    "101501011": "20:217000600:1",
+    "101501012": "20:106303200:10000"
+   },
+   "event": "The Formidable Engels",
+   "first_run_only": false
+  },
+  "10160101": {
+   "area": "1016",
+   "challenges": {
+    "101601012": "20:106304100:10000"
+   },
+   "event": "Defeat Jie Revorse - GOD",
+   "first_run_only": true
+  },
+  "10170101": {
+   "area": "1017",
+   "challenges": {
+    "101701012": "20:1209000901:10000"
+   },
+   "event": "Stopping Marchenko",
+   "first_run_only": false
+  },
+  "10200109": {
+   "area": "1020",
+   "challenges": {
+    "102001090": "10:900005301:1",
+    "102001091": "20:290060200:5",
+    "102001092": "20:290050500:5"
+   },
+   "event": "FF EXVIUS Universe Campaign Daily Quest",
+   "first_run_only": false
+  },
+  "10480101": {
+   "area": "1048",
+   "challenges": {},
+   "event": "Sprouts of Devouring",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "10480103": {
+   "area": "1048",
+   "challenges": {},
+   "event": "Sprouts of Devouring",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "10590101": {
+   "area": "1059",
+   "challenges": {
+    "105901016": "50:1:100",
+    "105901017": "50:1:100"
+   },
+   "event": "Brawler Unbound",
+   "first_run_only": false
+  },
+  "10620102": {
+   "area": "1062",
+   "challenges": {
+    "106201026": "50:1:50",
+    "106201027": "50:1:50"
+   },
+   "event": "Gluttonous Consumer of the Cosmos",
+   "first_run_only": false
+  },
+  "10620104": {
+   "area": "1062",
+   "challenges": {
+    "106201046": "50:1:50",
+    "106201047": "50:1:50"
+   },
+   "event": "Gluttonous Consumer of the Cosmos",
+   "first_run_only": false
+  },
+  "10620106": {
+   "area": "1062",
+   "challenges": {
+    "106201066": "50:1:50",
+    "106201067": "50:1:50"
+   },
+   "event": "Gluttonous Consumer of the Cosmos",
+   "first_run_only": false
+  },
+  "10620108": {
+   "area": "1062",
+   "challenges": {
+    "106201086": "50:1:50",
+    "106201087": "50:1:50"
+   },
+   "event": "Gluttonous Consumer of the Cosmos",
+   "first_run_only": false
+  },
+  "10630101": {
+   "area": "1063",
+   "challenges": {
+    "106301016": "50:1:100",
+    "106301017": "50:1:100"
+   },
+   "event": "Celestial Nova",
+   "first_run_only": false
+  },
+  "30050105": {
+   "area": "3005",
+   "challenges": {},
+   "event": "Iifa Tree",
+   "first_clear": "20:106308400:1000:100",
+   "first_run_only": false
+  },
+  "30690102": {
+   "area": "3069",
+   "challenges": {
+    "306901022": "50:1:30"
+   },
+   "event": "Bresha Ruins -005 AF-",
+   "first_run_only": false
+  },
+  "32150151": {
+   "area": "3215",
+   "challenges": {
+    "321501512": "10:900001201:1"
+   },
+   "event": "A Girl and Her Grandfather",
+   "first_run_only": false
+  },
+  "32160101": {
+   "area": "3216",
+   "challenges": {
+    "321601012": "23:80:1",
+    "321601013": "23:50:1"
+   },
+   "event": "VS Ultros & Typhon - EXT",
+   "first_run_only": false
+  },
+  "32820103": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820202": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820203": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820204": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820207": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820306": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820403": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "32820504": {
+   "area": "3282",
+   "challenges": {},
+   "event": "Esper of Destruction",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "42000102": {
+   "area": "4200",
+   "challenges": {
+    "420001023": "23:110180:1"
+   },
+   "event": "A World Ripped Apart",
+   "first_run_only": false
+  },
+  "60400101": {
+   "area": "6040",
+   "challenges": {
+    "604001013": "23:110180:2"
+   },
+   "event": "Monster Mash",
+   "first_run_only": false
+  },
+  "60500101": {
+   "area": "6050",
+   "challenges": {
+    "605001013": "23:110180:2"
+   },
+   "event": "Operation Mi'ihen",
+   "first_run_only": false
+  },
+  "60810104": {
+   "area": "6081",
+   "challenges": {
+    "608101042": "10:905000104:5"
+   },
+   "event": "The Exostars",
+   "first_run_only": false
+  },
+  "61010103": {
+   "area": "6101",
+   "challenges": {
+    "610101033": "20:106211340:10"
+   },
+   "event": "The Kingdom's Mightiest Warrior",
+   "first_run_only": false
+  },
+  "61700101": {
+   "area": "6170",
+   "challenges": {},
+   "event": "Forbidden Land of Slumbering Power",
+   "first_clear": "50:0:200:100",
+   "first_run_only": false
+  },
+  "61700102": {
+   "area": "6170",
+   "challenges": {},
+   "event": "Forbidden Land of Slumbering Power",
+   "first_clear": "50:0:200:100",
+   "first_run_only": false
+  },
+  "61700103": {
+   "area": "6170",
+   "challenges": {},
+   "event": "Forbidden Land of Slumbering Power",
+   "first_clear": "50:0:200:100",
+   "first_run_only": false
+  },
+  "62720101": {
+   "area": "6272",
+   "challenges": {
+    "627201011": "23:110:5",
+    "627201013": "20:106211340:15"
+   },
+   "event": "Beasts Hemmed in Stone",
+   "first_run_only": false
+  },
+  "7040103": {
+   "area": "704",
+   "challenges": {},
+   "event": "The Hanging Edge",
+   "first_clear": "20:106300200:300:100,50:0:100:100",
+   "first_run_only": true
+  },
+  "7060103": {
+   "area": "706",
+   "challenges": {},
+   "event": "Akademeia",
+   "first_clear": "50:0:500:100",
+   "first_run_only": true
+  },
+  "7140102": {
+   "area": "714",
+   "challenges": {},
+   "event": "Monster Carnival",
+   "first_clear": "20:106300700:200:100",
+   "first_run_only": true
+  },
+  "7430101": {
+   "area": "743",
+   "challenges": {
+    "74301010": "10:401000106:1",
+    "74301011": "20:106301800:1",
+    "74301012": "20:106301800:1",
+    "74301013": "20:106301800:1"
+   },
+   "event": "Dangerous Woman Tour",
+   "first_clear": "",
+   "first_run_only": true
+  },
+  "7430102": {
+   "area": "743",
+   "challenges": {
+    "74301020": "21:316000900:1",
+    "74301021": "20:106301800:1",
+    "74301022": "20:106301800:1",
+    "74301023": "20:106301800:1"
+   },
+   "event": "Dangerous Woman Tour",
+   "first_clear": "",
+   "first_run_only": true
+  },
+  "7430103": {
+   "area": "743",
+   "challenges": {
+    "74301030": "21:403043200:1",
+    "74301031": "20:106301800:1",
+    "74301032": "20:106301800:1",
+    "74301033": "20:106301800:1"
+   },
+   "event": "Dangerous Woman Tour",
+   "first_clear": "",
+   "first_run_only": true
+  },
+  "7430104": {
+   "area": "743",
+   "challenges": {
+    "74301040": "21:405003400:1",
+    "74301041": "20:106301800:1",
+    "74301042": "20:106301800:1",
+    "74301043": "20:106301800:1"
+   },
+   "event": "Dangerous Woman Tour",
+   "first_clear": "50:0:100:100",
+   "first_run_only": true
+  },
+  "7630104": {
+   "area": "763",
+   "challenges": {
+    "76301040": "50:1:100",
+    "76301041": "50:1:70",
+    "76301042": "10:904000105:1",
+    "76301043": "20:106213100:3"
+   },
+   "event": "Dark Castle",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "7630105": {
+   "area": "763",
+   "challenges": {
+    "76301050": "50:1:100",
+    "76301051": "50:1:100",
+    "76301052": "20:106213100:1",
+    "76301053": "20:106213100:1"
+   },
+   "event": "Dark Castle",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "7630106": {
+   "area": "763",
+   "challenges": {
+    "76301060": "50:1:200",
+    "76301061": "50:1:100",
+    "76301062": "20:106213100:1",
+    "76301063": "20:106213100:1"
+   },
+   "event": "Dark Castle",
+   "first_clear": "50:0:100:100",
+   "first_run_only": false
+  },
+  "7890101": {
+   "area": "789",
+   "challenges": {
+    "78901010": "20:106304400:100"
+   },
+   "event": "SeeD Field Exam",
+   "first_run_only": false
+  },
+  "7890102": {
+   "area": "789",
+   "challenges": {
+    "78901020": "20:106304400:100"
+   },
+   "event": "SeeD Field Exam",
+   "first_run_only": false
+  },
+  "7890103": {
+   "area": "789",
+   "challenges": {
+    "78901030": "20:106304400:500"
+   },
+   "event": "SeeD Field Exam",
+   "first_run_only": false
+  },
+  "7890104": {
+   "area": "789",
+   "challenges": {
+    "78901040": "20:106304400:100"
+   },
+   "event": "SeeD Field Exam",
+   "first_clear": "50:0:500:100",
+   "first_run_only": false
+  },
+  "7890105": {
+   "area": "789",
+   "challenges": {
+    "78901050": "20:106304400:100"
+   },
+   "event": "SeeD Field Exam",
+   "first_clear": "20:106304400:100:100",
+   "first_run_only": false
+  },
+  "7940104": {
+   "area": "794",
+   "challenges": {
+    "79401040": "20:101003100:1"
+   },
+   "event": "Shrine of Ru'Avitau",
+   "first_run_only": false
+  },
+  "8130101": {
+   "area": "813",
+   "challenges": {
+    "81301010": "10:401003606:1"
+   },
+   "event": "Tomb of the Silversmith",
+   "first_run_only": false
+  },
+  "8130102": {
+   "area": "813",
+   "challenges": {
+    "81301020": "20:1209000865:200"
+   },
+   "event": "Tomb of the Silversmith",
+   "first_run_only": false
+  },
+  "8130103": {
+   "area": "813",
+   "challenges": {
+    "81301030": "20:1209000865:300"
+   },
+   "event": "Tomb of the Silversmith",
+   "first_run_only": false
+  },
+  "8140101": {
+   "area": "814",
+   "challenges": {
+    "81401011": "20:1209000865:10000"
+   },
+   "event": "God of Chaos",
+   "first_clear": "10:904000105:1:100",
+   "first_run_only": false
+  },
+  "9000406": {
+   "area": "906",
+   "challenges": {},
+   "event": "Dread Frost Arrives",
+   "first_clear": "22:1500000005:1:100",
+   "first_run_only": false
+  },
+  "9860101": {
+   "area": "986",
+   "challenges": {
+    "98601014": "21:1100000314:1",
+    "98601015": "21:1100000313:1"
+   },
+   "event": "Mean Ghouls",
+   "first_run_only": false
+  },
+  "9920102": {
+   "area": "992",
+   "challenges": {
+    "99201025": "20:201000600:3"
+   },
+   "event": "Save Your Elf",
+   "first_run_only": false
+  },
+  "9930101": {
+   "area": "993",
+   "challenges": {
+    "99301014": "21:1100000324:1",
+    "99301015": "21:1100000323:1"
+   },
+   "event": "Sleigh the Grinch",
+   "first_run_only": false
+  }
+ }
+}

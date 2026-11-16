@@ -20,6 +20,9 @@ def begin_attempt(player, mid, captures=None, map_quest_monsters=None):
             return False  # repeated load while this mission is active
         state['attempt'] = {'mid': str(mid), 'sequence': current.get('sequence', 0) + 1,
                             'status': 'pending'}
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            state['attempt']['carry_at_load'] = copy.deepcopy(player.data.get('inventory', {}).get('carry_items', []))
         if captures:
             state['attempt']['captures'] = captures
         if map_quest_monsters is not None:

@@ -58,6 +58,18 @@ def normalize_master(raw, key, *, mode='cbc'):
     return ('\n'.join(line for line, _, _ in master_rows(raw, key, mode=mode)) + '\n').encode('ascii')
 
 
+def append_master(raw, key, additions, *, mode='cbc'):
+    """Append records using the source table's registered cipher and padding shape."""
+    rows = master_rows(raw, key, mode=mode)
+    lines = [line for line, _, _ in rows]
+    double = rows[0][2]
+    for row in additions:
+        plain = json.dumps(row, ensure_ascii=False, separators=(',', ':')).encode()
+        lines.append(cbc_encrypt(key16(key), plain, double_pad=double) if mode == 'cbc' else
+                     base64.b64encode(_ecb(key, _pad(plain, 2 if double else 1), True)).decode())
+    return ('\n'.join(lines) + '\n').encode('ascii')
+
+
 def _ecb(key, data, encrypt=False):
     cipher = Cipher(algorithms.AES(key16(key)), modes.ECB())
     op = cipher.encryptor() if encrypt else cipher.decryptor()

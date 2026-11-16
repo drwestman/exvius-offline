@@ -11,6 +11,11 @@ opt-in engine delivery, native gameplay hosting and independent hello-only conne
 Physical iPhone gameplay acceptance remains pending. Reference commit:
 `47a13c084f42cf1b83b53173d0c21065c78fc2de`.
 
+Selective later capabilities carry their own `d6e8858` provenance under the
+[update implementation ledger](../../../plans/IOS_REVIVAL_UPDATE_IMPLEMENTATION.md).
+The ledger identifies unfinished upstream capabilities; this pin is not a
+full-parity claim.
+
 ## Requirements
 
 ### Requirement: SelectImmutableEngineProfile
@@ -1924,3 +1929,135 @@ Existing banner-specific HTML and legacy resource routes SHALL retain behavior.
 - When the page is served
 - Then it lists eligible replay summons with local rates links
 - And future summons and unescaped catalogue text are absent.
+
+### Requirement: UpgradeRevivalCampaignExplicitly
+
+The update planner SHALL inspect an initialized isolated iOS save and decoded
+masters without loading the engine or writing files. Application SHALL require
+the exact planned save digest, take the private instance lock, retain an exact
+backup, and replace the save atomically. It SHALL preserve identity and the replay
+anchor, repair confirmed completed switches, invalid forms and excessive carry
+counts, and report unknown historical reward payment without granting backpay.
+The update's source revision SHALL remain distinct from a full-parity claim.
+
+- **Implementation**: `build::source/ios_server/campaign_upgrade.py`, `plan::source/ios_server/campaign_upgrade.py`, `apply::source/ios_server/campaign_upgrade.py`
+- **Implementation**: `document::source/server/revival_update.py`, `settings::source/server/revival_update.py`
+
+#### Scenario: Refuse an intervening campaign change
+
+- Given a read-only upgrade preview and a subsequently changed save
+- When application supplies the old digest
+- Then no campaign replacement or backup occurs.
+
+#### Scenario: Preserve a save on publication failure
+
+- Given a matching digest and a confirmed repair
+- When publishing the candidate fails
+- Then the original campaign and its exact private backup remain available.
+
+### Requirement: SeparateUpdatedRosterCommands
+
+iOS conversion SHALL resolve prism and fragment eligibility independently using
+the native mode and awakened-NV master flag. It SHALL validate the complete batch
+before consuming units and grant only that mode's reward. Roster and map commands
+SHALL publish their candidate only after a successful save. Bulk fusion SHALL
+process every selected base atomically. Awakening refusals SHALL use request-local
+native message state without charging resources or publishing a success result.
+
+- **Implementation**: `ConversionRules::source/server/revival_unit_rules.py`, `summon_unit::source/server/revival_unit_rules.py`
+- **Implementation**: `convert::source/server/revival_unit_commands.py`, `mix::source/server/revival_unit_commands.py`, `awaken::source/server/revival_unit_commands.py`
+- **Implementation**: `refuse::source/server/revival_messages.py`, `take::source/server/revival_messages.py`
+
+#### Scenario: Convert to prism without fragments
+
+- Given a unit eligible for both conversion menus
+- When an encrypted prism conversion succeeds
+- Then only its prism is saved and returned
+- And repeating the consumed-unit request grants nothing.
+
+#### Scenario: Roll back a failed conversion save
+
+- Given a valid conversion
+- When persistence fails
+- Then both the roster and inventory retain their prior state.
+
+### Requirement: ProjectUpdatedReplayAndNativeCatalogues
+
+The recorded update policy SHALL select full historical banner/event runs,
+corrected Global unit dates, supported late banners and held-ticket offers without
+writing state. Unconfirmed late banners SHALL stay excluded. One pure five-star
+Select catalogue SHALL govern purchases and native preparation. Preparation SHALL
+preserve each registered table's CBC/ECB cipher, padding shape and original lines
+when adding records, and bind changed bytes through the existing generation.
+
+- **Implementation**: `plan::source/server/revival_summons.py`, `event_runs::source/server/revival_history.py`, `plan::source/server/revival_events.py`
+- **Implementation**: `extra_rows::source/server/revival_select.py`, `prepare::source/ios_server/update_tables.py`, `append_master::source/ios_server/table_codec.py`
+
+#### Scenario: Keep a long-running banner across replay weeks
+
+- Given an updated campaign and a banner spanning two historical slices
+- When either week's catalogue is queried
+- Then the banner remains available without changing the campaign.
+
+### Requirement: RecordNativeBootstrapAndCarryFacts
+
+Explicit login/home commands SHALL record bounded hashed per-device function-table
+receipts. Early version projection SHALL require the current campaign identity
+and a receipt for the exact prepared version, without changing the save. Carried
+items SHALL be excluded from the projected bag, bounded by total ownership, and
+consumed once against their loaded attempt. Empty native reports SHALL remain
+ambiguous and SHALL NOT consume items.
+
+- **Implementation**: `step::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`
+- **Implementation**: `fit::source/server/revival_carry.py`, `settle::source/server/revival_carry.py`, `report::source/server/revival_quests.py`
+
+#### Scenario: Match the returning phone's table generation
+
+- Given a phone that reached Home after downloading the function table
+- When its next cold launch requests early versions
+- Then the recorded function-table version is advertised
+- And a later prepared generation invalidates that receipt until another login.
+
+#### Scenario: Retry after refilling the item set
+
+- Given a battle whose carry consumption was settled and a subsequently refilled set
+- When the old result is repeated
+- Then no additional stock is consumed.
+
+### Requirement: SettleRecordedUpdateQuestRewards
+
+Updated battle loads SHALL record collection RNG and first-clear reward inputs
+with their attempt. Successful completed attempts with normal reward receipts
+SHALL grant bounded collection rewards, per-entry first-clear rewards, quest Gil
+and LB EXP once. Existing Riches Gil and mission bonus payments SHALL not be
+duplicated. Unsupported first-clear entries SHALL remain unpaid. Existing
+historical clears SHALL form an unknown baseline. Forward story joins and Guide
+history SHALL be command-side; Guide projections SHALL not create a register.
+
+- **Implementation**: `prepare::source/server/revival_battle_updates.py`, `settle::source/server/revival_battle_updates.py`
+- **Implementation**: `plan::source/server/revival_lb.py`, `apply::source/server/revival_lb.py`
+- **Implementation**: `register_holdings::source/server/revival_guide.py`, `rows::source/server/revival_guide.py`, `record_battle::source/server/revival_guide.py`
+
+#### Scenario: Bound collection payment to the recorded roll
+
+- Given a recorded three-item collection reward
+- When a successful result reports a larger quantity
+- Then at most three items are granted
+- And a repeated settlement grants nothing.
+
+### Requirement: ComposeSupplementalIosPacks
+
+The default iOS manifest SHALL preserve destination packs and application metadata
+and add the pinned summon-art pack. An explicitly supplied manifest SHALL remain
+a complete override. Installation SHALL retain the existing ZIP containment and
+collision checks and permit only the documented static summon-art directories.
+Pack installation SHALL not claim completed native image projection integration.
+
+- **Implementation**: `read::source/ios_server/pack_manifest.py`, `destination::source/ios_server/pack_manifest.py`
+
+#### Scenario: Preserve the destination release
+
+- Given the destination release manifest
+- When the iOS default manifest is queried
+- Then all destination pack definitions and application metadata remain intact
+- And the source manifest file is unchanged.

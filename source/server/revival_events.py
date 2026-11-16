@@ -151,6 +151,8 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
     win = None if current.finished else current.window
     earliest = (date.fromisoformat(win['from']) - timedelta(days=14 if win['index'] == 0 else 0)) if win else None
     end = date.fromisoformat(win['to']) if win else None
+    from revival_update import settings as update_settings
+    update = update_settings(data)
     kept, extra, permanent, ranked = [], [], [], []
     for row in rows:
         if row.get('windows'):
@@ -172,6 +174,9 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
                   if (holiday == themed[run] and str(run.year) in years if run in themed else
                       any(timedelta(days=-3) <= run - day <= timedelta(days=13) for day in dates) or
                       (win and earliest <= run < end))]
+        if update and update['full_runs'] and win:
+            from revival_history import event_runs
+            opened = [first for first, last in event_runs(row) if first < end and last >= earliest]
         if opened:
             run = max(opened).isoformat()
             kept.append(row if run == row.get('release') else dict(row, release=run, first_release=row.get('release')))
@@ -202,6 +207,23 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
     dated = _one_per_look(kept, lambda group: min(group, key=lambda r: int(r['area'])), art)
     holiday_areas = set().union(*HOLIDAY_EVENTS.values())
     dated.sort(key=lambda row: (str(row['area']) in holiday_areas, str(row.get('release') or ''), int(row['area'])), reverse=True)
+    if update:
+        from revival_update import document
+        clones = {mid for row in document('clone_quests.json')['areas'].values() for mid in row.get('hidden', {})}
+        hidden = {'711'}  # Aquapolis: a duplicate shop exploration, not a Global event.
+        filtered = []
+        for row in dated + ranked + permanent:
+            if str(row['area']) in hidden:
+                continue
+            entry = dict(row)
+            dates = document('event_quest_dates.json')['missions']
+            cutoff = current.window['to'] if not current.finished else '9999-12-31'
+            entry['missions'] = [m for m in row['missions'] if str(m) not in clones and dates.get(str(m), '') < cutoff]
+            entry['held_back'] = list(row.get('held_back') or []) + [m for m in row['missions'] if m not in entry['missions']]
+            if entry['missions']:
+                entry['first_mission'] = entry['missions'][0]
+                filtered.append(entry)
+        dated, ranked, permanent = filtered, [], []
     known = {str(row['area']) for row in rows}
     if not supplied:
         known.update(str(row['area']) for row in history()['added'])

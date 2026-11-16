@@ -85,7 +85,7 @@ def english_versions(raw, *, tables=TEXT_TABLES):
     return result
 
 
-def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None):
+def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None, update=None):
     """Sources are {table name: (native source version, raw bytes)}."""
     if type(generation) is not int or generation < 1:
         raise ValueError('Native table version generation is out of range.')
@@ -153,6 +153,9 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floo
             changes[table.name] = 0
     if not EARLY_PACKS | {'GACHA_RATE_URL'} <= found:
         raise ValueError('Required tutorial resources or Drop Rates URL are missing.')
+    if update:
+        from ios_server.update_tables import prepare
+        prepare(outputs, changes, tables, select_limited=update['settings']['select_limited'])
     validate(outputs, versions, tables=tables)
     return outputs, versions, changes
 

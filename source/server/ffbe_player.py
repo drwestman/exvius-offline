@@ -738,6 +738,10 @@ def serve_unit_mix(spec, plaintext: str | None):
       * `1dT7ha9H` (success type) = 1 -- no reader of `getSuccessType` could be found in the unit path, so
         the value is a placeholder rather than a recovered enum.
     """
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import mix
+        return mix(spec, plaintext)
     req = _request_json(plaintext)
     rows = req.get(MIX_GROUP) if req else None
     if not isinstance(rows, list) or not rows:

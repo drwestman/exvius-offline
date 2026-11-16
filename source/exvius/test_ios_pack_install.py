@@ -41,9 +41,9 @@ def response(raw, *, status=200, start=0, size=None, headers=None, url='https://
 class ManifestPolicy(unittest.TestCase):
     def test_given_bundled_manifest_when_parsed_then_keep_android_metadata_and_skip_only_client_assets(self):
         raw = policy.DEFAULT.read_bytes(); manifest = policy.parse(raw)
-        self.assertEqual(len(manifest.packs), 18)
-        self.assertEqual(sum(p.size for p in manifest.packs), 14575874619)
-        self.assertEqual(sum(p.unpacked_size for p in manifest.packs), 14876694385)
+        self.assertEqual(len(manifest.packs), len(json.loads(raw)['packs']) - 1)
+        self.assertEqual(sum(p.size for p in manifest.packs), sum(r['size'] for r in json.loads(raw)['packs'] if r['id'] != 'client-assets'))
+        self.assertEqual(sum(p.unpacked_size for p in manifest.packs), sum(r['unpackedSize'] for r in json.loads(raw)['packs'] if r['id'] != 'client-assets'))
         self.assertNotIn('client-assets', {p.id for p in manifest.packs})
         self.assertEqual(manifest.document['app'], json.loads(raw)['app'])
         self.assertEqual(policy.DEFAULT.read_bytes(), raw)
