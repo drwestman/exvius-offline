@@ -1,14 +1,23 @@
 """Coordinate native sound versions/sizes with immutable, file-backed artifacts."""
 from dataclasses import dataclass
+import hashlib
 import os
 from pathlib import Path
 import re
+from typing import Protocol
 
 from ios_server import native_tables as rules, sound_inputs, sound_snapshots
 from ios_server.runtime import private_path
 from ios_server.table_codec import master_rows, patch_master
 
 PIPELINE = 1
+HEAD_CHUNK = 256 * 1024
+
+
+class SoundSource(Protocol):
+    """What table_delivery needs from prepared sounds (queries only)."""
+    def read(self, relative): ...
+    def verified_size(self, relative): ...
 
 
 def owns(relative):
@@ -128,21 +137,49 @@ class Delivery:
     snapshot: sound_snapshots.Sounds
     files: dict
 
-    def read(self, relative):
-        """Read one pinned bank; recheck containment and integrity before any reply."""
-        source = self.files.get(relative)
-        if source is None:
-            return None
-        entry = self.snapshot.manifest['banks'][source]
+    def _open(self, entry):
         path = private_path(self.root, self.snapshot.directory.relative_to(self.root) / entry['path'])
         if not path.resolve().is_relative_to(self.snapshot.directory.resolve()):
             raise ValueError('Sound bank escapes its generation')
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-        with os.fdopen(descriptor, 'rb') as stream:
-            raw = stream.read(entry['size'] + 1)
-        if len(raw) != entry['size'] or sound_inputs.digest(raw) != entry['sha256']:
+        return os.fdopen(descriptor, 'rb')
+
+    def _entry(self, relative):
+        source = self.files.get(relative)
+        return None if source is None else self.snapshot.manifest['banks'][source]
+
+    @staticmethod
+    def _check(entry, size, sha256):
+        """Single integrity rule shared by GET and HEAD."""
+        if size != entry['size'] or sha256 != entry['sha256']:
             raise ValueError('Prepared sound checksum mismatch')
+
+    def read(self, relative):
+        """Read one pinned bank; recheck containment and integrity before any reply."""
+        entry = self._entry(relative)
+        if entry is None:
+            return None
+        with self._open(entry) as stream:
+            raw = stream.read(entry['size'] + 1)
+        self._check(entry, len(raw), sound_inputs.digest(raw))
         return raw
+
+    def verified_size(self, relative):
+        """Verify bytes in bounded chunks without retaining a body or caching integrity."""
+        entry = self._entry(relative)
+        if entry is None:
+            return None
+        digest, size = hashlib.sha256(), 0
+        with self._open(entry) as stream:
+            # Like GET, read at most the expected length plus one to detect growth.
+            # Every request rehashes: same-size edits must never hit a stat cache.
+            while size <= entry['size']:
+                block = stream.read(min(HEAD_CHUNK, entry['size'] + 1 - size))
+                if not block:
+                    break
+                digest.update(block); size += len(block)
+        self._check(entry, size, digest.hexdigest())
+        return size
 
 
 def load(config, manifest, outputs):

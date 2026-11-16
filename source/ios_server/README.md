@@ -681,6 +681,8 @@ reports expose `sound_delivery_ready: true`. In an explicitly prepared engine,
 exact iOS sound GET/HEAD paths read one pinned bank at a time and check its hash
 and length before responding. Old or unknown iOS sound versions return 404 without
 stock fallback. Damaged or missing bound files return an empty 500 response.
+HEAD hashes the pinned file in bounded chunks without retaining a bank-sized
+response body; it still rechecks every byte on each request, including same-size edits.
 Requests do not convert, refresh inputs, download, repair or write caches.
 Sound preparation alone does not activate delivery.
 

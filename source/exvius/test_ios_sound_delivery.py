@@ -1,9 +1,12 @@
 """BDD for atomic sound/table coordination and exact file-backed native delivery."""
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import io
 import json
 import os
 from pathlib import Path
+import tempfile
+import tracemalloc
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -27,6 +30,71 @@ def handler(method='GET'):
     result.send_header = lambda key, value: result.headers.update({key: value})
     result.end_headers = lambda: None
     return result
+
+
+class SoundHeadVerification(unittest.TestCase):
+    """Delivery treats a bound bank as opaque bytes; preparation validates audio."""
+    relative = 'common_lang/sound/bgm/ios/Ver100001_fixture.acb'
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name).resolve(); self.path = self.root / 'sounds/banks/fixture.acb'
+        self.path.parent.mkdir(parents=True)
+        block = bytes(range(256)) * 4096
+        digest = hashlib.sha256()
+        with self.path.open('wb') as stream:
+            for _ in range(8):
+                stream.write(block); digest.update(block)
+            stream.write(b'partial final block'); digest.update(b'partial final block')
+        self.size = self.path.stat().st_size
+        self.digest = digest.hexdigest()
+        self.pack = self.bind(self.size, self.digest)
+
+    def bind(self, size, sha256):
+        sounds = sound_snapshots.Sounds(self.root / 'sounds', {'banks': {self.relative: {
+            'path': 'banks/fixture.acb', 'size': size, 'sha256': sha256}}})
+        delivery = native_sounds.Delivery(self.root, sounds, {self.relative: self.relative})
+        return SimpleNamespace(manifest={'version': 5}, sounds=delivery)
+
+    def head(self, pack=None):
+        response = handler('HEAD'); self.assertTrue(serve(response, pack or self.pack, self.relative))
+        return response.status, response.headers['Content-Length'], response.wfile.getvalue()
+
+    def test_given_large_pinned_bank_when_head_then_verify_with_bounded_memory(self):
+        tracemalloc.start()
+        try:
+            result = self.head()
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual(result, (200, str(self.size), b''))
+        self.assertLess(peak, 1024 * 1024, 'HEAD retained a whole sound bank')
+
+    def test_given_concurrent_heads_when_verified_then_each_request_succeeds(self):
+        with ThreadPoolExecutor(max_workers=4) as workers:
+            results = list(workers.map(lambda _: self.head(), range(8)))
+        self.assertEqual(results, [(200, str(self.size), b'')] * 8)
+
+    def test_given_same_size_edit_with_restored_mtime_when_head_then_reject_it(self):
+        self.assertEqual(self.head()[0], 200)
+        original = self.path.stat()
+        with self.path.open('r+b') as stream:
+            stream.seek(self.size - 1); stream.write(b'X')
+        os.utime(self.path, ns=(original.st_atime_ns, original.st_mtime_ns))
+        self.assertEqual(self.head(), (500, '0', b''))
+
+    def test_given_grown_or_truncated_bank_when_head_then_reject_it(self):
+        with self.path.open('ab') as stream:
+            stream.write(b'x')
+        self.assertEqual(self.head(), (500, '0', b''))
+        with self.path.open('r+b') as stream:
+            stream.truncate(self.size - 1)
+        self.assertEqual(self.head(), (500, '0', b''))
+
+    def test_given_unbound_path_when_head_then_not_found(self):
+        response = handler('HEAD')
+        self.assertTrue(serve(response, self.pack, 'common_lang/sound/bgm/ios/Ver1_other.acb'))
+        self.assertEqual((response.status, response.headers['Content-Length']), (404, '0'))
 
 
 class SoundTableDelivery(unittest.TestCase):
@@ -202,8 +270,18 @@ class SoundTableDelivery(unittest.TestCase):
             for method in ('GET', 'HEAD'):
                 response = handler(method); self.assertTrue(serve(response, pack, entry['path']))
                 self.assertEqual(response.status, 500); self.assertEqual(response.wfile.getvalue(), b'')
-        path.unlink(); outside = self.config.root / 'other.acb'; outside.write_bytes(raw); path.symlink_to(outside)
-        response = handler(); self.assertTrue(serve(response, pack, entry['path'])); self.assertEqual(response.status, 500)
+        path.unlink()
+        for outside in (self.config.root / 'other.acb', self.config.data / 'other.acb'):
+            outside.write_bytes(raw); path.symlink_to(outside)
+            for method in ('GET', 'HEAD'):
+                response = handler(method); self.assertTrue(serve(response, pack, entry['path']))
+                self.assertEqual((response.status, response.headers['Content-Length'], response.wfile.getvalue()),
+                                 (500, '0', b''))
+            path.unlink()
+        for method in ('GET', 'HEAD'):
+            response = handler(method); self.assertTrue(serve(response, pack, entry['path']))
+            self.assertEqual((response.status, response.headers['Content-Length'], response.wfile.getvalue()),
+                             (500, '0', b''))
         with self.assertRaises(ValueError): prep.load_prepared(self.config)
 
     def test_given_rehashed_wrong_resource_tables_when_loaded_then_refuse_disagreement(self):
