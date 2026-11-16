@@ -10,6 +10,12 @@ requests SHALL continue to reach their established refusal handlers. Refusal
 messages SHALL be request-local native envelope values. Unchanged original
 capabilities SHALL retain their original pin and contract.
 
+Pinned iOS event clone exclusions SHALL apply even without a recorded update
+policy. The pure event projection SHALL use per-area mission identities, preserve
+canonical order and saved progress, and leave existing pending attempts resumable.
+This correction SHALL NOT enable other optional update policies or alter legacy
+event catalogues. See SelectReplayVortexEvents in the iOS-server specification.
+
 The detailed upgrade, conversion, replay, carry, bootstrap, collection and native
 table requirements are defined in the iOS-server specification. Its implementation
 ledger identifies pending upstream capabilities; these selective ports SHALL NOT
@@ -20,6 +26,7 @@ be represented as complete parity with d6e8858.
 - **Implementation**: `begin_attempt::source/server/exvius_repeat.py`, `serve_unit_mix::source/server/ffbe_player.py`, `_handle::source/server/capture_server.py`
 - **Implementation**: `_unit_rows::source/server/player_state.py`, `item_rows::source/server/player_state.py`, `groups::source/server/player_state.py`, `expand_pool::source/server/player_state.py`
 - **Implementation**: `plan::source/server/revival_summons.py`, `plan::source/server/revival_events.py`
+- **Implementation**: `_without_clones::source/server/revival_events.py`
 
 ### Scenario: Preserve the save on a failed roster command
 

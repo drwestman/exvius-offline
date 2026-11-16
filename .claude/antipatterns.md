@@ -69,3 +69,10 @@
 - **Symptom**: Reported wolf defeats never advanced the accepted town quest after returning from a mission.
 - **Rule**: Resolve battle monster IDs through the served bundle's dictionary-family mapping and retain that mapping with the attempt before joining defeat reports to quest targets.
 - **Discovered**: 2026-11-14 via Bleeder of the Pack quest progress.
+
+## AP-011 — Gating catalogue corrections behind optional save upgrades
+
+- **Class**: assumption
+- **Symptom**: Existing iOS campaigns advertise duplicate event missions because clone filtering requires an unrelated update-policy marker.
+- **Rule**: Separate catalogue identity corrections from optional saved feature policies; test both existing campaigns without the marker and upgraded campaigns without mutating either.
+- **Discovered**: 2026-11-16 via duplicate Mana Mystery difficulties.

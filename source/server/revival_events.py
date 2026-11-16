@@ -79,6 +79,26 @@ def _one_per_look(rows, pick, art):
     return [row for row in rows if str(row['area']) in keep]
 
 
+def _without_clones(rows):
+    """Apply pinned mission identities to every iOS campaign without migrating it."""
+    from revival_update import document
+    clones = document('clone_quests.json')['areas']
+    out = []
+    for row in rows:
+        hidden = clones.get(str(row['area']), {}).get('hidden', {})
+        removed = [mid for mid in row['missions'] if str(mid) in hidden]
+        if not removed:
+            out.append(row)
+            continue
+        kept = [mid for mid in row['missions'] if str(mid) not in hidden]
+        if not kept:
+            continue
+        held_back = list(row.get('held_back') or [])
+        held_back.extend(mid for mid in removed if mid not in held_back)
+        out.append(dict(row, missions=kept, first_mission=kept[0], held_back=held_back))
+    return out
+
+
 def _holiday_runs(row):
     out = {}
     for name, areas in HOLIDAY_EVENTS.items():
@@ -207,27 +227,27 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
     dated = _one_per_look(kept, lambda group: min(group, key=lambda r: int(r['area'])), art)
     holiday_areas = set().union(*HOLIDAY_EVENTS.values())
     dated.sort(key=lambda row: (str(row['area']) in holiday_areas, str(row.get('release') or ''), int(row['area'])), reverse=True)
+    selected = _without_clones(dated + ranked + permanent)
     if update:
         from revival_update import document
-        clones = {mid for row in document('clone_quests.json')['areas'].values() for mid in row.get('hidden', {})}
         hidden = {'711'}  # Aquapolis: a duplicate shop exploration, not a Global event.
         filtered = []
-        for row in dated + ranked + permanent:
+        for row in selected:
             if str(row['area']) in hidden:
                 continue
             entry = dict(row)
             dates = document('event_quest_dates.json')['missions']
             cutoff = current.window['to'] if not current.finished else '9999-12-31'
-            entry['missions'] = [m for m in row['missions'] if str(m) not in clones and dates.get(str(m), '') < cutoff]
+            entry['missions'] = [m for m in row['missions'] if dates.get(str(m), '') < cutoff]
             entry['held_back'] = list(row.get('held_back') or []) + [m for m in row['missions'] if m not in entry['missions']]
             if entry['missions']:
                 entry['first_mission'] = entry['missions'][0]
                 filtered.append(entry)
-        dated, ranked, permanent = filtered, [], []
+        selected = filtered
     known = {str(row['area']) for row in rows}
     if not supplied:
         known.update(str(row['area']) for row in history()['added'])
-    return EventPlan(tuple(dated + ranked + permanent), frozenset(known), context)
+    return EventPlan(tuple(selected), frozenset(known), context)
 
 
 def can_enter(data, mission, *, resume=False):

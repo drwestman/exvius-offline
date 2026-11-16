@@ -89,6 +89,81 @@ class ReplayEventBehavior(unittest.TestCase):
         self.assertFalse(selected.can_enter(state, mission, resume=True))
         self.assertTrue(selected.can_enter(state, {'qo3PECw6': '1', 'uv60hgDW': '1'}))
 
+    def test_given_mana_clones_when_projecting_any_campaign_then_keep_one_of_each_difficulty(self):
+        from revival_update import initialize
+        row = dict(next(row for row in events.catalogue() if row['area'] == '708'),
+                   release=None, runs=[], held_back=['later', '7080106'])
+        original = copy.deepcopy(row)
+        for updated in (False, True):
+            with self.subTest(updated=updated):
+                data = campaign()
+                if updated:
+                    initialize(data)
+                data['exvius_repeat'] = {'attempt': {'mid': '7080106', 'status': 'completed'}}
+                data['progress'] = {'cleared_missions': ['7080106'],
+                                    'cleared_challenges': {'7080106': {'challenge'}},
+                                    'paid_challenges': {'7080106': {'challenge'}}}
+                before = copy.deepcopy(data)
+                first, again = self.select([row], data=data), self.select([row], data=data)
+                self.assertEqual(first.events, again.events)
+                self.assertEqual(first.events[0]['missions'],
+                                 ['7080101', '7080102', '7080103', '7080104', '7080105'])
+                self.assertEqual(first.events[0]['held_back'],
+                                 ['later', '7080106', '7080107', '7080108', '7080109', '7080110'])
+                self.assertEqual(first.events[0]['first_mission'], '7080101')
+                self.assertEqual(data, before)
+                self.assertEqual(row, original)
+
+    def test_given_pinned_clone_map_when_projecting_then_filter_every_mapped_area_only(self):
+        from revival_update import document, initialize
+        catalogue = {row['area']: row for row in events.catalogue()}
+        for area, info in document('clone_quests.json')['areas'].items():
+            for updated in (False, True):
+                with self.subTest(area=area, updated=updated):
+                    data = campaign()
+                    if updated:
+                        initialize(data)
+                    row = dict(catalogue[area], group='permanent', windows=[])
+                    original = copy.deepcopy(row)
+                    result = self.select([row], data=data).events[0]
+                    self.assertEqual(set(row['missions']) - set(result['missions']), set(info['hidden']))
+                    self.assertTrue(set(info['hidden'].values()) <= set(result['missions']))
+                    self.assertEqual(result['missions'], [mid for mid in row['missions'] if mid not in info['hidden']])
+                    self.assertEqual(row, original)
+        # Equal labels alone never establish that two missions are clones.
+        row = event(99999, missions=['9999901', '9999902'], name='Mana Mystery')
+        self.assertEqual(self.select([row]).events[0]['missions'], row['missions'])
+
+    def test_given_optional_update_when_filtering_then_keep_other_rules_opt_in(self):
+        from revival_update import document, initialize
+        rows = [event(711, group='permanent'),
+                event(100, group='permanent', missions=['1000101', '1000102'])]
+        def documents(name):
+            return {'missions': {'1000102': '2099-01-01'}} if name == 'event_quest_dates.json' else document(name)
+        with patch('revival_update.document', side_effect=documents):
+            old = self.select(rows)
+            self.assertEqual(old.areas, frozenset({'711', '100'}))
+            self.assertEqual(next(r for r in old.events if r['area'] == '100')['missions'], rows[1]['missions'])
+            data = campaign()
+            initialize(data)
+            updated = self.select(rows, data=data)
+            self.assertEqual(updated.areas, frozenset({'100'}))
+            self.assertEqual(updated.events[0]['missions'], ['1000101'])
+            self.assertEqual(updated.events[0]['held_back'], ['1000102'])
+
+    def test_given_hidden_clone_when_entering_then_refuse_new_entry_but_allow_pending_resume(self):
+        row = event(708, missions=['7080101', '7080106'])
+        data = campaign()
+        selected = self.select([row], data=data)
+        clone = {'uv60hgDW': '708', 'qo3PECw6': '7080106'}
+        self.assertTrue(selected.can_enter(data, dict(clone, qo3PECw6='7080101')))
+        self.assertFalse(selected.can_enter(data, clone, resume=True))
+        data['exvius_repeat'] = {'attempt': {'mid': '7080106', 'status': 'pending'}}
+        self.assertTrue(selected.can_enter(data, clone, resume=True))
+        self.assertFalse(selected.can_enter(data, clone))
+        data['exvius_repeat']['attempt']['status'] = 'completed'
+        self.assertFalse(selected.can_enter(data, clone, resume=True))
+
     def test_given_damaged_history_when_loaded_then_fail_instead_of_opening_all_events(self):
         self.addCleanup(events.history.cache_clear)
         for raw in ('{}', '{"version":2,"runs":{},"windows":{},"added":[]}'):
@@ -149,7 +224,9 @@ class ReplayEventIntegration(unittest.TestCase):
         (masters / 'F_MISSION_MST.ndjson').write_text('\n'.join(json.dumps({
             'qo3PECw6': mid, 'uv60hgDW': area, 'U9iHsau3': area + '01', 'Z0EN6jSh': '1',
             '8xi6Xvyk': '0', 'gQR24kST': '1', 'Y4VoF8yu': '1', 'B6kyCQ9M': '5', 'CQN15Hgr': '0',
-        }) for area, mid in [('100', '1000101'), ('101', '1010101')]))
+            '69fVGgcI': '1',
+        }) for area, mid in [('100', '1000101'), ('101', '1010101')] +
+            [('708', str(mid)) for mid in range(7080101, 7080111)]))
         (masters / 'F_TOWN_STORE_MST.ndjson').write_text(json.dumps({'Z20mNDvL': '980001', 'kaG4xf3I': '5'}))
         (masters / 'F_GACHA_STORE_MST.ndjson').write_text(json.dumps({'Z20mNDvL': '980001', 'X1IuZnj2': '9800001'}))
         (masters / 'F_STORE_ITEM_MST.ndjson').write_text('\n'.join(json.dumps({
@@ -203,6 +280,61 @@ with patch.object(events, 'catalogue', return_value=rows), \\
     assert player.data['exvius_repeat']['attempt'] == attempt
     result = complete_attempt(player, mid, False, [], {}, {})
     assert result['reason'] == 'completed'
+    player.save(str(config.state_file))
+    before, dirty, saved = copy.deepcopy(player.data), player.dirty, config.state_file.read_bytes()
+    assert request('DungeonResourceLoadMstListRequest', payload, allow_empty=True) is None
+    assert player.data == before and player.dirty == dirty
+    assert config.state_file.read_bytes() == saved
+''')
+
+    def test_given_existing_campaign_when_mana_gates_project_then_remove_clones_without_writes(self):
+        self.run_engine('''
+import revival_events as events
+from test_ios_events import event
+from ffbe_player import serve_event_gate
+from ffbe_config import EVENT_GATE_CARRIERS
+player.data.pop('ios_revival_update', None)
+player.save(str(config.state_file))
+missions = [str(mid) for mid in range(7080101, 7080111)]
+rows = (event(708, missions=missions),)
+captured = {'0xkoNP8U': [{'uv60hgDW': '708', 'U9iHsau3': '70801', 'qo3PECw6': mid}
+                         for mid in missions] + [{'uv60hgDW': '1', 'qo3PECw6': '1'}]}
+original = copy.deepcopy(captured)
+with patch.object(events, 'catalogue', return_value=rows), patch.object(summons, 'clock', return_value=NOW):
+    before, dirty, saved = copy.deepcopy(player.data), player.dirty, config.state_file.read_bytes()
+    for carrier in EVENT_GATE_CARRIERS:
+        result = serve_event_gate(captured, carrier)
+        assert [r['qo3PECw6'] for r in result['0xkoNP8U'] if r['uv60hgDW'] == '708'] == missions[:5]
+        assert {'uv60hgDW': '1', 'qo3PECw6': '1'} in result['0xkoNP8U']
+    assert captured == original
+    assert player.data == before and player.dirty == dirty
+    assert config.state_file.read_bytes() == saved
+''')
+
+    def test_given_hidden_mana_clone_when_encrypted_load_arrives_then_only_resume_existing_attempt(self):
+        self.run_engine('''
+import revival_events as events
+from test_ios_events import event
+from exvius_repeat import begin_attempt, complete_attempt
+player.data.pop('ios_revival_update', None)
+player.save(str(config.state_file))
+mid = '7080106'
+rows = (event(708, missions=['7080101', mid]),)
+bundle = {'an6TB4WS': [{'qo3PECw6': mid, 'gou39JeI': '0'}]}
+server.State.replies['jnw49dUq@' + mid] = bundle
+payload = {'1zTjkp5B': [{'6uIYE15X': mid}]}
+with patch.object(events, 'catalogue', return_value=rows), patch.object(summons, 'clock', return_value=NOW):
+    before, dirty, saved = copy.deepcopy(player.data), player.dirty, config.state_file.read_bytes()
+    assert request('DungeonResourceLoadMstListRequest', payload, allow_empty=True) is None
+    assert player.data == before and player.dirty == dirty
+    assert config.state_file.read_bytes() == saved
+    # Model an attempt durably opened before the duplicate filter was deployed.
+    begin_attempt(player, mid)
+    player.save(str(config.state_file))
+    attempt = copy.deepcopy(player.data['exvius_repeat']['attempt'])
+    assert request('DungeonResourceLoadMstListRequest', payload)
+    assert player.data['exvius_repeat']['attempt'] == attempt
+    assert complete_attempt(player, mid, False, [], {}, {})['reason'] == 'completed'
     player.save(str(config.state_file))
     before, dirty, saved = copy.deepcopy(player.data), player.dirty, config.state_file.read_bytes()
     assert request('DungeonResourceLoadMstListRequest', payload, allow_empty=True) is None

@@ -165,6 +165,13 @@ or download artwork. Additional authored areas SHALL require validated encounter
 content and prepared native art or the shipped safe fallback. Legacy archive
 behavior SHALL remain unchanged.
 
+Pinned clone mission IDs SHALL be excluded for every iOS campaign, including
+campaigns without an update policy. Filtering SHALL use the per-area identity
+mapping, retain canonical mission order and existing held-back entries, and
+preserve distinct missions even when their names match. Saved clears, challenges
+and reward receipts SHALL remain unchanged. A hidden clone SHALL reject new
+entry while an already-pending attempt remains resumable through settlement.
+
 #### Scenario: Project a new historical week
 
 - Given a captured response includes a future event and the campaign is in replay week zero
@@ -172,6 +179,13 @@ behavior SHALL remain unchanged.
 - Then only eligible archive gates remain alongside unrelated gate rows
 - And the selected gates carry the current Eastern week's UTC bounds
 - And player data and save bytes remain unchanged.
+
+#### Scenario: Open Mana Mystery in an existing campaign
+
+- Given an anchored iOS campaign without an update policy and all ten Mana Mystery missions
+- When its Vortex gate list is projected
+- Then only missions 7080101 through 7080105 are advertised, one per difficulty
+- And captured rows for clones 7080106 through 7080110 are removed without changing the save.
 
 ### Requirement: LoadPinnedAuthoredEventAreas
 
@@ -1760,6 +1774,11 @@ published native table identities SHALL receive prepared file versions.
 
 <!-- manual -->
 ### Known Invariants
+
+- `revival_events.plan` must exclude pinned clone mission IDs independently of
+  optional campaign upgrades, without writing save data. Discovered November 16,
+  2026: clone filtering inside the update-policy branch exposed duplicate Mana
+  Mystery difficulties in existing campaigns.
 
 - The iPhone gameplay launcher must distinguish release metadata from installed
   content when selecting its default data directory. A metadata-only data/ folder
