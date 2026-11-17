@@ -73,9 +73,9 @@
 ## AP-011 — Gating catalogue corrections behind optional save upgrades
 
 - **Class**: assumption
-- **Symptom**: Existing iOS campaigns advertise duplicate event missions because clone filtering requires an unrelated update-policy marker.
-- **Rule**: Separate catalogue identity corrections from optional saved feature policies; test both existing campaigns without the marker and upgraded campaigns without mutating either.
-- **Discovered**: 2026-11-16 via duplicate Mana Mystery difficulties.
+- **Symptom**: Existing iOS campaigns advertise duplicate event missions because clone filtering requires an unrelated update-policy marker, and exploration collection points (`vM21k0do` / `COLLECTION` in `revival_battle_updates.py`) never spawn or pay out harvest drops such as Lumber in Latius Woods without `ios_revival_update`.
+- **Rule**: Separate catalogue identity corrections and base exploration mechanics from optional saved feature policies; test both existing campaigns without the marker and upgraded campaigns without mutating either.
+- **Discovered**: 2026-11-16 via duplicate Mana Mystery difficulties; recurred 2026-11-17 via missing Lumber collection drops in Latius Woods - Exploration.
 
 ## AP-012 — Substituting replay weeks for annual event dates
 
@@ -83,3 +83,10 @@
 - **Symptom**: January Vortex events run during November, and News presents their original dates without current availability bounds.
 - **Rule**: Resolve one annual occurrence from pinned run metadata and use it for listings, date fields and entry checks. Keep summon replay history separately labelled; never cache clock-dependent eligibility across midnight.
 - **Discovered**: 2026-11-16 via Notices -> News date mismatch and shared legacy/iOS event reproduction.
+
+## AP-013 — Treating a base receipt as optional-feature initialization
+
+- **Class**: assumption
+- **Symptom**: Upgrading during a pending exploration preserves an existing collection receipt whose empty reward placeholders suppress first-clear Lapis and Gil.
+- **Rule**: Initialize optional-feature snapshots independently of base receipts; exercise enabling the feature during a pending operation, preserving existing rolls and authoritative snapshots.
+- **Discovered**: 2026-11-17 via pending-exploration upgrade reward regression.

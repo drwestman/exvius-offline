@@ -1793,6 +1793,12 @@ published native table identities SHALL receive prepared file versions.
 <!-- manual -->
 ### Known Invariants
 
+- `revival_battle_updates.prepare` must initialize upgrade-only reward inputs
+  independently of an existing base collection receipt when resuming a pending
+  exploration after campaign upgrade. Preserve recorded collection RNG and
+  previously initialized upgrade rewards, including empty rewards. Discovered
+  November 17, 2026: base receipt placeholders suppressed first-clear Lapis and Gil.
+
 - `revival_events.plan` must exclude pinned clone mission IDs independently of
   optional campaign upgrades, without writing save data. Discovered November 16,
   2026: clone filtering inside the update-policy branch exposed duplicate Mana
@@ -2063,15 +2069,23 @@ ambiguous and SHALL NOT consume items.
 
 ### Requirement: SettleRecordedUpdateQuestRewards
 
-Updated battle loads SHALL record collection RNG and first-clear reward inputs
-with their attempt. Successful completed attempts with normal reward receipts
-SHALL grant bounded collection rewards, per-entry first-clear rewards, quest Gil
-and LB EXP once. Existing Riches Gil and mission bonus payments SHALL not be
-duplicated. Unsupported first-clear entries SHALL remain unpaid. Existing
-historical clears SHALL form an unknown baseline. Forward story joins and Guide
-history SHALL be command-side; Guide projections SHALL not create a register.
+Exploration battle loads SHALL record collection RNG and project `vM21k0do` for
+all campaigns without requiring `ios_revival_update` or creating
+`ios_reward_claims`. Updated battle loads SHALL record first-clear reward inputs
+with their attempt, independently of base collection initialization. Upgrading a
+pending exploration SHALL allow its next load to initialize missing upgrade
+rewards without rerolling collection or replacing recorded upgrade rewards.
+Completed exploration attempts with normal reward receipts
+SHALL grant bounded collection rewards once (including when exiting with
+`cleared=False`) and re-project settled collection rewards on retried results.
+Successful completed attempts with normal reward receipts SHALL grant per-entry
+first-clear rewards, quest Gil and LB EXP once. Existing Riches Gil and mission
+bonus payments SHALL not be duplicated. Unsupported first-clear entries SHALL
+remain unpaid. Existing historical clears SHALL form an unknown baseline.
+Forward story joins and Guide history SHALL be command-side; Guide projections
+SHALL not create a register.
 
-- **Implementation**: `prepare::source/server/revival_battle_updates.py`, `settle::source/server/revival_battle_updates.py`
+- **Implementation**: `collection_enabled::source/server/revival_battle_updates.py`, `prepare::source/server/revival_battle_updates.py`, `settle::source/server/revival_battle_updates.py`
 - **Implementation**: `plan::source/server/revival_lb.py`, `apply::source/server/revival_lb.py`
 - **Implementation**: `register_holdings::source/server/revival_guide.py`, `rows::source/server/revival_guide.py`, `record_battle::source/server/revival_guide.py`
 
@@ -2081,6 +2095,20 @@ history SHALL be command-side; Guide projections SHALL not create a register.
 - When a successful result reports a larger quantity
 - Then at most three items are granted
 - And a repeated settlement grants nothing.
+
+#### Scenario: Settle exploration collection points without the upgrade marker
+
+- Given a campaign without `ios_revival_update`
+- When an exploration battle is loaded and exited with `cleared=False` after collecting a harvest point
+- Then `vM21k0do` projects the rolled collection points at load without creating `ios_reward_claims`
+- And settlement credits the bounded harvested items once and re-projects `EWmQy52k` on retried results.
+
+#### Scenario: Upgrade and resume a pending exploration
+
+- Given a pending exploration with a base collection receipt, including saved empty upgrade-reward placeholders
+- When the campaign is upgraded and the attempt is loaded again
+- Then first-clear and Gil inputs are recorded without changing its collection roll
+- And successful completion pays the recorded rewards once across retries and reloads.
 
 ### Requirement: ComposeSupplementalIosPacks
 

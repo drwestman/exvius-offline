@@ -32,6 +32,13 @@ def build(data, *, units, steps, switches, missions, experience):
         return candidate, report
     initialize(candidate)
     candidate.setdefault('ios_reward_claims', {'version':1,'baseline':list(candidate.get('progress', {}).get('cleared_missions', [])), 'paid':{}})
+    attempt = candidate.get('exvius_repeat', {}).get('attempt', {})
+    facts = attempt.get('ios_update')
+    if (attempt.get('status') == 'pending' and isinstance(facts, dict)
+            and facts.get('first_clear') == '' and facts.get('gil') == 0):
+        # Old base collection receipts used empty placeholders for upgrade-only rewards.
+        facts.pop('first_clear')
+        facts.pop('gil')
     buckets = candidate.setdefault('progress', {}).setdefault('switches', {})
     def grant(raw, reason):
         for token in str(raw or '').split(','):

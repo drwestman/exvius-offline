@@ -20,6 +20,11 @@ JOINS = (
 COLLECTION = {20:'EWmQy52k',21:'XMgu7qE0',22:'1Z2TD5ai',23:'7rA9WGQe'}
 
 
+def collection_enabled(player):
+    """Exploration collection points are active on all live campaigns."""
+    return player is not None
+
+
 def enabled(player):
     from engine_profile import current_profile
     return player is not None and current_profile().name == 'ios-revival' and settings(player.data) is not None
@@ -27,33 +32,51 @@ def enabled(player):
 
 def prepare(spec, mid, bundle, state, *, rng=random):
     player = state.player
-    if not enabled(player) or not bundle or not isinstance(spec, dict) or '09HRWXDf' in spec:
+    if not collection_enabled(player) or not bundle or not isinstance(spec, dict) or '09HRWXDf' in spec:
         return spec
     attempt = player.data.get('exvius_repeat', {}).get('attempt', {})
     if attempt.get('mid') != str(mid) or attempt.get('status') != 'pending' or player.mode != 'live':
         return spec
+    update_enabled = enabled(player)
+    from player_state import mission_row
     if 'ios_update' not in attempt:
-        from player_state import mission_row
-        player.data.setdefault('ios_reward_claims', {'version':1,
-            'baseline':list(player.data.get('progress', {}).get('cleared_missions', [])), 'paid':{}})
         row = mission_row(mid) or {}
-        first = str(row.get('1x4bG2J8') or '')
-        extras = document('story_recipes.json')['missions'].get(str(mid), [])
-        first = ','.join(filter(None,[first]+[r['reward'] for r in extras]))
+        exploration = str(row.get('Y4VoF8yu')) == '2'
         collection = {}
         doc = document('collection_points.json')
         for point, key in doc['missions'].get(str(mid), []):
             entries = doc['pools'][key]['items']
             kind, iid, _, low, high = rng.choices(entries, weights=[r[2] for r in entries])[0]
             collection[str(point)] = f'{kind}:{iid}:{rng.randint(int(low),int(high))}'
-        attempt['ios_update'] = {'version':1, 'first_clear':first, 'gil':max(0,int(row.get('7UR4J2SE') or 0)),
-            'collection':collection, 'exploration':str(row.get('Y4VoF8yu')) == '2', 'settled':False}
+        if not update_enabled and not exploration and not collection:
+            return spec
+        attempt['ios_update'] = {'version':1, 'collection':collection,
+            'exploration':exploration, 'settled':False, 'collection_settled':False}
+        player.dirty = True
+    if update_enabled and 'first_clear' not in attempt['ios_update']:
+        row = mission_row(mid) or {}
+        player.data.setdefault('ios_reward_claims', {'version':1,
+            'baseline':list(player.data.get('progress', {}).get('cleared_missions', [])), 'paid':{}})
+        first = str(row.get('1x4bG2J8') or '')
+        extras = document('story_recipes.json')['missions'].get(str(mid), [])
+        first = ','.join(filter(None,[first]+[r['reward'] for r in extras]))
+        attempt['ios_update'].update(first_clear=first, gil=max(0,int(row.get('7UR4J2SE') or 0)))
         player.dirty = True
     out = copy.deepcopy(spec)
     if attempt['ios_update'].get('exploration'):
         out['vM21k0do'] = [{'N3hB0CwE':pid,'9GIvAQC2':'1','1Fa7rL5R':reward}
                           for pid,reward in attempt['ios_update']['collection'].items()]
     return out
+
+
+def _project_collection(out, collected):
+    """Write settled collection rewards onto their MissionResultResponse channels."""
+    for kind, channel in COLLECTION.items():
+        rows = [r for r in collected if r.get('kind') == kind]
+        if rows:
+            text = ','.join(f"{r['kind']}:{r['id']}:{r['count']}" for r in rows)
+            for row in out['09HRWXDf']:
+                row[channel] = text
 
 
 def _rows(text):
@@ -76,48 +99,61 @@ def shown(rows, data):
 
 def settle(spec, mid, plaintext, state):
     player = state.player
-    if not enabled(player) or not isinstance(spec, dict) or '09HRWXDf' not in spec:
+    if not collection_enabled(player) or not isinstance(spec, dict) or '09HRWXDf' not in spec:
         return spec
     attempt = player.data.get('exvius_repeat', {}).get('attempt', {})
     facts = attempt.get('ios_update')
     if (player.mode != 'live' or attempt.get('mid') != str(mid) or not facts
-            or attempt.get('status') != 'completed' or attempt.get('cleared') is not True
+            or attempt.get('status') != 'completed'
             or not attempt.get('normal_rewards_recorded')):
         return spec
-    if facts['settled']:
-        return spec  # the canonical result echo carries the original paid result
+    already_collection = bool(facts.get('collection_settled') or facts.get('settled'))
+    if already_collection:
+        collected = list(facts.get('collected') or [])
+    else:
+        try:
+            req = json.JSONDecoder().raw_decode(plaintext or '{}')[0]
+        except ValueError:
+            return spec
+        result = (req.get('09HRWXDf') or [{}])[0]
+        earned = Counter()
+        for reward in facts.get('collection', {}).values():
+            row = _rows(reward)[0]
+            earned[(row['kind'],row['id'])] += row['count']
+        collected = []
+        for kind, channel in COLLECTION.items():
+            reported = Counter()
+            for row in _rows(result.get(channel) or ''):
+                if row['kind'] == kind:
+                    reported[(kind,row['id'])] += row['count']
+            grants = [{'kind':k,'id':iid,'count':min(n,earned.get((k,iid),0))} for (k,iid),n in reported.items()
+                      if earned.get((k,iid),0) > 0]
+            for row in grants:
+                if not player._can_credit(row) or player._grant_items([row]) != [row]:
+                    raise ValueError('Recorded collection reward could not be credited')
+            collected.extend(grants)
     out = copy.deepcopy(spec)
-    try:
-        req = json.JSONDecoder().raw_decode(plaintext or '{}')[0]
-    except ValueError:
-        return spec
-    result = (req.get('09HRWXDf') or [{}])[0]
-    earned = Counter()
-    for reward in facts['collection'].values():
-        row = _rows(reward)[0]
-        earned[(row['kind'],row['id'])] += row['count']
-    collected = []
-    for kind, channel in COLLECTION.items():
-        reported = Counter()
-        for row in _rows(result.get(channel) or ''):
-            if row['kind'] == kind:
-                reported[(kind,row['id'])] += row['count']
-        grants = [{'kind':k,'id':iid,'count':min(n,earned.get((k,iid),0))} for (k,iid),n in reported.items()
-                  if earned.get((k,iid),0) > 0]
-        for row in grants:
-            if not player._can_credit(row) or player._grant_items([row]) != [row]:
-                raise ValueError('Recorded collection reward could not be credited')
-        collected.extend(grants)
-        if grants:
-            text = ','.join(f"{r['kind']}:{r['id']}:{r['count']}" for r in grants)
+    _project_collection(out, collected)
+    if not already_collection:
+        facts['collection_settled'] = True
+        facts['collected'] = collected
+        player.dirty = True
+    if not enabled(player) or attempt.get('cleared') is not True:
+        return out
+    if facts.get('settled'):
+        first = facts.get('first_clear_granted') or []
+        if first:
+            text = shown(first, player.data)
             for row in out['09HRWXDf']:
-                row[channel] = text
-    claims = player.data['ios_reward_claims']
+                row['p1K5NecV'] = text
+        return out
+    claims = player.data.setdefault('ios_reward_claims', {'version':1,
+        'baseline':list(player.data.get('progress', {}).get('cleared_missions', [])), 'paid':{}})
     first = []
     blocked = []
     if str(mid) not in claims['baseline']:
         paid = claims['paid'].setdefault(str(mid), [])
-        for index, entry in enumerate(facts['first_clear'].split(',')):
+        for index, entry in enumerate(facts.get('first_clear', '').split(',')):
             if not entry or entry == '0':
                 continue
             key = str(index) + ':' + entry
@@ -146,7 +182,7 @@ def settle(spec, mid, plaintext, state):
             row['p1K5NecV'] = text
     # Riches already pays its mission Gil through the canonical special-stage rule.
     from ffbe_battle import CHAMBER_OF_RICHES
-    gil = 0 if str(mid) in CHAMBER_OF_RICHES else facts['gil']
+    gil = 0 if str(mid) in CHAMBER_OF_RICHES else facts.get('gil', 0)
     if gil:
         player.add_currency('gil',gil)
         for row in out['09HRWXDf']:
@@ -182,6 +218,6 @@ def settle(spec, mid, plaintext, state):
                     player.set_unit_level(unit['instance_id'], level)
                 joined.append(uid)
     register_holdings(player)
-    facts.update(settled=True, first_clear_granted=first, blocked=blocked, collected=collected)
+    facts.update(settled=True, collection_settled=True, first_clear_granted=first, blocked=blocked, collected=collected)
     player.dirty = True
     return out
