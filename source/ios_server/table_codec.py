@@ -12,9 +12,15 @@ from ffbe_crypto import cbc_decrypt, cbc_encrypt, key16
 
 
 def master_rows(raw, key, *, mode='cbc'):
+    """Return an eager list for callers that need decoded records."""
+    return list(_master_rows(raw, key, mode=mode))
+
+
+def _master_rows(raw, key, *, mode):
+    """Share all validation rules without retaining the decoded table."""
     if mode not in ('cbc', 'ecb'):
         raise ValueError('Unsupported native master cipher.')
-    rows = []
+    found = False
     for line in raw.decode('ascii').splitlines():
         if not line.strip():
             continue
@@ -32,10 +38,16 @@ def master_rows(raw, key, *, mode='cbc'):
         row = json.loads(plain[:-pad] if double else plain)
         if not isinstance(row, dict):
             raise ValueError('Native master row must be a JSON object.')
-        rows.append((line.strip(), row, double))
-    if not rows:
+        found = True
+        yield line.strip(), row, double
+    if not found:
         raise ValueError('Native master table has no rows.')
-    return rows
+
+
+def validate_master(raw, key, *, mode='cbc'):
+    """Check every record eagerly without retaining the decoded table."""
+    for _ in _master_rows(raw, key, mode=mode):
+        pass
 
 
 def patch_master(raw, key, transform, *, mode='cbc'):
@@ -55,7 +67,7 @@ def patch_master(raw, key, transform, *, mode='cbc'):
 
 def normalize_master(raw, key, *, mode='cbc'):
     """Validate a passthrough table and normalize outer lines without copying rows."""
-    return ('\n'.join(line for line, _, _ in master_rows(raw, key, mode=mode)) + '\n').encode('ascii')
+    return ('\n'.join(line for line, _, _ in _master_rows(raw, key, mode=mode)) + '\n').encode('ascii')
 
 
 def append_master(raw, key, additions, *, mode='cbc'):

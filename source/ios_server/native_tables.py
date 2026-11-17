@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import hashlib
 
-from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines, normalize_master
+from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines, normalize_master, validate_master
 from ios_server.native_registry import definitions
 from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
@@ -169,7 +169,7 @@ def validate(outputs, versions, *, tables=TABLES):
         if table.localized:
             text_lines(raw, table.key)
         else:
-            master_rows(raw, table.key, mode=table.cipher)
+            validate_master(raw, table.key, mode=table.cipher)
     actual = english_versions(outputs[INDEX.name], tables=tables)
     for _, row, _ in master_rows(outputs[INDEX.name], INDEX.key):
         name = row.get('a4hXTIm0')

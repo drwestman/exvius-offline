@@ -4,15 +4,16 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import tracemalloc
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import test_ios_preparation as harness
 import test_ios_native_labels as label_harness
 import test_ios_server as engine_harness
 from ios_server import preparation as prep, native_tables as rules, native_registry as registry
-from ios_server.table_codec import master_rows, patch_master, normalize_master
+from ios_server.table_codec import master_rows, patch_master, normalize_master, validate_master
 from ios_server.table_delivery import serve
 
 
@@ -50,6 +51,52 @@ class CompleteTableCodecs(unittest.TestCase):
         for mode in ('cbc','ecb'):
             with self.assertRaises(ValueError): normalize_master(mixed,'fixture1',mode=mode)
 
+    def test_given_many_master_rows_when_checked_or_normalized_then_do_not_retain_decoded_table(self):
+        # Wide rows make accidental retention of the decoded catalogue visible.
+        rows = [{f'field{j}': str(i * 100 + j) for j in range(32)} for i in range(2048)]
+        for mode in ('cbc', 'ecb'):
+            raw = harness.master('fixture1', rows, mode=mode)
+            for operation in (normalize_master, validate_master):
+                with self.subTest(mode=mode, operation=operation.__name__):
+                    tracemalloc.start()
+                    try:
+                        out = operation(raw, 'fixture1', mode=mode)
+                        _, peak = tracemalloc.get_traced_memory()
+                    finally:
+                        tracemalloc.stop()
+                    expected = raw.replace(b'\r\n', b'\n') if operation == normalize_master else None
+                    self.assertEqual(out, expected)
+                    # Includes encoded lines/output; excludes input/fixture setup.
+                    self.assertLess(peak, 3 * len(raw) + 1024 * 1024)
+
+    def test_given_mixed_padding_and_outer_whitespace_when_validated_then_keep_eager_reader_and_exact_lines(self):
+        for mode in ('cbc', 'ecb'):
+            lines = harness.master('fixture1', [{'id': '1'}, {'id': '2'}], mode=mode).splitlines()
+            # Preserve str.splitlines() behavior, including uncommon ASCII breaks.
+            raw = b' \t' + lines[0] + b' \v\f\x1c\x1d\x1e\r\n\t' + lines[1] + b'\t\r'
+            self.assertIsNone(validate_master(raw, 'fixture1', mode=mode))
+            out = master_rows(raw, 'fixture1', mode=mode)
+            self.assertIsInstance(out, list)
+            self.assertEqual([row[1] for row in out], [{'id': '1'}, {'id': '2'}])
+            self.assertEqual([row[2] for row in out], [False, True])
+            self.assertEqual(normalize_master(raw, 'fixture1', mode=mode), b'\n'.join(lines) + b'\n')
+
+    def test_given_invalid_tail_when_validated_then_reject_every_row_before_returning(self):
+        for mode in ('cbc', 'ecb'):
+            good = harness.master('fixture1', [{'id': '1'}], mode=mode)
+            non_object = harness.master('fixture1', [['not an object']], mode=mode)
+            for bad in (b'', b' \t\r\n', b'not-base64\n', good + b'AAAA\n',
+                        good + b'!\n', good + b'\xff', good + non_object):
+                for operation in (validate_master, normalize_master, master_rows):
+                    with self.subTest(mode=mode, operation=operation.__name__), self.assertRaises(ValueError):
+                        operation(bad, 'fixture1', mode=mode)
+            transform = Mock()
+            with self.assertRaises(ValueError):
+                patch_master(good + b'!\n', 'fixture1', transform, mode=mode)
+            transform.assert_not_called()
+        with self.assertRaisesRegex(ValueError, 'Unsupported native master cipher'):
+            validate_master(good, 'fixture1', mode='unknown')
+
     def test_given_duplicate_token_or_bad_cipher_when_registry_loads_then_fail_visibly(self):
         doc,_=registry.definitions()
         for change in ('token','cipher'):
@@ -69,6 +116,23 @@ class CompleteTablePreparation(unittest.TestCase):
     saved=label_harness.NativeLabelPreparation.saved
 
     def version_file(self): return Path(self.config.engine_environment()['VERSION_TABLE_XML'])
+
+    def test_given_invalid_final_passthrough_row_when_prepared_then_keep_published_generation(self):
+        self.fixture()
+        prep.prepare_data(self.config)
+        before = self.pointer().read_bytes()
+        for mode in ('cbc', 'ecb'):
+            table = next(t for t in rules.TABLES if not t.localized and t.cipher == mode
+                         and t.name not in {r.name for r in (*rules.CORE_TABLES, *rules.ECONOMY_TABLES)})
+            original = self.source(table).read_bytes()
+            self.source(table).write_bytes(original + b'not-base64\n')
+            try:
+                with self.assertRaises(ValueError):
+                    prep.prepare_data(self.config)
+                self.assertEqual(self.pointer().read_bytes(), before)
+                self.assertIsNotNone(prep.load_prepared(self.config))
+            finally:
+                self.source(table).write_bytes(original)
 
     def test_given_complete_snapshot_when_projected_then_advertise_only_unique_published_versions(self):
         self.fixture();prep.prepare_data(self.config);pack=prep.load_prepared(self.config)
