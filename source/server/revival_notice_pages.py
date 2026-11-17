@@ -1,4 +1,5 @@
 """Local WebView presentation of replay news; no remote artwork or disk caches."""
+from datetime import timedelta
 from html import escape
 from urllib.parse import quote
 
@@ -87,7 +88,7 @@ def _bundle_price(row):
 def render(summary, *, reward_name, unit_name):
     parts = ['<header><p>Brave Exvius News</p>', f'<h1>Week of {summary["start"]:%B %d, %Y}</h1>']
     era = ("Global's history is complete. Summons rotate weekly now." if summary['finished'] else
-           f"Global history: {summary['from']} – {summary['to']}")
+           f"Global history (summon replay): {summary['from']} – {summary['to']}")
     parts.append('<p>' + escape(era) + '</p></header>')
     if summary['holiday']:
         parts.append('<p class="ribbon">' + escape(summary['holiday']) + ' summons are here this week</p>')
@@ -143,12 +144,20 @@ def render(summary, *, reward_name, unit_name):
                          + '</p><p>Attached: ' + escape(', '.join(items)) + '</p></article>')
         parts.append('</section>')
     parts.append('<section><h2>In the Vortex</h2>')
+    from event_calendar import EventWindow
     art = policy.events._art()
     for row in summary['events']:
         filename = art.get(str(row['area']), {}).get('filename')
+        periods = []
+        for span in row.get('event_windows', []):
+            occurrence = EventWindow.from_description(span)
+            periods.append(f'Available {occurrence.starts_at:%Y-%m-%d} – '
+                           f'{occurrence.ends_at - timedelta(days=1):%Y-%m-%d} (New York)')
+        period = '; '.join(periods) or 'Recurring dungeon'
         parts.append('<article>' + _image('event', filename) + '<h3>' + escape(row['name']) + '</h3><p>'
-                     + escape(str(row.get('kind', '')).split('<br>')[0]) + '</p><p class="date">Originally '
-                     + escape(row['release']) + '</p></article>')
+                     + escape(str(row.get('kind', '')).split('<br>')[0]) + '</p><p class="date">'
+                     + escape(period) + '</p><p class="date">Originally '
+                     + escape(row.get('release') or 'release date unavailable') + '</p></article>')
     if not summary['events']:
         parts.append('<p>No new events this week. Permanent Vortex areas remain available.</p>')
     parts.append('</section>')

@@ -61,9 +61,10 @@ def entries(data, artwork, *, now=None, events=None, summons=None):
         return None
     events = events if events is not None else revival_events.plan(data, moment, summons=selected).events
     result, seen = [], set()
-    candidates = [row for row in events if row.get('release')
-                  and (row.get('group') != 'permanent' or row.get('windows'))]
-    for event in sorted(candidates, key=lambda row: (str(row['release']), str(row.get('area'))), reverse=True):
+    candidates = [row for row in events if row.get('event_windows') or
+                  row.get('release') and (row.get('group') != 'permanent' or row.get('windows'))]
+    for event in sorted(candidates, key=lambda row: (row.get('event_windows', [{}])[0].get('starts_at') or str(row.get('release') or ''),
+                                                       str(row.get('area'))), reverse=True):
         image = artwork.image(str(event.get('area')))
         if image is None or image['source'] in seen:
             continue
@@ -81,7 +82,12 @@ def rows(data, artwork, *, now=None, window_days=21, location='10:601', events=N
         return None
     first = (moment - timedelta(days=1)).astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     last = (moment + timedelta(days=window_days)).astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    from event_calendar import window
+    def bounds(event):
+        occurrence = window(event)
+        return occurrence.wire() if occurrence else (first, last)
     return [{'nZfbucEw': str(ID_BASE + int(row['event']['area'])),
-             'JZryxaYY': str(artwork.manifest['generation']), 'twb8TQPx': first, 'ZkGp8XbQ': last,
+             'JZryxaYY': str(artwork.manifest['generation']),
+             'twb8TQPx': bounds(row['event'])[0], 'ZkGp8XbQ': bounds(row['event'])[1],
              'TsZhcqbT': HOST + '/' + row['image']['url'], 'zRZY8dcE': '0', '3c8348af': '0',
              'uP4695k3': row['link'] or location} for row in chosen]

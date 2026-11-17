@@ -156,14 +156,30 @@ SHALL retain the replay cutoff. Legacy bundle definitions SHALL remain unchanged
 
 ### Requirement: SelectReplayVortexEvents
 
-The iOS Vortex and archive menu SHALL use the saved replay calendar and pinned
-event run/window metadata. Selection SHALL include the first-week 14-day lookback,
-historical reruns, holiday event years, ranked periods, and deterministic recurring
-and permanent dungeon rotations. Known closed captured gates SHALL be removed;
-selected gates SHALL use the actual weekly bounds. Queries SHALL not create state
-or download artwork. Additional authored areas SHALL require validated encounter
-content and prepared native art or the shipped safe fallback. Legacy archive
-behavior SHALL remain unchanged.
+The iOS Vortex and archive menu SHALL use annual month/day dates from pinned
+run/window metadata, independently of campaign age and summon replay. Every
+edition SHALL apply the same America/New_York midnight boundaries, inclusive last
+days, recorded reruns and ranked periods. Distinct active mission sets SHALL be
+retained even when artwork or names match. Undated recurring and permanent
+dungeon rotations SHALL retain their existing behavior. Known closed captured
+gates SHALL be removed; selected dated gates SHALL carry actual annual UTC bounds.
+Queries SHALL not create state or download artwork. Additional authored areas
+SHALL require validated content and prepared native art or the shipped fallback.
+
+- **Implementation**: `select::source/server/event_calendar.py`, `occurrences::source/server/event_calendar.py`, `plan::source/server/revival_events.py`
+
+<!-- manual -->
+### Known Invariants
+
+- Annual event selection, projected dates and command admission must use the same
+  occurrence; December-January windows wrap across years and February 29 clamps
+  to February 28 in non-leap years. Replay history must not move a dated Vortex
+  event into a different month. Discovered 2026-11-16: replay-week projection and
+  legacy ten-year extensions replaced the original month/day bounds.
+- Dated event mission availability must not be filtered by the summon replay
+  cutoff. Clone exclusions, content validation and pending-attempt receipts remain
+  authoritative. Only immutable metadata may be cached across date boundaries.
+<!-- /manual -->
 
 Pinned clone mission IDs SHALL be excluded for every iOS campaign, including
 campaigns without an update policy. Filtering SHALL use the per-area identity
@@ -172,12 +188,12 @@ preserve distinct missions even when their names match. Saved clears, challenges
 and reward receipts SHALL remain unchanged. A hidden clone SHALL reject new
 entry while an already-pending attempt remains resumable through settlement.
 
-#### Scenario: Project a new historical week
+#### Scenario: Project the current annual window
 
-- Given a captured response includes a future event and the campaign is in replay week zero
+- Given a captured response includes an event outside its annual month/day dates
 - When the Vortex is projected
 - Then only eligible archive gates remain alongside unrelated gate rows
-- And the selected gates carry the current Eastern week's UTC bounds
+- And the selected gates carry their actual annual UTC bounds
 - And player data and save bytes remain unchanged.
 
 #### Scenario: Open Mana Mystery in an existing campaign
@@ -193,15 +209,15 @@ The iOS catalogue and archive facade SHALL include the nine pinned history
 additions, containing 118 unique missions, without altering the legacy catalogue.
 Area/mission identities, first entries, and complete content inventories SHALL
 be validated before gates are advertised. Their ordinary releases, reruns, and
-Halloween windows SHALL use the same replay policy as existing events. News SHALL
+Halloween windows SHALL use the same annual policy as existing events. News SHALL
 deduplicate the two Halloween areas into one campaign announcement while Vortex
 retains both distinct gates. Missing new art SHALL use the existing native fallback;
 queries SHALL not fetch or install artwork.
 
 #### Scenario: Open the Halloween Vortex
 
-- Given an initialized iOS campaign whose saved history has reached the Halloween events
-- When the real holiday window is active
+- Given an initialized iOS campaign with validated Halloween event content
+- When the recorded annual event window is active
 - Then both Halloween gates appear with valid native art references
 - And their News campaign is announced once without campaign or save writes.
 
@@ -822,7 +838,9 @@ SHALL be replaced, including when notices are disabled. Missing initialization
 or a clock before the anchor SHALL not create notices or state.
 
 Each week's summary SHALL use the same canonical iOS summon and event policies
-as gameplay, including holiday and post-history rotation. Deals, newly opened
+as gameplay. Vortex events SHALL overlap the real notice week, including midweek
+starts, and SHALL display actual annual dates separately from original releases.
+The history heading SHALL identify summon replay history. Deals, newly opened
 dated permanent offers, dated bundles, and enabled historical mails SHALL use the
 historical window's exclusive end. Gift quantities SHALL use the saved replay
 start. Queries SHALL not consume gameplay RNG, grant inventory, initialize saves,
@@ -1311,7 +1329,7 @@ identical inputs and preserve the active pointer on publication failure.
 
 The home carousel SHALL use recorded enabled/limit/tap policy and prepared art.
 Defaults SHALL be enabled, six images and eligible taps; limits SHALL be 1 to 52.
-Historical selection SHALL use active replay events, descending release/area,
+Event selection SHALL use active annual events, descending release/area,
 filename deduplication and available art. Disabled, unprepared, unanchored or
 finished replay SHALL use era fallback; an active week without art SHALL yield
 no replay rows. Queries SHALL not initialize policy or mutate campaign facts.
@@ -2002,7 +2020,7 @@ native message state without charging resources or publishing a success result.
 
 ### Requirement: ProjectUpdatedReplayAndNativeCatalogues
 
-The recorded update policy SHALL select full historical banner/event runs,
+The recorded update policy SHALL select full historical banner runs,
 corrected Global unit dates, supported late banners and held-ticket offers without
 writing state. Unconfirmed late banners SHALL stay excluded. One pure five-star
 Select catalogue SHALL govern purchases and native preparation. Preparation SHALL

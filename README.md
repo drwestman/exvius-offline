@@ -37,9 +37,10 @@ Seasons group banners by when they came out. Collab groups crossover banners by 
 
 Banner prices, featured units, tickets, step-ups and guarantees are kept where their original details are known. Some missing campaign details use replacements. You can check the current pool and rates through the banner's **Drop Rates** button.
 
-### Events are always available
+### Events return on their original calendar dates
 
 Open **Vortex** and use **Filter** to choose **All Events, Permanent, Season 1, Season 2, Season 3, Season 4, Collab or Other Events**.
+Events repeat on their recorded month/day dates each year, using New York midnight boundaries. For example, January 6–19 remains playable through January 19. Permanent and undated dungeons keep their existing availability.
 The summon dropdown and Vortex filter are separate. You can browse one season's summons and another season's events on the same save.
 
 ### Raids are adjusted for solo play

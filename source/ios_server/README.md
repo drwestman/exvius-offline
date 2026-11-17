@@ -149,12 +149,17 @@ the live player. A refused or failed grant preserves the original state. The nat
 gameplay host and deal-art preparation remain later checkpoints; importing these
 definitions does not download their generated artwork.
 
-Vortex events follow that calendar too: the first week includes the preceding
-14 days, reruns retain their own run dates, ranked events use their original
-periods, and recurring dungeons rotate deterministically. Closed captured gates
-are removed and selected gates carry the actual weekly bounds. New entries after
-rollover are refused before creating an attempt or spending stamina/orbs. A pending
-battle can still resume and settle through the existing reward/raid ledger.
+Vortex events in every edition use annual month/day dates in `America/New_York`,
+independently of summon replay progress. A recorded January 6–19 run opens at
+midnight January 6 and closes at midnight January 20 each year. Recorded reruns
+and ranked periods retain their own windows; December–January runs cross New
+Year, and February 29 maps to February 28 in non-leap years. Undated recurring
+and permanent dungeons retain each edition's existing handling. Closed captured
+gates are removed, and selected gates carry the actual annual bounds as UTC text.
+New entries after closure are refused before creating an attempt or spending
+stamina/orbs. A pending battle can still resume and settle through its ledger.
+Legacy area-selection files remain readable; their date-override flags apply only
+to undated gates. No replay anchor or save migration is required.
 
 Exchange listings and purchases share historical unit eligibility. This includes
 the native medal and Trust Coin purchase paths. Event exchanges stay open while
@@ -168,7 +173,7 @@ explicit campaign-initialization command. Initializing an older iOS campaign
 backfills missing switches atomically while preserving its replay anchor. Views
 do not create them. The nine additional event areas declared by the pinned history
 metadata are now included for iOS, with 118 original missions. They retain the
-same historical and holiday entry guards. No art is downloaded by previews or
+same annual date and pending-battle entry guards. No art is downloaded by previews or
 gameplay projections; new images use the shipped native fallback until prepared.
 
 These engine integrations are available through prepared gameplay hosting below.
@@ -777,9 +782,11 @@ to refresh the client's cached friend data; existing saves need no migration.
 ## Replay notices
 
 The iOS News board now lists the current and seven previous replay weeks by
-default. Each notice summarizes the canonical historical summons, deals, Vortex
-events, dated bundles, and enabled replay gifts. Holiday and post-history
-rotations follow the same policies as gameplay. Dated bundle/mail announcements
+default. Each notice summarizes historical summons, deals, dated bundles, and
+enabled replay gifts. Its Vortex section lists annual event runs overlapping that
+real week, including midweek openings, and shows their actual New York dates
+separately from original releases. The Global history heading describes summon
+replay history. Summon holiday and post-history rotations follow gameplay. Dated bundle/mail announcements
 use the historical window's exclusive end; appreciation quantities use the
 campaign's saved start. Viewing gifts in News never delivers or grants them.
 

@@ -94,7 +94,8 @@ def rotation(config, *, now=None, weeks=1) -> dict:
     selected = data if result['anchored'] else {
         **data, 'ios_revival': {'version': 1, 'replay': new_anchor(now, IOS_REVIVAL.replay)}}
     for window in result['windows']:
-        events = plan(selected, datetime.fromisoformat(window['starts']))
+        events = plan(selected, datetime.fromisoformat(window['starts']),
+                      until=datetime.fromisoformat(window['ends']))
         window['events'] = events.describe()
         window['event_shops'] = policy(selected, events=events).describe()
     return result

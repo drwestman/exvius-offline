@@ -69,7 +69,7 @@ class HomePolicy(unittest.TestCase):
         self.assertEqual([r['event']['area'] for r in selected], ['102', '101'])
 
     def test_given_replay_rollover_when_selected_then_follow_active_event_policy_without_mutation(self):
-        data = self.data(); rows = [events.event(100, '2016-12-16'), events.event(101, '2017-01-06')]
+        data = self.data(); rows = [events.event(100, '2016-10-26'), events.event(101, '2017-11-15')]
         before = copy.deepcopy(data); rng = random.getstate()
         for moment, expected in ((NOW, ['100']), (NOW + timedelta(weeks=1), ['101'])):
             selected, summons = self.selected(data, rows, moment)

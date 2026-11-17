@@ -16,6 +16,10 @@ from exvius_rewards import parse
 
 class Completion(unittest.TestCase):
     def setUp(self):
+        # Completion fixtures exercise already-admitted seasons, independently of annual selection.
+        self.enterContext(patch('exvius_events.can_enter', return_value=True))
+        from event_archive import events
+        self.enterContext(patch('event_archive.weekly_events', side_effect=lambda *args, **kw: events()))
         self.previous = State.player
         self.p = PlayerState.load('/nonexistent', slot='feature-completion')
         State.player = self.p

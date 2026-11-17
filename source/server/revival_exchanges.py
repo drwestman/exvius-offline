@@ -56,12 +56,20 @@ class ExchangePolicy:
         shown_details = [copy.deepcopy(row) for row in details if row['3X1gLufw'] in detail_ids]
         shown_products = [copy.deepcopy(row) for row in products if row['jPV7Xc4N'] in kept]
         event_ids = {offer['detail'] for offer in kept.values() if offer.get('event_areas') is not None}
+        from event_calendar import EventWindow, window
+        bounds = {str(event['area']): window(event) for event in self.events.events}
         week = self.events.context['week']
-        first = week.starts.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        last = (week.ends.astimezone(timezone.utc) - timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+        first, last = EventWindow(week.starts, week.ends).wire()
         for row in shown_details + shown_products:
             if row['3X1gLufw'] in event_ids:
-                row.update(VjJQ51uG=first, m8ivD4NX=last)
+                areas = {area for offer in kept.values() if offer['detail'] == row['3X1gLufw']
+                         for area in offer.get('event_areas', [])}
+                active = [bounds[str(area)] for area in areas if bounds.get(str(area))]
+                # Without an active run: the existing leftover-currency redemption window.
+                opening, closing = (EventWindow(min(w.starts_at for w in active),
+                                                max(w.ends_at for w in active)).wire()
+                                    if active else (first, last))
+                row.update(VjJQ51uG=opening, m8ivD4NX=closing)
         return shown_details, shown_products, copy.deepcopy(kept)
 
     def describe(self):

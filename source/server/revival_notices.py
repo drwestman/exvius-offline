@@ -111,11 +111,11 @@ def summary(data, index, now=None):
             if window['from'] <= row['date'] < window['to']:
                 delivered.append(dict(copy.deepcopy(row), items=mail.items_for(row, read_anchor(data)[1].start)))
     selected_events, seen = [], set()
-    for row in sorted(events.plan(data, start + timedelta(hours=1), summons=selected).events,
+    for row in sorted(events.plan(data, start, summons=selected, until=_end).events,
                       key=lambda row: (str(row.get('release')), str(row.get('area')))):
-        if not row.get('release') or row.get('group') == 'permanent' and not row.get('windows'):
+        if not row.get('event_windows'):
             continue
-        key = row['release'], row['name']
+        key = row.get('release'), row['name'], tuple((w['starts_at'], w['ends_at']) for w in row['event_windows'])
         if key not in seen:
             seen.add(key)
             selected_events.append(copy.deepcopy(row))

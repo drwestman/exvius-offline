@@ -76,3 +76,10 @@
 - **Symptom**: Existing iOS campaigns advertise duplicate event missions because clone filtering requires an unrelated update-policy marker.
 - **Rule**: Separate catalogue identity corrections from optional saved feature policies; test both existing campaigns without the marker and upgraded campaigns without mutating either.
 - **Discovered**: 2026-11-16 via duplicate Mana Mystery difficulties.
+
+## AP-012 — Substituting replay weeks for annual event dates
+
+- **Class**: boundary
+- **Symptom**: January Vortex events run during November, and News presents their original dates without current availability bounds.
+- **Rule**: Resolve one annual occurrence from pinned run metadata and use it for listings, date fields and entry checks. Keep summon replay history separately labelled; never cache clock-dependent eligibility across midnight.
+- **Discovered**: 2026-11-16 via Notices -> News date mismatch and shared legacy/iOS event reproduction.

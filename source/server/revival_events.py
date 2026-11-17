@@ -1,6 +1,6 @@
-"""Pure iOS Vortex projections over the saved campaign calendar.
+"""Pure iOS Vortex projections over annual event dates and saved dungeon rotations.
 
-Selection follows event_archive.py at revival commit
+Undated dungeon rotations follow event_archive.py at revival commit
 47a13c084f42cf1b83b53173d0c21065c78fc2de. Historical runs/windows are pinned
 metadata; queries neither fetch art nor create replay/rotation state files.
 """
@@ -138,12 +138,16 @@ class EventPlan:
 
     def gate_windows(self, spec):
         from exvius_events import DATE_START, DATE_END
+        from event_calendar import window
         week = self.context['week']
-        first = week.starts.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        last = (week.ends.astimezone(timezone.utc) - timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+        from event_calendar import EventWindow
+        fallback = EventWindow(week.starts, week.ends).wire()
+        bounds = {str(row['area']): window(row) for row in self.events}
         out = copy.deepcopy(spec)
         for row in out.get('0xkoNP8U', []):
-            if str(row.get('uv60hgDW')) in self.areas:
+            area = str(row.get('uv60hgDW'))
+            if area in bounds:
+                first, last = bounds[area].wire() if bounds[area] else fallback
                 row.update({key: first for key in DATE_START})
                 row.update({key: last for key in DATE_END})
         return out
@@ -151,10 +155,10 @@ class EventPlan:
     def describe(self):
         return [{'area': str(row['area']), 'name': row['name'], 'group': row['group'],
                  'release': row.get('release'), 'first_release': row.get('first_release'),
-                 'missions': len(row['missions'])} for row in self.events]
+                 'missions': len(row['missions']), 'event_windows': copy.deepcopy(row.get('event_windows', []))} for row in self.events]
 
 
-def plan(data, now=None, *, rows=None, summons=None, art=None):
+def plan(data, now=None, *, rows=None, summons=None, art=None, until=None):
     now = now if now is not None else revival_summons.clock()
     supplied = rows is not None
     rows = catalogue() if rows is None else rows
@@ -166,40 +170,19 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
             event_keys.setdefault(name, []).append(run.isoformat())
     context = revival_summons.event_context(data, now, event_keys, selected=summons)
     current, week = context['summons'], context['week']
-    dates, holiday, years = context['dates'], context['holiday'], context['years']
+    from event_calendar import select
+    holiday = context['holiday']
     number = week.number
-    win = None if current.finished else current.window
-    earliest = (date.fromisoformat(win['from']) - timedelta(days=14 if win['index'] == 0 else 0)) if win else None
-    end = date.fromisoformat(win['to']) if win else None
     from revival_update import settings as update_settings
     update = update_settings(data)
-    kept, extra, permanent, ranked = [], [], [], []
-    for row in rows:
-        if row.get('windows'):
-            opened = [date.fromisoformat(first) for first, last in row['windows']
-                      if (date.fromisoformat(first) < end and date.fromisoformat(last) >= earliest if win else
-                          any(timedelta(days=-3) <= date.fromisoformat(first) - day <= timedelta(days=13) for day in dates))]
-            if opened:
-                ranked.append(dict(row, release=max(opened).isoformat()))
-            continue
-        if row.get('group') == 'permanent':
+    kept, extra, permanent = [], [], []
+    for row in select(rows, now, until=until):
+        if row.get('event_windows'):
+            kept.append(row)
+        elif row.get('group') == 'permanent':
             permanent.append(row)
-            continue
-        released = [date.fromisoformat(run) for run in row.get('runs') or [row.get('release')] if run]
-        if not released:
+        else:
             extra.append(row)
-            continue
-        themed = holiday_runs[str(row['area'])]
-        opened = [run for run in released
-                  if (holiday == themed[run] and str(run.year) in years if run in themed else
-                      any(timedelta(days=-3) <= run - day <= timedelta(days=13) for day in dates) or
-                      (win and earliest <= run < end))]
-        if update and update['full_runs'] and win:
-            from revival_history import event_runs
-            opened = [first for first, last in event_runs(row) if first < end and last >= earliest]
-        if opened:
-            run = max(opened).isoformat()
-            kept.append(row if run == row.get('release') else dict(row, release=run, first_release=row.get('release')))
     if extra:
         names = sorted({row['name'] for row in extra})
         cycle, start = divmod(number * 2, len(names))
@@ -219,30 +202,25 @@ def plan(data, now=None, *, rows=None, summons=None, art=None):
                  HOLIDAY_PERMANENT[str(row['area'])] == holiday or
                  not any(r['name'] == row['name'] and str(r['area']) not in HOLIDAY_PERMANENT for r in permanent)]
     permanent = _one_per_look(permanent, take_turns, art)
-    newest = {}
-    for row in ranked:
-        newest[row['name']] = max(newest.get(row['name'], ''), row['release'])
-    ranked = _one_per_look([row for row in ranked if row['release'] == newest[row['name']]],
-                           lambda group: sorted(group, key=lambda r: int(r['area']))[number % len(group)], art)
-    dated = _one_per_look(kept, lambda group: min(group, key=lambda r: int(r['area'])), art)
-    holiday_areas = set().union(*HOLIDAY_EVENTS.values())
-    dated.sort(key=lambda row: (str(row['area']) in holiday_areas, str(row.get('release') or ''), int(row['area'])), reverse=True)
-    selected = _without_clones(dated + ranked + permanent)
+    # Dated areas with distinct missions must not disappear merely because their art matches.
+    kept.sort(key=lambda row: (row.get('event_windows', [{}])[0].get('starts_at', ''),
+                              int(row['area'])), reverse=True)
+    selected = _without_clones(kept + permanent)
     if update:
         from revival_update import document
-        hidden = {'711'}  # Aquapolis: a duplicate shop exploration, not a Global event.
+        mission_dates = document('event_quest_dates.json')['missions']
+        cutoff = current.window['to'] if not current.finished else '9999-12-31'
         filtered = []
         for row in selected:
-            if str(row['area']) in hidden:
+            if str(row['area']) == '711':
                 continue
-            entry = dict(row)
-            dates = document('event_quest_dates.json')['missions']
-            cutoff = current.window['to'] if not current.finished else '9999-12-31'
-            entry['missions'] = [m for m in row['missions'] if dates.get(str(m), '') < cutoff]
-            entry['held_back'] = list(row.get('held_back') or []) + [m for m in row['missions'] if m not in entry['missions']]
-            if entry['missions']:
-                entry['first_mission'] = entry['missions'][0]
-                filtered.append(entry)
+            if row.get('event_windows'):
+                filtered.append(row)
+                continue
+            missions = [mid for mid in row['missions'] if mission_dates.get(str(mid), '') < cutoff]
+            if missions:
+                filtered.append(dict(row, missions=missions, first_mission=missions[0],
+                    held_back=list(row.get('held_back') or []) + [m for m in row['missions'] if m not in missions]))
         selected = filtered
     known = {str(row['area']) for row in rows}
     if not supplied:

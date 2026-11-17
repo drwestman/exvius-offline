@@ -12593,6 +12593,7 @@ The system SHALL the service shall save the requested event area selection and p
 - **GIVEN** One or more event areas are provided
 - **WHEN** The event selection is saved
 - **THEN** The selected areas are persisted with permanent set according to the historical-window option
+- **AND** The permanent/historical-window option applies only to undated gates; dated events always use annual America/New_York dates
 
 #### Scenario: DisableAddedEvents
 - **GIVEN** The disable-added-events option is selected

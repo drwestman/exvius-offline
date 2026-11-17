@@ -2996,59 +2996,9 @@ def event_gate_art(area):
     return _EVENT_GATE_ART_CACHE.get(str(area), {}).get('filename')
 
 
-def serve_event_gate(spec, reply_id):
-    """0xkoNP8U -> one gate row per EVENT_GATE_AREAS area, APPENDED to the carrier's own rows.
-
-    SpDungeonCondMstResponse is what makes an area's tile exist at all (GateScene::setListLayout, and
-    AreaMapManager::drawDungeon asks the same list per tile) -- the survival family's own lesson, and
-    docs/notes/chamber_battle_authoring.md section 6 names this as the step a battle-authoring run does
-    NOT cover. DERIVED: the area id is the env word, and its dungeon + first mission are read from the
-    shipped tables. AUTHORED: the window, the tab (qnUhs32P, 1-BASED, 1 = Event), the 1/2 selector, and
-    the art (reused from a shipped row so the client can resolve it -- see the config's collision note).
-
-    Legacy appends on the existing carriers and preserves their rows. iOS also removes closed archive
-    gates and bounds the selected gates to the saved rotation week.
-    """
-    from exvius_events import native_gate_dates
-    spec = native_gate_dates(spec)
-    if State.player is None or reply_id not in EVENT_GATE_CARRIERS:
-        return spec
-    from engine_profile import current_profile
-    revival = None
-    if current_profile().name == 'ios-revival':
-        from revival_events import plan
-        revival = plan(State.player.data)
-        archive_events = revival.events
-        policy = {'version': 1, 'areas': list(revival.areas), 'permanent': True}
-    else:
-        try:
-            policy = load_policy(DATA_ROOT, EVENT_GATE_AREAS)
-            archive_events = None
-            from exvius_events import policy_path
-            saved_policy = policy_path(DATA_ROOT)
-            if (os.environ.get('EXVIUS_EVENT_ARCHIVE') == '1' and
-                    not (saved_policy is not None and saved_policy.exists())):
-                from event_archive import area_ids, events
-                archive_events = events()
-                policy = dict(policy, areas=area_ids(), permanent=True)
-        except (OSError, ValueError) as exc:
-            _note("event policy invalid; no extra gates served: " + str(exc))
-            return spec
-    facts = ([(row['area'], row['first_dungeon'], row['first_mission']) for row in archive_events]
-             if archive_events is not None else _event_area_facts(policy["areas"]))
-    if not facts and revival is None:
-        return spec
-    spec = _as_spec(spec)
-    rows = [dict(r) for r in (spec.get(EVENT_GATE_TAG) or []) if isinstance(r, dict)]
-    if revival is not None:
-        missions = {mid for event in archive_events for mid in event['missions']}
-        rows = [row for row in rows if str(row.get('uv60hgDW')) not in revival.known_areas or
-                (str(row.get('uv60hgDW')) in revival.areas and str(row.get('qo3PECw6')) in missions)]
-    have = {str(r.get("uv60hgDW")) for r in rows}
-    gate_changed = revival is not None
-    selected = {f[0] for f in facts}
-    from exvius_raid_progress import personal_event
-    raids = {area: personal_event(dungeon_id=dungeon) for area, dungeon, _mission in facts}
+def _refresh_gate_rows(rows, selected, raids):
+    """Point already-served rows of selected areas at their art and reward banner; True if any changed."""
+    gate_changed = False
     for row in rows:
         area = str(row.get('uv60hgDW'))
         image = event_gate_art(area) if area in selected else None
@@ -3064,37 +3014,47 @@ def serve_event_gate(spec, reply_id):
         if raid and row.get('fSxqkF10') != raid['reward_banner_id']:
             row['fSxqkF10'] = raid['reward_banner_id']
             gate_changed = True
+    return gate_changed
+
+
+def _new_gate_row(area, dungeon, mission, raid):
+    return {
+        "uv60hgDW": area,             # SubRegionId -- THE key the tile lookups match
+        "U9iHsau3": dungeon,          # the dungeon the tile opens
+        "qo3PECw6": mission,          # its first mission
+        "qnUhs32P": EVENT_GATE_TAB,   # 1-BASED tab: 1 = Event
+        "Z0EN6jSh": EVENT_GATE_KIND,  # +0x100 -- the 1/2 selector getAreaIdWithBannerTouch reads
+        "VjJQ51uG": EVENT_GATE_WINDOW_START,   # AcceptedDate
+        "m8ivD4NX": EVENT_GATE_WINDOW_END,     # CompletedDate
+        "NTXoA6e2": EVENT_GATE_WINDOW_START,
+        "V48um7Jw": EVENT_GATE_WINDOW_END,
+        "7Gvw6J82": EVENT_GATE_WINDOW_END,
+        "4yT7FUqj": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
+        "A5efbo71": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
+        "fSxqkF10": raid['reward_banner_id'] if raid else '0',
+        # The shipped rows' remaining fields, with their own values, so the row's SHAPE matches what
+        # the client has already parsed: the neutral zeros/empties where no reader was located.
+        "0iWgxc1X": "0", "45wVefcS": "", "5mouF8P1": "", "B2FW5Qjq": "",
+        "C8Qf5bs6": "1" if raid else "0", "ET8L6iDw": "0", "M1p3ehVU": "", "MrxFQ63W": "",
+        "QCLs6SV8": "0", "mTHe6pI0": "", "oY0vAuE9": "0", "vnhT2EM5": "",
+        "xm7c08IS": "0", "z0ft1PK8": "0", "pAwU2R6W": "0", "td06MKEX": "0",
+        "BGFw7qi4": "", "2oL4dNFy": "", "uwHx3jk0": "", "XY5ZfS0w": "", "0dh7yRIN": "",
+    }
+
+
+def _append_gate_rows(rows, have, facts, raids):
     added = 0
     for area, dungeon, mission in facts:
         if area in have:
             continue
-        raid = raids.get(area)
-        rows.append({
-            "uv60hgDW": area,             # SubRegionId -- THE key the tile lookups match
-            "U9iHsau3": dungeon,          # the dungeon the tile opens
-            "qo3PECw6": mission,          # its first mission
-            "qnUhs32P": EVENT_GATE_TAB,   # 1-BASED tab: 1 = Event
-            "Z0EN6jSh": EVENT_GATE_KIND,  # +0x100 -- the 1/2 selector getAreaIdWithBannerTouch reads
-            "VjJQ51uG": EVENT_GATE_WINDOW_START,   # AcceptedDate
-            "m8ivD4NX": EVENT_GATE_WINDOW_END,     # CompletedDate
-            "NTXoA6e2": EVENT_GATE_WINDOW_START,
-            "V48um7Jw": EVENT_GATE_WINDOW_END,
-            "7Gvw6J82": EVENT_GATE_WINDOW_END,
-            "4yT7FUqj": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
-            "A5efbo71": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
-            "fSxqkF10": raid['reward_banner_id'] if raid else '0',
-            # The shipped rows' remaining fields, with their own values, so the row's SHAPE matches what
-            # the client has already parsed: the neutral zeros/empties where no reader was located.
-            "0iWgxc1X": "0", "45wVefcS": "", "5mouF8P1": "", "B2FW5Qjq": "",
-            "C8Qf5bs6": "1" if raid else "0", "ET8L6iDw": "0", "M1p3ehVU": "", "MrxFQ63W": "",
-            "QCLs6SV8": "0", "mTHe6pI0": "", "oY0vAuE9": "0", "vnhT2EM5": "",
-            "xm7c08IS": "0", "z0ft1PK8": "0", "pAwU2R6W": "0", "td06MKEX": "0",
-            "BGFw7qi4": "", "2oL4dNFy": "", "uwHx3jk0": "", "XY5ZfS0w": "", "0dh7yRIN": "",
-        })
+        rows.append(_new_gate_row(area, dungeon, mission, raids.get(area)))
         added += 1
-    # A raid mission with the original schedule flag is hidden unless its OWN
-    # mission ID has a SpDungeonCondMst row (GateUtil 0x1ab6bbc-0x1ab6bdc).
-    # One row for the first difficulty cannot open ADV, PRO or ELT.
+    return added
+
+
+def _append_mission_rows(rows, facts, selected, archive_events):
+    """One row per mission of each selected area, templated on the area's first row."""
+    added = 0
     event_missions = _load_mst_rows('F_MISSION_MST.ndjson')['__rows__']
     archive_missions = {mid for event in archive_events for mid in event['missions']} if archive_events is not None else None
     missions_by_area = {}
@@ -3111,13 +3071,10 @@ def serve_event_gate(spec, reply_id):
                 rows.append(dict(template, U9iHsau3=str(mission_row['U9iHsau3']), qo3PECw6=mid))
                 present_missions.add(mid)
                 added += 1
-    if revival is not None:
-        order = {str(row['area']): index for index, row in enumerate(archive_events)}
-        rows.sort(key=lambda row: order.get(str(row.get('uv60hgDW')), len(order)))
-    if added or gate_changed:
-        spec[EVENT_GATE_TAG] = rows
-    spec = serve_switches(revival.gate_windows(spec) if revival is not None else
-                          apply_availability(spec, policy, resolved_areas=[f[0] for f in facts]))
+    return added
+
+
+def _publish_reward_schedules(spec, raids):
     # GateMissionScene keeps the Rewards link only when its BannerMst has an
     # active BannerScheduleMst row. The master table itself contains no dates.
     reward_ids = {raid['reward_banner_id'] for raid in raids.values() if raid}
@@ -3129,6 +3086,47 @@ def serve_event_gate(spec, reply_id):
         schedules.extend({'fSxqkF10': bid, 'VjJQ51uG': windows[bid]['VjJQ51uG'],
                           'm8ivD4NX': windows[bid]['m8ivD4NX']} for bid in sorted(windows))
         spec['jBL5XNf6'] = schedules
+
+
+def serve_event_gate(spec, reply_id):
+    """0xkoNP8U -> one gate row per EVENT_GATE_AREAS area, APPENDED to the carrier's own rows.
+
+    SpDungeonCondMstResponse is what makes an area's tile exist at all (GateScene::setListLayout, and
+    AreaMapManager::drawDungeon asks the same list per tile) -- the survival family's own lesson, and
+    docs/notes/chamber_battle_authoring.md section 6 names this as the step a battle-authoring run does
+    NOT cover. DERIVED: the area id is the env word, and its dungeon + first mission are read from the
+    shipped tables. AUTHORED: the window, the tab (qnUhs32P, 1-BASED, 1 = Event), the 1/2 selector, and
+    the art (reused from a shipped row so the client can resolve it -- see the config's collision note).
+
+    Legacy appends on the existing carriers and preserves their rows. iOS also removes closed archive
+    gates. Dated gates in every edition use their annual calendar bounds.
+    """
+    from exvius_events import native_gate_dates
+    from event_availability import current
+    spec = native_gate_dates(spec)
+    if State.player is None or reply_id not in EVENT_GATE_CARRIERS:
+        return spec
+    source = current().gate_source(State.player)
+    if source is None:
+        return spec
+    facts = source.facts
+    if not facts and not source.serve_when_empty:
+        return source.window(spec, [])
+    spec = _as_spec(spec)
+    rows = source.prune([dict(r) for r in (spec.get(EVENT_GATE_TAG) or []) if isinstance(r, dict)])
+    have = {str(r.get("uv60hgDW")) for r in rows}
+    selected = {f[0] for f in facts}
+    from exvius_raid_progress import personal_event
+    raids = {area: personal_event(dungeon_id=dungeon) for area, dungeon, _mission in facts}
+    refreshed = _refresh_gate_rows(rows, selected, raids)  # always runs: it edits rows in place
+    gate_changed = source.rewrites or refreshed
+    added = _append_gate_rows(rows, have, facts, raids)
+    added += _append_mission_rows(rows, facts, selected, source.archive_events)
+    rows = source.order(rows)
+    if added or gate_changed:
+        spec[EVENT_GATE_TAG] = rows
+    spec = serve_switches(source.window(spec, facts))
+    _publish_reward_schedules(spec, raids)
     return spec
 
 

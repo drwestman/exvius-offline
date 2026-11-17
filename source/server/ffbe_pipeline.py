@@ -577,11 +577,11 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
     `docs/notes/server_code_review_2nd_opinion.md` §C1.
     """
     from engine_profile import current_profile
-    if current_profile().name == 'ios-revival' and str(reply_id) == 'jnw49dUq' and mid:
+    if str(reply_id) == 'jnw49dUq' and mid:
         from player_state import mission_row
-        from revival_events import can_enter
-        if not can_enter(State.player.data if State.player else {}, mission_row(mid), resume=True):
-            st._note(f'Replay event closed: mission {mid}; no load or mutation')
+        from exvius_events import can_enter, request_moment
+        if not can_enter(State.player.data if State.player else {}, mission_row(mid), now=request_moment(), resume=True):
+            st._note(f'Annual event closed: mission {mid}; no load or mutation')
             return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
     roster_command = (str(reply_id) in ({'UiSC9y8R', 'zf49XKg8', '7tWdn9zH', 'x94MnujU',

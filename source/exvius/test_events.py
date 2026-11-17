@@ -11,7 +11,7 @@ from preflight import audit
 
 class Events(unittest.TestCase):
     def test_archive_groups_duplicate_tiles_without_dropping_stages(self):
-        from event_archive import events, listings, menu
+        from event_archive import events, listings, menu, weekly_events
         original = {str(row['area']): row for row in events()}
         groups = listings()
         covered = [str(row['area']) for row, _aliases in groups]
@@ -23,7 +23,7 @@ class Events(unittest.TestCase):
             {mid for row in events() for mid in row['missions']})
         result = menu(None, '')
         all_group = next(row for row in result['groups'] if row['id'] == 'all')
-        self.assertEqual(all_group['count'], len(groups))
+        self.assertEqual(all_group['count'], len(listings(weekly_events())))
         vault = [(row, aliases) for row, aliases in groups if row['name'] == 'Vault of Hidden Treasures']
         self.assertEqual(len(vault), 1)
         self.assertEqual(len(vault[0][1]), 11)
@@ -44,14 +44,14 @@ class Events(unittest.TestCase):
             p=Path(d)/'state/exvius_events.json';p.parent.mkdir();p.write_text('{bad')
             with self.assertRaises(ValueError):load_policy(d,[970])
     def test_existing_expired_row_extended_only_selected(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970','m8ivD4NX':'1','other':'keep'}, {'uv60hgDW':'888','m8ivD4NX':'2'}]}
-        out=apply_availability(source,{'version':1,'areas':[970],'permanent':True},now=2000000000)
+        source={'0xkoNP8U':[{'uv60hgDW':'999999','m8ivD4NX':'1','other':'keep'}, {'uv60hgDW':'999998','m8ivD4NX':'2'}]}
+        out=apply_availability(source,{'version':1,'areas':[999999],'permanent':True},now=2000000000)
         self.assertGreater(calendar.timegm(time.strptime(out['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S')),2000000000)
         self.assertEqual(out['0xkoNP8U'][0]['other'],'keep')
         self.assertEqual(source['0xkoNP8U'][0]['m8ivD4NX'],'1')
         self.assertEqual(out['0xkoNP8U'][1],source['0xkoNP8U'][1])
     def test_rolling_window_and_unresolved_not_changed(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970'}]};policy={'version':1,'areas':[970],'permanent':True}
+        source={'0xkoNP8U':[{'uv60hgDW':'999999'}]};policy={'version':1,'areas':[999999],'permanent':True}
         early=apply_availability(source,policy,100);late=apply_availability(source,policy,500)
         self.assertEqual(calendar.timegm(time.strptime(late['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S'))-calendar.timegm(time.strptime(early['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S')),400)
         self.assertEqual(apply_availability(source,policy,500,[]),source)
@@ -66,8 +66,8 @@ class Events(unittest.TestCase):
         self.assertEqual(out['0xkoNP8U'][0]['m8ivD4NX'],'2100-01-01 00:00:00')
         self.assertEqual(source['0xkoNP8U'][0]['VjJQ51uG'],'1577836800')
     def test_historical_policy_preserves_rows(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970','m8ivD4NX':'1'}]}
-        self.assertEqual(apply_availability(source,{'version':1,'areas':[970],'permanent':False}),source)
+        source={'0xkoNP8U':[{'uv60hgDW':'999999','m8ivD4NX':'1'}]}
+        self.assertEqual(apply_availability(source,{'version':1,'areas':[999999],'permanent':False}),source)
 
 class Preflight(unittest.TestCase):
     def fixture(self,d):

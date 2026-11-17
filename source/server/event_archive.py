@@ -28,14 +28,8 @@ def events():
 
 
 def weekly_events(player=None, now=None):
-    from engine_profile import current_profile
-    if current_profile().name != 'ios-revival':
-        return events()
-    if player is None:
-        from ffbe_state import State
-        player = State.player
-    from revival_events import plan
-    return list(plan(player.data if player else {}, now).events)
+    from event_availability import current
+    return current().weekly_events(player, now)
 
 
 def area_ids():
@@ -120,11 +114,10 @@ def activate_mode(player, selection):
     if (player is None or player.mode == 'frozen' or not rows or mode not in ('tfa', 'parade')
             or any(allowed.get(str(r.get('uv60hgDW'))) != mode for r in rows)):
         raise ValueError('Unknown event season')
-    from engine_profile import current_profile
-    if current_profile().name == 'ios-revival':
-        from revival_events import can_enter
-        if not all(can_enter(player.data, row) for row in rows):
-            raise ValueError('This event is outside the current replay rotation.')
+    from exvius_events import can_enter, request_moment
+    moment = request_moment()  # one instant for every row of the season
+    if not all(can_enter(player.data, row, now=moment) for row in rows):
+        raise ValueError('This event is outside its annual dates.')
     area = str(rows[0]['uv60hgDW'])
     feature = deepcopy(player.data.get('exvius_' + mode, {}))
     if feature.get('active'):

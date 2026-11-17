@@ -1070,4 +1070,5 @@ The system SHALL the service must route proxied url connections handled by the l
 
 ## Technical Notes
 
+- **Embedded Python packages**: `tzdata` is bundled so annual event dates can resolve the `America/New_York` zone on Android
 - **Dependencies**: Game runtime, libgame.so, libc.so, JNI runtime, PlateManifest, PlateAsset, LimitBurstMaster, LocalGameBridge

@@ -29,9 +29,9 @@ class ReplayEventBehavior(unittest.TestCase):
         selected = summons.plan(data, now, banners=banners, families=set())
         return events.plan(data, now, rows=rows, summons=selected, art={})
 
-    def test_given_first_week_when_selecting_then_include_running_events_and_exclude_future(self):
-        rows = [event(100, '2016-12-02'), event(101, '2016-12-01'),
-                event(102, '2016-12-16'), event(103, '2017-01-06'),
+    def test_given_calendar_day_when_selecting_then_include_running_events_and_exclude_future(self):
+        rows = [event(100, '2016-10-26'), event(101, '2016-10-01'),
+                event(102, '2016-11-01'), event(103, '2017-11-15'),
                 event(104, group='permanent')]
         before = copy.deepcopy(rows)
         self.assertEqual({r['area'] for r in self.select(rows).events}, {'100', '102', '104'})
@@ -41,23 +41,23 @@ class ReplayEventBehavior(unittest.TestCase):
         self.assertNotIn('100', later.areas)
 
     def test_given_rerun_when_selected_then_date_the_rerun_without_rewriting_the_catalogue(self):
-        rows = [event(100, '2016-08-01', runs=['2016-08-01', '2017-01-10'])]
+        rows = [event(100, '2016-08-01', runs=['2016-08-01', '2017-11-15'])]
         selected = self.select(rows, NOW + timedelta(weeks=1))
-        self.assertEqual(selected.events[0]['release'], '2017-01-10')
-        self.assertEqual(selected.events[0]['first_release'], '2016-08-01')
+        self.assertEqual(selected.events[0]['release'], '2016-08-01')
+        self.assertEqual(selected.events[0]['event_windows'][0]['starts_at'], '2026-11-15T00:00:00-05:00')
         self.assertEqual(rows[0]['release'], '2016-08-01')
 
-    def test_given_holiday_event_when_its_history_date_arrives_then_wait_for_the_real_holiday(self):
+    def test_given_holiday_event_when_selecting_then_use_recorded_run_dates(self):
         rows = [event(906, '2016-12-23', name='Christmas event')]
         self.assertFalse(self.select(rows).areas)
-        christmas = datetime(2026, 12, 21, 4, tzinfo=timezone.utc)
+        christmas = datetime(2026, 12, 31, 12, tzinfo=timezone.utc)
         selected = self.select(rows, christmas, data=campaign(christmas))
         self.assertEqual(selected.areas, frozenset({'906'}))
 
-    def test_given_ranked_windows_when_overlapping_then_show_only_the_newest_run(self):
-        rows = [event(100, name='Ranked', windows=[['2016-12-02', '2016-12-20']]),
-                event(101, name='Ranked', windows=[['2016-12-16', '2017-01-08']])]
-        self.assertEqual(self.select(rows).areas, frozenset({'101'}))
+    def test_given_ranked_windows_when_overlapping_then_keep_distinct_mission_sets(self):
+        rows = [event(100, name='Ranked', windows=[['2016-11-01', '2016-11-20']]),
+                event(101, name='Ranked', windows=[['2016-11-05', '2016-11-30']])]
+        self.assertEqual(self.select(rows).areas, frozenset({'100', '101'}))
 
     def test_given_recurring_and_duplicate_tiles_when_selected_then_rotate_deterministically(self):
         rows = [event(i, name='Recurring ' + str(i)) for i in range(100, 108)]
@@ -69,15 +69,15 @@ class ReplayEventBehavior(unittest.TestCase):
         following = self.select(rows, NOW + timedelta(weeks=1))
         self.assertNotEqual(first.areas & {'200', '201'}, following.areas & {'200', '201'})
 
-    def test_given_finished_history_when_selecting_then_follow_the_weekly_summon_sets(self):
-        later = NOW + timedelta(weeks=220)
+    def test_given_finished_history_when_selecting_then_use_calendar_dates(self):
+        later = datetime(2031, 11, 16, 12, tzinfo=timezone.utc)
         banners = [banner(i, f'2017-01-{i:02d}') for i in range(1, 9)]
-        selected = self.select([event(100, '2017-01-10'), event(101, '2024-08-22')], later, banners=banners)
+        selected = self.select([event(100, '2017-11-15'), event(101, '2024-08-22')], later, banners=banners)
         self.assertIn('100', selected.areas)
         self.assertNotIn('101', selected.areas)
 
     def test_given_closed_event_when_checking_entry_then_preserve_a_pending_battle_only(self):
-        row = event(100, '2016-12-16')
+        row = event(100, '2016-10-26')
         state = campaign()
         selected = self.select([row], NOW + timedelta(weeks=1), data=state)
         mission = {'qo3PECw6': row['first_mission'], 'uv60hgDW': row['area']}
@@ -92,7 +92,7 @@ class ReplayEventBehavior(unittest.TestCase):
     def test_given_mana_clones_when_projecting_any_campaign_then_keep_one_of_each_difficulty(self):
         from revival_update import initialize
         row = dict(next(row for row in events.catalogue() if row['area'] == '708'),
-                   release=None, runs=[], held_back=['later', '7080106'])
+                   release=None, runs=[], group='permanent', held_back=['later', '7080106'])
         original = copy.deepcopy(row)
         for updated in (False, True):
             with self.subTest(updated=updated):
@@ -152,7 +152,7 @@ class ReplayEventBehavior(unittest.TestCase):
             self.assertEqual(updated.events[0]['held_back'], ['1000102'])
 
     def test_given_hidden_clone_when_entering_then_refuse_new_entry_but_allow_pending_resume(self):
-        row = event(708, missions=['7080101', '7080106'])
+        row = event(708, group='permanent', missions=['7080101', '7080106'])
         data = campaign()
         selected = self.select([row], data=data)
         clone = {'uv60hgDW': '708', 'qo3PECw6': '7080106'}
@@ -176,7 +176,7 @@ class ReplayEventBehavior(unittest.TestCase):
 class ReplayExchangeBehavior(unittest.TestCase):
     def test_given_leftover_currency_when_event_closes_then_exchange_remains_redeemable(self):
         data = campaign()
-        selected = ReplayEventBehavior().select([event(100, '2016-12-16')], NOW + timedelta(weeks=1), data=data)
+        selected = ReplayEventBehavior().select([event(100, '2016-10-26')], NOW + timedelta(weeks=1), data=data)
         offer = {'event_areas': ['100'], 'cost': [20, '123']}
         self.assertFalse(exchanges.policy(data, events=selected).detail_open(offer))
         data['inventory'] = {'items': [{'item_type': 20, 'item_id': 123, 'count': 1}]}
@@ -243,7 +243,7 @@ import revival_events as events
 from test_ios_events import event
 from ffbe_player import serve_event_gate
 from ffbe_config import EVENT_GATE_CARRIERS
-rows = (event(100, '2016-12-16'), event(101, '2017-01-06'))
+rows = (event(100, '2016-10-26'), event(101, '2017-11-15'))
 captured = {'0xkoNP8U': [{'uv60hgDW': '101', 'qo3PECw6': '1010101'},
                          {'uv60hgDW': '1', 'qo3PECw6': '1'}]}
 with patch.object(events, 'catalogue', return_value=rows), patch.object(summons, 'clock', return_value=NOW):
@@ -252,8 +252,8 @@ with patch.object(events, 'catalogue', return_value=rows), patch.object(summons,
     gates = result['0xkoNP8U']
     assert {r['uv60hgDW'] for r in gates} == {'100', '1'}, gates
     active = next(r for r in gates if r['uv60hgDW'] == '100')
-    assert active['VjJQ51uG'] == '2026-11-09 03:00:00', active
-    assert active['m8ivD4NX'] == '2026-11-16 02:59:59', active
+    assert active['VjJQ51uG'] == '2026-10-26 04:00:00', active
+    assert active['m8ivD4NX'] == '2026-11-09 04:59:59', active
     assert player.data == before and config.state_file.read_bytes() == saved
     assert captured['0xkoNP8U'][0]['uv60hgDW'] == '101'
     from event_archive import menu
@@ -266,7 +266,7 @@ with patch.object(events, 'catalogue', return_value=rows), patch.object(summons,
 import revival_events as events
 from test_ios_events import event
 from exvius_repeat import complete_attempt
-rows = (event(100, '2016-12-16'), event(101, '2017-01-06'))
+rows = (event(100, '2016-10-26'), event(101, '2017-11-15'))
 mid = '1000101'
 server.State.replies['jnw49dUq@' + mid] = {'an6TB4WS': [{'qo3PECw6': mid, 'gou39JeI': '0'}]}
 payload = {'1zTjkp5B': [{'6uIYE15X': mid}]}
@@ -296,7 +296,7 @@ from ffbe_config import EVENT_GATE_CARRIERS
 player.data.pop('ios_revival_update', None)
 player.save(str(config.state_file))
 missions = [str(mid) for mid in range(7080101, 7080111)]
-rows = (event(708, missions=missions),)
+rows = (event(708, group='permanent', missions=missions),)
 captured = {'0xkoNP8U': [{'uv60hgDW': '708', 'U9iHsau3': '70801', 'qo3PECw6': mid}
                          for mid in missions] + [{'uv60hgDW': '1', 'qo3PECw6': '1'}]}
 original = copy.deepcopy(captured)
@@ -319,7 +319,7 @@ from exvius_repeat import begin_attempt, complete_attempt
 player.data.pop('ios_revival_update', None)
 player.save(str(config.state_file))
 mid = '7080106'
-rows = (event(708, missions=['7080101', mid]),)
+rows = (event(708, group='permanent', missions=['7080101', mid]),)
 bundle = {'an6TB4WS': [{'qo3PECw6': mid, 'gou39JeI': '0'}]}
 server.State.replies['jnw49dUq@' + mid] = bundle
 payload = {'1zTjkp5B': [{'6uIYE15X': mid}]}
@@ -348,7 +348,7 @@ import revival_events as events
 from test_ios_events import event
 from exvius_actions_modes import _begin, _Refused
 from player_state import mission_row
-with patch.object(events, 'catalogue', return_value=(event(100, '2016-12-16'),)), \\
+with patch.object(events, 'catalogue', return_value=(event(100, '2016-10-26'),)), \\
      patch.object(summons, 'clock', return_value=NOW + timedelta(weeks=1)), \\
      patch.object(player, 'settle_nrg', side_effect=AssertionError('entry debited before eligibility')):
     before, dirty = copy.deepcopy(player.data), player.dirty
@@ -369,7 +369,7 @@ from test_ios_events import event, shop_fixture
 raw = shop_fixture()
 def buy(pid):
     return request('GachaSelectExchangeExeRequest', {'4mrD6JuA': [{'jPV7Xc4N': pid, 'Qy5EvcK1': '1'}]})
-with patch.object(events, 'catalogue', return_value=(event(100, '2016-12-16'),)), \\
+with patch.object(events, 'catalogue', return_value=(event(100, '2016-10-26'),)), \\
      patch.object(shops, '_catalogue', return_value=raw), patch.object(summons, 'clock', return_value=NOW):
     before, saved = copy.deepcopy(player.data), config.state_file.read_bytes()
     listed = request('GachaSelectEntryRequest')
@@ -386,7 +386,7 @@ with patch.object(events, 'catalogue', return_value=(event(100, '2016-12-16'),))
     player.grant_item(20, 106213050, 1)
     assert '4owH1uT2' in buy('950000000')
     assert player.item_count(20, 106213050) == 0
-with patch.object(events, 'catalogue', return_value=(event(100, '2016-12-16'),)), \\
+with patch.object(events, 'catalogue', return_value=(event(100, '2016-10-26'),)), \\
      patch.object(shops, '_catalogue', return_value=raw), \\
      patch.object(summons, 'clock', return_value=NOW + timedelta(weeks=1)):
     assert '940000001' in shops.catalogue()[2]
@@ -410,7 +410,7 @@ import revival_events as events
 from test_ios_events import event
 from exvius_actions_shops import medal_exchange, archived_store_schedules
 player.grant_item(20, 106213050, 3)
-with patch.object(events, 'catalogue', return_value=(event(100, '2016-12-16'),)), \\
+with patch.object(events, 'catalogue', return_value=(event(100, '2016-10-26'),)), \\
      patch.object(summons, 'clock', return_value=NOW):
     assert any(row['Z20mNDvL'] == '980001' for row in archived_store_schedules())
     before, dirty = copy.deepcopy(player.data), player.dirty

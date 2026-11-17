@@ -9,6 +9,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 import exvius_actions_modes as actions
 from exvius_actions import UNIT_GROUP, _mst, _parse_rewards
@@ -48,6 +49,8 @@ class Modes(unittest.TestCase):
         self.assertEqual(self.p.data, before)
 
     def setUp(self):
+        # These lifecycle fixtures model already-admitted events; annual admission has separate BDD.
+        self.enterContext(patch('exvius_events.can_enter', return_value=True))
         self.previous = state.State.player
         self.notes = len(state.NOTES)
         self.p = player_state.PlayerState.load("/nonexistent", slot="selftest-modes")

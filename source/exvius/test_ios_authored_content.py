@@ -114,11 +114,11 @@ class AuthoredContentBehavior(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'authored'):
                 content.added_events(bad)
 
-    def test_given_historical_release_when_rotated_then_include_ordinary_events_and_defer_halloween(self):
+    def test_given_annual_dates_when_selected_then_include_ordinary_events_and_defer_halloween(self):
         data = harness.campaign()
         data['ios_revival']['replay']['settings']['start'] = '2017-01-06'
         before, rng = copy.deepcopy(data), random.getstate()
-        chosen = events.plan(data, harness.NOW)
+        chosen = events.plan(data, datetime(2027, 1, 10, 12, tzinfo=timezone.utc))
         self.assertIn('711', chosen.areas)
         self.assertNotIn('712', chosen.areas)
         self.assertEqual(data, before)

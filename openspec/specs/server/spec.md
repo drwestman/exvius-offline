@@ -8622,14 +8622,19 @@ The system SHALL the service shall resolve event facts by following the upstream
 
 ### Requirement: ApplyAvailability
 
-The system SHALL the service shall extend availability only for gate rows that are both selected by policy and resolved, including rows already present in the specification.
+The service SHALL remove dated gates outside their annual America/New_York month/day
+windows. Selected and resolved dated gates SHALL carry their actual annual bounds,
+including pre-existing rows, irrespective of legacy date-override flags. Undated
+gates SHALL retain existing extension policy. Pending attempts SHALL remain
+resumable after closure; new entries SHALL be refused before mutation.
 
 - **Implementation**: `apply_availability::source/server/exvius_events.py`
+- **Implementation**: `select::source/server/event_calendar.py`, `occurrences::source/server/event_calendar.py`, `can_enter::source/server/exvius_events.py`
 
 #### Scenario: SelectedAndResolvedGate
 - **GIVEN** A gate row is selected by policy and its area is resolved
 - **WHEN** Availability is applied
-- **THEN** The gate row's availability is extended
+- **THEN** The gate row carries its actual annual bounds, or the existing undated extension
 
 #### Scenario: UnselectedOrUnresolvedGate
 - **GIVEN** A gate row is not selected or its area is unresolved
