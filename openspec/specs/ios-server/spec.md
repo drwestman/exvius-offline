@@ -1017,6 +1017,25 @@ gaps using the existing common-pack fallback without invented art or downloads.
 - Then its content enters the new pack and the reported gap clears
 - And old generations remain unchanged.
 
+#### Scenario: Recover from a failed native artwork trial
+
+- Given revision 3's inner-icon embedding failed physical iPhone acceptance
+- When normal Vortex preparation runs
+- Then a higher pack version restores the previous banner-only inventory
+- And the experimental inner-icon collector stays disabled
+- And campaign contents and shared icon master mappings remain unchanged.
+
+<!-- manual -->
+### Known Invariants
+
+- `vortex_art.collect`: structural pack validation and available original image
+  bytes do not establish native mounting or scene compatibility. Revision 3's
+  235 extra entries passed host tests but were followed by physical reports of
+  missing Home icons and exits at GateEntryScene on 2026-11-18. Normal preparation
+  must keep that embedding disabled pending device diagnosis. Daybreak's original
+  15 missing inner icons remain a separate unresolved issue.
+<!-- /manual -->
+
 ### Requirement: PreserveNativeBannerPackLayout
 
 The pure CPK builder SHALL preserve every original file payload, compression

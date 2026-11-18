@@ -15,7 +15,11 @@ HERE = Path(__file__).resolve().parents[1] / 'server'
 DOCUMENTS = ('event_art.json', 'event_archive.json', 'event_history.json', 'raid_archive.json')
 PACK = 'spdungeon1.cpk'
 RESOURCE_ID = '6108101'
-PIPELINE = 2  # Preserve native UTF null-string offsets; invalidate older pack bytes.
+PIPELINE = 4  # Publish a higher version of the pre-trial native menu inventory.
+# Revision 3 passed host checks but failed physical iPhone acceptance (missing
+# Home icons and an exit at GateEntryScene). Keep its collector testable without
+# shipping its extra world-icon entries until native compatibility is resolved.
+INNER_ICONS_ENABLED = False
 RESOURCE = rules.RESOURCE
 VERSIONS = rules.VERSIONS
 CHECKSUM = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
@@ -129,6 +133,12 @@ def collect(config, sources):
         _image(name, content)
         images[name], records[name] = content, record
     coverage = {'named': len(names), 'available': len(names) - len(missing), 'missing_added': missing}
+    if INNER_ICONS_ENABLED:
+        from ios_server import vortex_icons
+        inner, inner_records, coverage['inner_icons'] = vortex_icons.collect(
+            sources, docs['event_art.json']['dungeons'], present | {name.upper() for name in images}, read, _image)
+        images.update(inner)
+        records.update(inner_records)
     provenance = {'pipeline': PIPELINE, 'pack': {**pack_record, 'version': version},
                   'images': records, 'documents': documents, 'coverage': coverage}
     return Inputs(raw, images, version, provenance, coverage)

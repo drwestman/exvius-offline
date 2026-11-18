@@ -79,7 +79,7 @@ and DNS setup can be reused, but current gameplay reachability needs a fresh tes
 | First-login relaunch | Restart reported | Exact restart timing and full app-switcher close remain unconfirmed |
 | Tutorial battle | Completion reported after restart | User reports passing the tutorial; independent settlement and duplicate-reward checks remain pending |
 | Vortex quest battle | Passed on iPhone and saved | Chamber of Experience 2110401 completed with a borrowed unit, rewards and durable settlement |
-| Home navigation | Home, Summon, Units, Shop, Friends and Vortex/Enhance observed working | Enhance displays its banner; Back returns to Home with the footer restored |
+| Home navigation | Recovered on iPhone (November 18) | User confirms Home icons returned and Vortex no longer crashes after the Home wait and relaunch, with generation 7 unchanged |
 | Audio | Passed on iPhone | User confirms music and button sound effects sound normal on the Summon page |
 | Reward mail | Passed on iPhone and saved | Weekly Summon Gift claimed; ten Rare Summon Tickets and one Guaranteed Ticket saved with the receipt |
 | Summons | Ticket draw and native Drop Rates passed | Guaranteed-ticket draw awarded Strago; user confirms unit names and probabilities display after the native-route repair |
@@ -87,7 +87,7 @@ and DNS setup can be reused, but current gameplay reachability needs a fresh tes
 | Shops/exchanges | Bundle and exchange purchase passed on iPhone and saved | NRG Restore 10 cost 3 Lapis, granted one item and saved stock count 1; bundle charge/reward was previously verified |
 | Friends | List, companion selection and battle use passed on iPhone | User confirms the borrowed unit fights normally and the Chamber of Experience battle/rewards complete |
 | Arena | Expected story lock observed; gameplay deferred | Home button is dark/inert; its unlock comes from Grandshelt Castle – Throne Room, not yet cleared |
-| Artwork and taps | Vortex/Enhance banner and return navigation passed; other artwork/taps pending | User confirms Back returns to Home with its footer; no footer repair was needed for this flow |
+| Artwork and taps | Vortex entry recovered on iPhone; Daybreak inner tiles unresolved | User confirms icons and Vortex recovered after the Home wait and relaunch. No code or generation change intervened; logs and OS fault support incomplete background masters. Experimental inner icons remain disabled. See the [investigation](../docs/reviews/2026-11-18-ios-vortex-crash.md) |
 | Restart persistence | Passed on iPhone and saved | After clean server stop/start and fresh login, user confirms rank 3, 1,350 Lapis and Strago; saved settlement remains completed |
 
 The first-login relaunch comes from the pinned fork's play instructions: patched

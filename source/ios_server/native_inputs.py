@@ -32,15 +32,22 @@ def collect(config):
     registrations = registered(version_raw, rules.BY_NAME)
     expected = {'mst': {table.token for table in rules.TABLES if not table.localized},
                 'localized_texts/en': {table.token for table in rules.TABLES if table.localized}}
+    # Reuse the validation walk for latest master versions. This inventory belongs
+    # to one collection only; the next query rescans and rehashes every input.
+    latest = {}
     for root in roots:
         for relative, tokens in expected.items():
             folder = root / relative
             if not folder.resolve().is_relative_to(config.data):
                 raise ValueError('Native table folder escapes shared data: ' + str(folder))
             for path in folder.glob('Ver*_*.dat'):
-                match = re.fullmatch(r'Ver[0-9]+_([A-Za-z0-9]{8})\.dat', path.name)
-                if match is None or match[1] not in tokens:
+                match = re.fullmatch(r'Ver([0-9]+)_([A-Za-z0-9]{8})\.dat', path.name)
+                if match is None or match[2] not in tokens:
                     raise ValueError('Unmapped native table source: ' + str(path))
+                if relative == 'mst':
+                    key, version = (root, match[2]), int(match[1])
+                    if key not in latest or version > latest[key][0]:
+                        latest[key] = (version, path)
 
     def read(table, version=None):
         for root in roots:
@@ -48,9 +55,7 @@ def collect(config):
             if not folder.resolve().is_relative_to(config.data):
                 raise ValueError('Native table folder escapes shared data: ' + str(folder))
             if version is None:
-                matches = [(int(m[1]), path) for path in folder.glob('Ver*_' + table.token + '.dat')
-                           if (m := re.fullmatch(r'Ver([0-9]+)_' + table.token + r'\.dat', path.name))]
-                path = max(matches, default=(0, None), key=lambda p: p[0])[1]
+                path = latest.get((root, table.token), (0, None))[1]
             else:
                 path = folder / Path(table.path(version)).name
                 if not path.exists():

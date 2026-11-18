@@ -1,6 +1,7 @@
 """BDD for explicit core native table preparation and immutable verified snapshots."""
 import base64
 import copy
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
@@ -19,6 +20,7 @@ from ffbe_crypto import cbc_encrypt, key16
 from ios_server.config import Configuration
 from ios_server import native_tables as rules
 from ios_server import preparation as prep
+from ios_server.native_inputs import collect
 from ios_server.runtime import InstanceLock
 from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines
 
@@ -163,6 +165,64 @@ class NativePreparation(unittest.TestCase):
             self.assertFalse(prep.verify_data(self.config)['ok'])
         self.assertFalse(self.config.root.exists())
         self.assertFalse({'capture_server','ffbe_state','player_state','data_paths'} & (set(sys.modules)-before))
+
+    def test_given_complete_sources_when_collected_then_scan_each_table_directory_once_without_writes(self):
+        self.fixture()
+        with patch('pathlib.os.scandir', wraps=os.scandir) as scans, \
+                patch.object(Path, 'mkdir', side_effect=AssertionError('query wrote')), \
+                patch('subprocess.run', side_effect=AssertionError('query spawned')):
+            sources, _, _, _, _ = collect(self.config)
+        self.assertEqual(set(sources), {table.name for table in rules.INPUT_TABLES})
+        # A disk-work budget guards against rescanning the corpus for each master.
+        folders = [Path(self.config.engine_environment()[key]) / relative
+                   for key in ('CDN_OVERLAY', 'CDN_ROOT') for relative in ('mst', 'localized_texts/en')]
+        for folder in folders:
+            self.assertEqual(sum(Path(call.args[0]) == folder for call in scans.call_args_list), int(folder.is_dir()))
+        self.assertFalse(self.config.root.exists())
+        self.assert_shared()
+
+    def test_given_versions_and_overlay_when_recollected_then_keep_precedence_and_observe_added_removed_and_edited_inputs(self):
+        self.fixture()
+        table = rules.QUEST
+        raw = self.source(table).read_bytes()
+        # Numeric order matters; an overlay wins even over a newer base version.
+        for version in (2, 11):
+            (self.native / table.path(version)).write_bytes(raw)
+        overlay = Path(self.config.engine_environment()['CDN_OVERLAY']) / table.path(3)
+        overlay.parent.mkdir(parents=True)
+        overlay.write_bytes(raw)
+        first = collect(self.config)
+        self.assertEqual(first[0][table.name], (3, raw))
+        self.assertEqual(first[1]['tables'][table.name]['path'], str(overlay.relative_to(self.config.data)))
+        overlay.unlink()
+        second = collect(self.config)
+        self.assertEqual(second[0][table.name], (11, raw))
+        newer = self.native / table.path(12)
+        newer.write_bytes(raw)
+        third = collect(self.config)
+        self.assertEqual(third[0][table.name], (12, raw))
+        edited = master(table.key, [dict(row, keep='modified') for _, row, _ in master_rows(raw, table.key)])
+        newer.write_bytes(edited)
+        fourth = collect(self.config)
+        self.assertEqual(fourth[0][table.name], (12, edited))
+        self.assertEqual(len(edited), len(raw))
+        self.assertEqual(len({result[2] for result in (first, second, third, fourth)}), 4)
+        # Earlier query results own their bytes; no inventory survives into a query.
+        self.assertEqual(first[0][table.name], (3, raw))
+        self.assertFalse(self.config.root.exists())
+
+    def test_given_separate_content_layouts_when_collected_concurrently_then_keep_each_inventory_private(self):
+        configs = []
+        for managed in (False, True):
+            self.config = Configuration(self.root / ('private-' + str(managed)),
+                                        self.root / ('content-' + str(managed)))
+            self.fixture(managed)
+            configs.append(self.config)
+        expected = [collect(config) for config in configs]
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            self.assertEqual(list(pool.map(collect, configs)), expected)
+        self.assertNotEqual(expected[0][2], expected[1][2])
+        self.assertTrue(all(not config.root.exists() for config in configs))
 
     def test_given_changed_inputs_when_prepared_then_increase_versions_and_keep_old_generation(self):
         self.fixture(); prep.prepare_data(self.config)

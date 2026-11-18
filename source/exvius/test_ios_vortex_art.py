@@ -188,6 +188,145 @@ class VortexPreparation(unittest.TestCase):
         ref = json.loads(self.pointer().read_bytes()); ref['manifest_sha256'] = prep._sha(raw)
         self.pointer().write_bytes(prep._json(ref))
 
+    def inner_icons(self, managed=False):
+        self.artwork(managed)
+        # Exercise the quarantined collector explicitly; normal hosting uses the
+        # previously accepted pack until native recovery is confirmed.
+        self.enterContext(patch.object(art, 'INNER_ICONS_ENABLED', True))
+        document = json.loads((self.docs/'event_art.json').read_bytes())
+        document['dungeons'].update({did: {'filename': 'event_one.png'}
+                                     for did in ('87801', '87802', '87901')})
+        (self.docs/'event_art.json').write_text(json.dumps(document))
+        rows = {'F_DUNGEON_MST': [{'U9iHsau3': did, '0HUPxDf1': icon}
+                                 for did, icon in (('87801', '10'), ('87802', '20'), ('87901', '10'), ('99901', '30'))],
+                'F_ICON_MST': [{'0HUPxDf1': icon, 'qtkvrS60': name}
+                               for icon, name in (('10', 'map_icon_3120101.png'), ('20', 'missing.png'), ('30', 'unrelated.png'))],
+                art.RESOURCE.name: [{'9ZCEWn0z': '108010', '3LHdc6Qa': 'area', 'pJ56sAEo': 'area10.cpk'}],
+                art.VERSIONS.name: [{'9ZCEWn0z': '108010', 'OzT5lSz3': '6', '86SWOBTb': '1'}]}
+        for name, additions in rows.items():
+            table = rules.BY_NAME[name]
+            original = [row for _, row, _ in master_rows(self.source(table).read_bytes(), table.key, mode=table.cipher)]
+            self.source(table).write_bytes(harness.master(table.key, original + additions, mode=table.cipher))
+        self.icon = 'map_icon_3120101.png'
+        self.icon_pack = self.native/'common_lang/sd/area/Ver6_area10.cpk'
+        self.icon_pack.parent.mkdir(parents=True)
+        self.icon_pack.write_bytes(cpk.rebuild(fixture_pack(), {self.icon: png(4), 'unrelated.png': png(5)})[0])
+
+    def test_given_native_crash_quarantine_when_prepared_then_retain_previous_menu_inventory(self):
+        self.inner_icons()
+        with patch.object(art, 'INNER_ICONS_ENABLED', False):
+            report = prep.prepare_data(self.config, vortex_art=True)
+            pack = prep.load_prepared(self.config)
+            files = {r[0]: r[3] for r in payloads(pack.lookup(pack.manifest['packs'][art.PACK]['path']))}
+            self.assertNotIn(self.icon, files)
+            self.assertEqual(set(files), {'Original.png', 'original.PNG', 'spd_bn_list_dummy.png',
+                                         'event_one.png', 'raid.png'})
+            self.assertNotIn('inner_icons', report['preparation']['art'])
+
+    def test_given_inner_icons_in_area_pack_when_prepared_then_all_events_share_originals_without_master_edits(self):
+        for managed in (False, True):
+            with self.subTest(managed=managed):
+                self.config = Configuration(self.root/('private-'+str(managed)), self.root/('content-'+str(managed)))
+                self.inner_icons(managed)
+                report = prep.prepare_data(self.config, vortex_art=True)
+                pack = prep.load_prepared(self.config)
+                files = {row[0]: row[3] for row in payloads(pack.lookup(pack.manifest['packs'][art.PACK]['path']))}
+                self.assertEqual(files[self.icon], png(4))
+                self.assertNotIn('unrelated.png', files)
+                self.assertEqual(report['preparation']['art']['inner_icons'],
+                                 {'required': 2, 'available': 1, 'missing': ['missing.png']})
+                for name in ('F_DUNGEON_MST', 'F_ICON_MST'):
+                    self.assertEqual(pack.manifest['tables'][name]['changed_rows'], 0)
+                self.assertTrue(prep.verify_data(self.config)['ok'])
+                self.assertFalse(self.config.state_file.exists())
+
+    def test_given_localized_and_overlay_icons_when_prepared_then_use_registered_english_overlay(self):
+        self.inner_icons()
+        (self.icon_pack.parent/self.icon).write_bytes(png(6))
+        english = self.area/'Ver1_area10.cpk'
+        english.write_bytes(cpk.rebuild(fixture_pack(), {self.icon: png(7)})[0])
+        (self.area/'Ver99_area10.cpk').write_bytes(cpk.rebuild(fixture_pack(), {self.icon: png(8)})[0])
+        overlay = Path(self.config.engine_environment()['CDN_OVERLAY'])/'en/sd/area'/english.name
+        overlay.parent.mkdir(parents=True)
+        overlay.write_bytes(cpk.rebuild(fixture_pack(), {self.icon: png(9)})[0])
+        prep.prepare_data(self.config, vortex_art=True)
+        pack = prep.load_prepared(self.config)
+        files = {r[0]: r[3] for r in payloads(pack.lookup(pack.manifest['packs'][art.PACK]['path']))}
+        self.assertEqual(files[self.icon], png(9))
+        record = pack.manifest['sources']['art']['images'][self.icon]
+        self.assertEqual(record['path'], overlay.relative_to(self.config.data).as_posix())
+        self.assertEqual(record['member_sha256'], hashlib.sha256(png(9)).hexdigest())
+
+    def test_given_map_resource_common_icons_when_prepared_then_include_them_without_loading_scene_archives(self):
+        self.inner_icons()
+        name = 'area_parade_common.cpk'
+        self.icon_pack.rename(self.icon_pack.parent/('Ver6_'+name))
+        rows = {'F_RESOURCE_MAP_MST': [{'Nnb20keZ': '555', '3LHdc6Qa': 'area', 'pJ56sAEo': name}],
+                'F_RESOURCE_MAP_VERSION_MST_LOCALIZE': [{'Nnb20keZ': '555', 'OzT5lSz3': '6', '86SWOBTb': '0'}]}
+        for table_name, values in rows.items():
+            table = rules.BY_NAME[table_name]
+            self.source(table).write_bytes(harness.master(table.key, values, mode=table.cipher))
+        prep.prepare_data(self.config, vortex_art=True)
+        pack = prep.load_prepared(self.config)
+        self.assertIn(self.icon, pack.manifest['packs'][art.PACK]['added'])
+
+    def test_given_changed_icon_source_when_verified_then_report_stale_and_refresh_immutably(self):
+        self.inner_icons()
+        prep.prepare_data(self.config, vortex_art=True)
+        old = prep.load_prepared(self.config)
+        self.assertFalse(prep.prepare_data(self.config)['prepared_now'])
+        before = self.pointer().read_bytes()
+        raw = cpk.rebuild(fixture_pack(), {self.icon: png(7), 'unrelated.png': png(5)})[0]
+        self.assertEqual(len(raw), self.icon_pack.stat().st_size)
+        self.icon_pack.write_bytes(raw)
+        with patch.object(cpk, 'rebuild', side_effect=AssertionError('query rebuilt')):
+            self.assertFalse(prep.verify_data(self.config)['ok'])
+        self.assertEqual(before, self.pointer().read_bytes())
+        self.assertTrue(prep.prepare_data(self.config)['prepared_now'])
+        self.assertTrue(prep.verify_data(self.config)['ok'])
+        for relative, raw in old.files.items():
+            self.assertEqual((old.directory/relative).read_bytes(), raw)
+
+    def test_given_corrupt_icon_or_escaping_source_when_prepared_then_keep_current_generation(self):
+        self.inner_icons()
+        prep.prepare_data(self.config, vortex_art=True)
+        before = self.pointer().read_bytes()
+        bad = bytearray(png(4)); bad[-1] ^= 1
+        self.icon_pack.write_bytes(cpk.rebuild(fixture_pack(), {self.icon: bytes(bad)})[0])
+        with self.assertRaisesRegex(ValueError, 'Invalid Vortex PNG'):
+            prep.prepare_data(self.config)
+        self.assertEqual(before, self.pointer().read_bytes())
+        self.icon_pack.unlink()
+        outside = self.root/'outside.cpk'; outside.write_bytes(fixture_pack())
+        self.icon_pack.symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, 'escapes shared data'):
+            prep.prepare_data(self.config)
+        self.assertEqual(before, self.pointer().read_bytes())
+
+    def test_given_missing_source_when_supplied_then_clear_only_its_icon_gap(self):
+        self.inner_icons()
+        raw = self.icon_pack.read_bytes(); self.icon_pack.unlink()
+        report = prep.prepare_data(self.config, vortex_art=True)
+        self.assertEqual(report['preparation']['art']['inner_icons']['available'], 0)
+        self.icon_pack.write_bytes(raw)
+        self.assertFalse(prep.verify_data(self.config)['ok'])
+        report = prep.prepare_data(self.config)
+        self.assertEqual(report['preparation']['art']['inner_icons']['missing'], ['missing.png'])
+
+    def test_given_icon_already_in_vortex_pack_when_prepared_then_preserve_original_payload(self):
+        self.inner_icons()
+        base = self.native/art.pack_path(461)
+        raw = cpk.rebuild(base.read_bytes(), {self.icon: png(8)})[0]; base.write_bytes(raw)
+        table = art.CHECKSUM
+        changed, _ = patch_master(self.source(table).read_bytes(), table.key,
+            lambda row: {**row, 'MLOSu5E0': str(len(raw))} if row.get('9ZCEWn0z') == art.RESOURCE_ID else row)
+        self.source(table).write_bytes(changed)
+        prep.prepare_data(self.config, vortex_art=True)
+        pack = prep.load_prepared(self.config)
+        files = {r[0]: r[3] for r in payloads(pack.lookup(pack.manifest['packs'][art.PACK]['path']))}
+        self.assertEqual(files[self.icon], png(8))
+        self.assertNotIn(self.icon, pack.manifest['packs'][art.PACK]['added'])
+
     def test_given_both_layouts_when_art_prepared_then_pack_and_three_tables_publish_together_without_query_writes(self):
         for managed in (False, True):
             with self.subTest(managed=managed):

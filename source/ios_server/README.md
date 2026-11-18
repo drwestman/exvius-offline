@@ -567,6 +567,28 @@ Supplying an image and explicitly preparing again clears its gap. Changes to art
 bytes, even at the same size, or metadata make verification stale. Verification
 validates published bytes and resource-table agreement without rebuilding a pack.
 
+Artwork pipeline revision 4 disables revision 3's experimental inner-icon embedding
+after physical iPhone reports of missing Home icons and a crash at GateEntryScene.
+It republishes the previous banner-only pack under a higher native version, without
+rolling back the campaign or deleting client data. Refresh with the commands above,
+restart hosting, and allow the replacement pack to finish downloading. Device
+recovery was unsuccessful on the iPhone: generation 7's replacement download and
+installation completed, but GateEntryScene still exits without a native exception
+in the game log. The icon expansion is therefore not a sufficient explanation.
+The supplied OS report shows a null-pointer fault consistent with the native
+Vortex town lookup; client logs still lack that generation's town-table install
+and stop during background master downloads. The host serves the correct table.
+See the [crash investigation](../../docs/reviews/2026-11-18-ios-vortex-crash.md).
+The user subsequently confirmed that Home icons returned and Vortex stopped
+crashing after waiting on Home and relaunching, with generation 7 unchanged.
+Completion of the visible pack download does not establish completion of the
+separate background master queue. A server control to keep the native download
+screen visible through that queue has not been established. Running Through
+Daybreak's original blank inner tiles remain unresolved.
+The original-icon collector and its host tests are retained behind the disabled
+internal `INNER_ICONS_ENABLED` gate; no CLI option enables it. Passing structural
+CPK and HTTP checks alone does not establish physical mounting/rendering acceptance.
+
 The prepared engine serves exact Vortex GET/HEAD bytes and returns 404 for old pack
 versions without falling back to stock files. Both prepared and managed data
 layouts are supported. Physical-iPhone mounting/visual acceptance, missing artwork
