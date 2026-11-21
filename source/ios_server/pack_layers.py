@@ -47,7 +47,8 @@ def members(archive, pack):
             raise ValueError('Unsupported encrypted or special ZIP entry')
         if entry.is_dir():
             clean = entry.filename[:-1]
-            parents = {'static', 'native', 'metadata', 'static/client', 'static/client/shared_prefs', 'static/gacha_community'}
+            parents = {'static', 'native', 'metadata', 'native/exvius', 'static/client',
+                       'static/client/shared_prefs', 'static/gacha_community', 'static/summon_art'}
             if clean not in parents:
                 policy.destination(clean + '/placeholder')
             continue

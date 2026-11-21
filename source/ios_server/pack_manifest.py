@@ -122,9 +122,9 @@ def destination(name):
         raise ValueError('Unsafe data pack path: ' + str(name))
     if name == 'metadata/registry.json':
         return 'registry.json'
-    if re.fullmatch(r'native/(?:mst|localized_texts|common_lang|en|homeMarquee)/.+', name):
+    if re.fullmatch(r'native/(?:mst|localized_texts|common_lang|en|homeMarquee|exvius/equipment-enhancement)/.+', name):
         return name
-    if re.fullmatch(r'static/(?:mst_decoded|text_decoded|cpk_extract)/.+', name):
+    if re.fullmatch(r'static/(?:mst_decoded|text_decoded|cpk_extract|prepared_tables)/.+', name):
         return name
     if name.startswith('static/gacha_community/art/') or name == 'static/client/shared_prefs/gamedata.xml':
         return name

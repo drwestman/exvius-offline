@@ -9,6 +9,7 @@ import unittest
 
 
 LAUNCHER = Path(__file__).resolve().parents[2] / 'Play Exvius on iPhone.command'
+UPDATER = Path(__file__).resolve().parents[2] / 'Update Exvius iOS Data.command'
 
 
 class IPhoneLauncher(unittest.TestCase):
@@ -16,9 +17,9 @@ class IPhoneLauncher(unittest.TestCase):
         work = tempfile.TemporaryDirectory(prefix='ios launcher ')
         self.addCleanup(work.cleanup)
         self.checkout = Path(work.name) / 'checkout with spaces'
-        entrypoint = self.checkout / 'source/exvius/macos_ios_server.py'
-        entrypoint.parent.mkdir(parents=True)
-        entrypoint.write_text(
+        self.entrypoint = self.checkout / 'source/exvius/macos_ios_server.py'
+        self.entrypoint.parent.mkdir(parents=True)
+        self.entrypoint.write_text(
             'import argparse, json\n'
             'parser = argparse.ArgumentParser()\n'
             'parser.add_argument("command")\n'
@@ -27,6 +28,8 @@ class IPhoneLauncher(unittest.TestCase):
             'print(json.dumps(dict(command=args.command, data=args.data, extra=extra)))\n')
         self.launcher = self.checkout / LAUNCHER.name
         shutil.copy2(LAUNCHER, self.launcher)
+        self.updater = self.checkout / UPDATER.name
+        shutil.copy2(UPDATER, self.updater)
         self.data = self.checkout / 'data'
         self.data.mkdir()
         (self.data / 'latest.json').write_text('{}')
@@ -87,6 +90,95 @@ class IPhoneLauncher(unittest.TestCase):
     def test_given_no_installed_assets_when_launched_then_keep_repository_default(self):
         self.prepared.mkdir(parents=True)
         self.assertEqual(self.launch()['data'], str(self.data))
+
+    def _install_recording_entrypoint(self, *, check_code: int, update_code: int = 0):
+        self.calls_log = self.checkout / 'calls.log'
+        self.entrypoint.write_text(
+            'import argparse, json, sys\n'
+            'from pathlib import Path\n'
+            'parser = argparse.ArgumentParser()\n'
+            'parser.add_argument("command")\n'
+            'parser.add_argument("--data")\n'
+            'args, extra = parser.parse_known_args()\n'
+            f'log = Path({repr(str(self.calls_log))})\n'
+            'with log.open("a") as f:\n'
+            '    f.write(json.dumps(dict(command=args.command, data=args.data, extra=extra)) + "\\n")\n'
+            'if args.command == "check-update":\n'
+            '    if "--summary" in extra:\n'
+            '        print("iOS data update needed", file=sys.stderr)\n'
+            f'    raise SystemExit({check_code})\n'
+            'if args.command == "update":\n'
+            f'    raise SystemExit({update_code})\n'
+            'print(json.dumps(dict(command=args.command, data=args.data, extra=extra)))\n'
+        )
+
+    def _run_script(self, script: Path, *args, user_input: str = ''):
+        env = dict(os.environ)
+        env.pop('FFBE_IOS_DATA', None)
+        return subprocess.run(
+            [str(script), *map(str, args)],
+            cwd=self.checkout.parent,
+            env=env,
+            input=user_input,
+            text=True,
+            capture_output=True,
+            timeout=10,
+        )
+
+    def test_given_up_to_date_check_when_launched_then_start_directly_without_prompt(self):
+        self.marker(self.prepared, 'client/shared_prefs/gamedata.xml')
+        self._install_recording_entrypoint(check_code=0)
+        res = self._run_script(self.launcher, user_input='')
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        self.assertNotIn('Update now?', res.stderr + res.stdout)
+        calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
+        self.assertEqual([c['command'] for c in calls], ['check-update', 'start'])
+
+    def test_given_update_needed_and_user_accepts_when_launched_then_update_then_start(self):
+        self.marker(self.prepared, 'client/shared_prefs/gamedata.xml')
+        for answer in ('y\n', '\n'):
+            with self.subTest(answer=repr(answer)):
+                if (self.checkout / 'calls.log').exists():
+                    (self.checkout / 'calls.log').unlink()
+                self._install_recording_entrypoint(check_code=2, update_code=0)
+                res = self._run_script(self.launcher, user_input=answer)
+                self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+                self.assertIn('Update now?', res.stderr)
+                self.assertEqual(json.loads(res.stdout)['command'], 'start')
+                calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
+                self.assertEqual([c['command'] for c in calls], ['check-update', 'update', 'start'])
+
+    def test_given_update_needed_and_user_declines_or_eof_when_launched_then_exit_without_start(self):
+        self.marker(self.prepared, 'client/shared_prefs/gamedata.xml')
+        for answer in ('n\n', ''):
+            with self.subTest(answer=repr(answer)):
+                if (self.checkout / 'calls.log').exists():
+                    (self.checkout / 'calls.log').unlink()
+                self._install_recording_entrypoint(check_code=2)
+                res = self._run_script(self.launcher, user_input=answer)
+                self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+                self.assertIn('Update Exvius iOS Data.command', res.stderr)
+                calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
+                self.assertEqual([c['command'] for c in calls], ['check-update'])
+
+    def test_given_update_needed_and_update_fails_when_launched_then_do_not_start_and_exit_nonzero(self):
+        self.marker(self.prepared, 'client/shared_prefs/gamedata.xml')
+        self._install_recording_entrypoint(check_code=2, update_code=1)
+        res = self._run_script(self.launcher, user_input='y\n')
+        self.assertNotEqual(res.returncode, 0)
+        calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
+        self.assertEqual([c['command'] for c in calls], ['check-update', 'update'])
+
+    def test_given_update_launcher_when_invoked_then_run_update_with_resolved_data(self):
+        self.marker(self.prepared, 'client/shared_prefs/gamedata.xml')
+        self._install_recording_entrypoint(check_code=0, update_code=0)
+        res = self._run_script(self.updater, '--archive-dir', self.checkout / 'archives')
+        self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
+        calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]['command'], 'update')
+        self.assertEqual(calls[0]['data'], str(self.prepared))
+        self.assertEqual(calls[0]['extra'], ['--archive-dir', str(self.checkout / 'archives')])
 
 
 if __name__ == '__main__':

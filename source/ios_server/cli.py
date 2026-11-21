@@ -16,13 +16,15 @@ def main(argv=None) -> int:
     parser.add_argument('command', choices=('setup', 'serve', 'start', 'stop', 'doctor', 'status', 'rotation', 'init-campaign',
                                            'prepare-data', 'verify-data', 'prepare-banners', 'verify-banners',
                                            'prepare-sounds', 'verify-sounds', 'prepare-home-banners', 'verify-home-banners',
-                                           'plan-data', 'fetch-data', 'verify-packs', 'plan-campaign-upgrade', 'upgrade-campaign'))
+                                           'plan-data', 'fetch-data', 'verify-packs', 'plan-campaign-upgrade', 'upgrade-campaign',
+                                           'check-update', 'update'))
     parser.add_argument('--expected-save-sha256', help='required save digest for upgrade-campaign')
     parser.add_argument('--root', type=Path, default=default_root(), help='private iOS runtime directory')
     parser.add_argument('--data', type=Path, default=default_data(), help='shared prepared or static/native data')
     parser.add_argument('--slot', default='campaign')
-    parser.add_argument('--manifest', type=Path, help='local release manifest for managed pack commands; defaults to data/latest.json')
-    parser.add_argument('--archive-dir', type=Path, help='read-only local ZIP source for fetch-data; missing archives are downloaded')
+    parser.add_argument('--manifest', type=Path, help='local release manifest for pack/update commands; defaults to data/latest.json')
+    parser.add_argument('--archive-dir', type=Path, help='read-only local ZIP source for fetch-data/update; missing archives are downloaded')
+    parser.add_argument('--summary', action='store_true', help='print compact human-readable update summary to stderr for check-update')
     parser.add_argument('--vortex-art', action='store_true', help='include the native Vortex banner pack during prepare-data')
     parser.add_argument('--sounds', action='store_true', help='bind already prepared sound banks during prepare-data')
     parser.add_argument('--weeks', type=int, default=1, help='rotation preview length, 1 to 52')
@@ -38,10 +40,12 @@ def main(argv=None) -> int:
         parser.error('--vortex-art applies only to prepare-data')
     if args.sounds and args.command != 'prepare-data':
         parser.error('--sounds applies only to prepare-data')
-    if args.manifest is not None and args.command not in ('plan-data', 'fetch-data', 'verify-packs'):
-        parser.error('--manifest applies only to managed pack commands')
-    if args.archive_dir is not None and args.command != 'fetch-data':
-        parser.error('--archive-dir applies only to fetch-data')
+    if args.manifest is not None and args.command not in ('plan-data', 'fetch-data', 'verify-packs', 'check-update', 'update'):
+        parser.error('--manifest applies only to managed pack and update commands')
+    if args.archive_dir is not None and args.command not in ('fetch-data', 'update'):
+        parser.error('--archive-dir applies only to fetch-data and update')
+    if args.summary and args.command != 'check-update':
+        parser.error('--summary applies only to check-update')
     try:
         config = Configuration(args.root, args.data, args.slot)
         if args.command in ('plan-campaign-upgrade', 'upgrade-campaign'):
@@ -53,6 +57,20 @@ def main(argv=None) -> int:
             manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
             result = (pack_install.fetch(config, manifest, archive_dir=args.archive_dir) if args.command == 'fetch-data' else
                       pack_install.verify(config, manifest) if args.command == 'verify-packs' else pack_install.plan(config, manifest))
+        elif args.command == 'check-update':
+            from ios_server import pack_manifest
+            from ios_server.update_queries import check_update, format_summary
+            manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
+            result = check_update(config, manifest)
+            if args.summary:
+                print(format_summary(result), file=sys.stderr, flush=True)
+        elif args.command == 'update':
+            from ios_server import pack_manifest
+            from ios_server.update_commands import run_update
+            manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
+            result = run_update(config, manifest, archive_dir=args.archive_dir)
+            if not result.get('ok') or 'error' in result:
+                print(result.get('error') or 'Update failed.', file=sys.stderr, flush=True)
         elif args.command in ('setup', 'stop', 'init-campaign'):
             from ios_server.commands import lifecycle
             result = lifecycle(config, args)
@@ -67,8 +85,18 @@ def main(argv=None) -> int:
             result = {'doctor': doctor, 'status': status}[args.command](config)
     except (ValueError, OSError, RuntimeError, ImportError) as exc:
         result = {'error': str(exc)}
+        if args.command in ('check-update', 'update'):
+            result['ok'] = False
+            if args.command == 'check-update' and args.summary:
+                print(f'iOS update check failed: {exc}', file=sys.stderr, flush=True)
+            elif args.command == 'update':
+                print(str(exc), file=sys.stderr, flush=True)
     print(json.dumps(result, indent=2))
-    return int('error' in result or result.get('ok') is False)
+    if args.command == 'check-update':
+        if not result.get('ok') or 'error' in result and result.get('error') is not None:
+            return 1
+        return 2 if result.get('update_needed') else 0
+    return int('error' in result and result.get('error') is not None or result.get('ok') is False)
 
 
 def serve(config, args):

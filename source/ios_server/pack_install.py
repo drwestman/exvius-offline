@@ -114,7 +114,7 @@ def _publish(root, stage, manifest, record):
     return destination
 
 
-def fetch(config, manifest_path=policy.DEFAULT, *, archive_dir=None, opener=urllib.request.urlopen, emit=progress):
+def fetch(config, manifest_path=policy.DEFAULT, *, archive_dir=None, opener=urllib.request.urlopen, emit=progress, normalize=None):
     """Retain old generations/layers; the pointer replacement is the only activation."""
     manifest = policy.read(manifest_path)
     root = config.data_root
@@ -133,6 +133,9 @@ def fetch(config, manifest_path=policy.DEFAULT, *, archive_dir=None, opener=urll
         stage = Path(tempfile.mkdtemp(prefix='.building-', dir=parent))
         try:
             files = pack_layers.merge(stage, layers)
+            if normalize is not None:
+                files = normalize(stage, files)
+                content.validate_layout(stage, files)
             record = {'version': 1, 'policy': policy.POLICY, 'manifest_sha256': manifest.sha256,
                       'layers': {pack.sha256: layer[2] for pack, layer in zip(manifest.packs, layers)}, 'files': files}
             content.verify_files(stage, files)
