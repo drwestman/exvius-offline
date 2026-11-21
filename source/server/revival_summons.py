@@ -26,6 +26,12 @@ OFFER_KEYS = ('cost', 'draws', 'steps', 'ticket_group_id', 'guarantee', 'seconda
               'purchase_limit', 'lap_limit', 'milestone_bonus', 'bonus_rewards',
               'bonus_choice', 'guarantee_slots')
 
+# One bounded cache for the currently selected source tuple. Callers treat the
+# catalogue rows as read-only; retaining the tuple lets replacements (including
+# updated catalogues) invalidate signatures without reusable object IDs.
+# Selection state and time stay out of this cache; `plan()` recomputes them.
+_catalogue_identity_cache = None
+
 
 def clock():
     return datetime.now(timezone.utc)
@@ -49,6 +55,22 @@ def catalogue(updated=False):
         by_id.update((str(b['id']), b) for b in late_banners())
         apply(by_id)
     return tuple(apply_printed(banner) for banner in by_id.values())
+
+
+def _offer_identity(banner):
+    """Canonical duplicate key for one banner's offer; the only definition of it."""
+    return json.dumps({key: banner.get(key) for key in OFFER_KEYS}, sort_keys=True)
+
+
+def _catalogue_offer_identities(banners):
+    """Memoized `{banner id: offer identity}` for one catalogue tuple (derived from `banners` alone)."""
+    global _catalogue_identity_cache
+    cached = _catalogue_identity_cache
+    if cached is not None and cached[0] is banners:
+        return cached[1]
+    identities = {str(b['id']): _offer_identity(b) for b in banners}
+    _catalogue_identity_cache = (banners, identities)
+    return identities
 
 
 @lru_cache(maxsize=1)
@@ -294,10 +316,12 @@ def plan(data, now=None, *, banners=None, families=None):
     updated = update is not None
     last = max(max(unit_dates(updated).values()), '2024-10-30' if updated else '2024-08-22')
     finished = window['from'] > last
-    banners = catalogue(updated and update['late_banners']) if banners is None else banners
+    use_catalogue_cache = banners is None
+    banners = catalogue(updated and update['late_banners']) if use_catalogue_cache else banners
     families = {str(b['id']) for b in _standard()} if families is None else families
     by_id = {str(b['id']): b for b in banners}
     aliases = {str(alias) for b in banners for alias in b.get('alias_ids', []) if str(alias) != str(b['id'])}
+    offer_identities = _catalogue_offer_identities(banners) if use_catalogue_cache else None
     fixed, sets, seen = [], {}, set()
     for bid, b in by_id.items():
         if bid in aliases:
@@ -306,7 +330,7 @@ def plan(data, now=None, *, banners=None, families=None):
         day = released(b)
         identity = (('standard', b.get('name')) if bid in families else
                     ((b.get('art') or {}).get('banner'), str(day)),
-                    json.dumps({key: b.get(key) for key in OFFER_KEYS}, sort_keys=True))
+                    offer_identities[bid] if offer_identities is not None else _offer_identity(b))
         if identity in seen:
             continue
         seen.add(identity)

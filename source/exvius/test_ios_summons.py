@@ -1,5 +1,6 @@
 """BDD for the iOS replay catalogue, pool rules and encrypted summon boundary."""
 import copy
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -62,6 +63,48 @@ class ReplaySummonBehavior(unittest.TestCase):
         banners = [banner(1, '2016-12-16'), banner(2, '2016-12-16', alias_ids=['1'])]
         plan = summons.plan(campaign(), NOW, banners=banners, families=set())
         self.assertEqual(plan.ids, ('2',))
+
+    def test_given_reloaded_catalogue_when_planned_then_refresh_duplicate_offer_identity(self):
+        week = datetime(2016, 12, 20, 12, tzinfo=timezone.utc)
+        same_art = {'banner': 'same-banner.png'}
+        original = (banner(1, '2016-12-16', art=same_art),
+                    banner(2, '2016-12-16', art=same_art))
+        changed = (banner(1, '2016-12-16', art=same_art),
+                   banner(2, '2016-12-16', art=same_art,
+                          cost={'kind': 'lapis', 'amount': 600}))
+        with patch.object(summons, 'catalogue', side_effect=(original, changed)):
+            first = summons.plan(campaign(week), week)
+            second = summons.plan(campaign(week), week)
+        self.assertEqual(first.ids, ('1',))
+        self.assertEqual(second.ids, ('1', '2'))
+
+    def test_given_concurrent_catalogue_warmup_when_planned_then_keep_each_calendar_selection(self):
+        week = datetime(2016, 12, 20, 12, tzinfo=timezone.utc)
+        rows = (banner(1, '2016-12-16'),)
+        state = campaign(week)
+        with patch.object(summons, 'catalogue', return_value=rows):
+            with ThreadPoolExecutor(max_workers=8) as workers:
+                selected = list(workers.map(lambda now: summons.plan(state, now).ids,
+                                            [week, week + timedelta(weeks=1)] * 12))
+        self.assertEqual(selected, [('1',) if index % 2 == 0 else () for index in range(24)])
+
+    def test_given_injected_banners_when_planned_then_leave_catalogue_identity_cache_untouched(self):
+        week = datetime(2016, 12, 20, 12, tzinfo=timezone.utc)
+        sentinel = ((), {})
+        with patch.object(summons, '_catalogue_identity_cache', sentinel):
+            plan = summons.plan(campaign(week), week, banners=(banner(1, '2016-12-16'),), families=set())
+            self.assertIs(summons._catalogue_identity_cache, sentinel)
+        self.assertEqual(plan.ids, ('1',))
+
+    def test_given_alternating_catalogues_when_planned_then_each_plan_uses_its_own_identities(self):
+        week = datetime(2016, 12, 20, 12, tzinfo=timezone.utc)
+        same_art = {'banner': 'same-banner.png'}
+        duplicate = (banner(1, '2016-12-16', art=same_art), banner(2, '2016-12-16', art=same_art))
+        distinct = (banner(1, '2016-12-16', art=same_art),
+                    banner(2, '2016-12-16', art=same_art, cost={'kind': 'lapis', 'amount': 600}))
+        with patch.object(summons, 'catalogue', side_effect=(duplicate, distinct, duplicate, distinct)):
+            selected = [summons.plan(campaign(week), week).ids for _ in range(4)]
+        self.assertEqual(selected, [('1',), ('1', '2'), ('1',), ('1', '2')])
 
     def test_given_dated_permanent_when_replay_overlaps_then_open_only_its_historical_period(self):
         banners = [banner(1, permanent={'from': '2016-12-20', 'until': '2017-01-02'}),

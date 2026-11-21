@@ -5,3 +5,7 @@
 ## 2026-11-20 - Validate prepared startup assets once
 **Learning:** `Gameplay.preflight()` and `Engine.initialize(prepared=True)` both validated the complete prepared snapshot. On a disposable current-data runtime, that repeated the 735-bank sound checksum and source-freshness walks and added about 15.6 seconds to startup.
 **Action:** Keep the campaign-initialized guard in hosting, and let `Engine.initialize()` validate the prepared tables and art once before importing `capture_server`.
+
+## 2026-11-21 - Cache static summon offer identities
+**Learning:** A warm iOS summon projection serialized unchanged offer identities 780 times per call. A recursive Python freeze was 4.8x slower than the JSON encoder; a one-catalogue signature cache reduced the 1,053-row projection from about 22 ms to 2.5 ms and retained about 6.2 MB of traced Python allocations. The first cold call stayed about the same because it still builds the signatures.
+**Action:** Cache only catalogue-derived signatures against the retained source tuple; recompute replay selection from campaign state and time on every query, and keep the cache bounded to one catalogue.
