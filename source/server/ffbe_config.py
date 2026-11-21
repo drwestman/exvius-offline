@@ -499,8 +499,8 @@ DROP_TABLE = ("20:290050100:1:30,20:290010000:1:30,20:290050200:1:30,20:20200010
 # DEFAULT ON since 2026-09-20. The served `9BetM2Ds` is the per-monster CANDIDATE pool (6-8 items at rate 30
 # for the shrine mobs, straight from the oracle) and the client DISCARDS the rate, so serving the pool
 # verbatim hands the player every candidate at once -- the operator's "4-5 items, where retail is 1-2".
-# Rolling it is what the real server did. Measured with the served pools (20000 trials/phase): mean 2.2-2.5
-# items, 1-2 items 55-65% of the time. Set ROLL_DROPS=0 only for a deterministic reference state (SW-26).
+# Roll each candidate using its authored rate. A failed roll may legitimately
+# produce no items. Set ROLL_DROPS=0 only for a deterministic reference state (SW-26).
 ROLL_DROPS = os.environ.get("ROLL_DROPS", "1") == "1"
 STATE_PERSIST = os.environ.get("STATE", "1") == "1"
 

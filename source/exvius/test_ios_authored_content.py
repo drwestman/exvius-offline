@@ -259,7 +259,8 @@ with patch.object(summons, 'clock', return_value=HALLOWEEN):
     from ffbe_config import EVENT_GATE_CARRIERS
     out = serve_event_gate({}, EVENT_GATE_CARRIERS[0])
     assert {'919', '921'} <= {r['uv60hgDW'] for r in out['0xkoNP8U']}, 'native gates'
-    assert all(r['4yT7FUqj'] == 'spd_bn_list_dummy.png' for r in out['0xkoNP8U'] if r['uv60hgDW'] in ('919', '921')), [('art', r['uv60hgDW'], r['4yT7FUqj']) for r in out['0xkoNP8U'] if r['uv60hgDW'] in ('919', '921')]
+    art_by_area = {r['uv60hgDW']: r['4yT7FUqj'] for r in out['0xkoNP8U'] if r['uv60hgDW'] in ('919', '921')}
+    assert art_by_area == {'919': 'event_919.png', '921': 'spd_bn_list_dummy.png'}, art_by_area
     summary = notices.summary(player.data, 0, HALLOWEEN)
     campaigns = [r for r in summary['events'] if r['area'] in ('919', '921')]
     assert len(campaigns) == 1 and campaigns[0]['name'] == 'Return to the Halloween Castle', 'news campaign'
@@ -275,8 +276,7 @@ sys.path[:0] = sys.argv[1:3]
 from event_archive import events
 import battle_content as battle
 from ffbe_battle import roll_drops
-assert not {'919', '921', '711'} & {r['area'] for r in events()}
-assert battle.event_encounter('9190001') is None
+assert not {'921', '711'} & {r['area'] for r in events()}
 assert battle.event_encounter('9210003') is None
 spec = {'6v0LPiRe': [{'qo3PECw6': '7110101', '9BetM2Ds': '20:106213050:1:0'}]}
 assert roll_drops(spec, '7110101')['6v0LPiRe'] == spec['6v0LPiRe']

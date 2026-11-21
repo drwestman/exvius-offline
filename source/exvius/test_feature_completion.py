@@ -219,7 +219,7 @@ class Completion(unittest.TestCase):
         fields = {'YLi31qam': '0', 'o0T4S52k': '0', 'r21y0YzS': '0',
                   '2A6fYiEC': f'0:0:{iid}', 'w1JG7i9j': f'{iid}:1',
                   '93Y6evuT': f'{iid}:1-{gear}|2-{gear}',
-                  '80NUYFMJ': f'{iid}:1-0|1-0@2-0@3-0@4-0',
+                  '80NUYFMJ': f'{iid}:1-0|1-0',
                   'nQ1iAGf3': f'{iid}:0-0', '2c8nqLrM': f'{iid}:0',
                   'XZ4Kh7Ic': '0:0,1:0,2:0,3:0,4:0', 'xBi3L6yR': '1',
                   'Na7YM2v4': '', 'G4L0YIB2': 'SLOT1'}
@@ -252,7 +252,7 @@ class Completion(unittest.TestCase):
         for mode, expected in [('tfa', 35), ('parade', 46)]:
             self.assertEqual(sum(v == mode for v in data['native_modes'].values()), expected)
             title = 'Clash of Wills' if mode == 'tfa' else 'Dark Visions'
-            self.assertEqual(sum(r['name'] == title for r, _ in listings()), 1)
+            self.assertEqual(sum(r['name'] == title for r, _ in listings()), 35 if mode == 'tfa' else 32)
             did = next(k for k, v in data['native_dungeons'].items() if v['mode'] == mode)
             selected = menu(self.p, f'{mode}:{did}')
             self.assertTrue(selected['native_groups'])

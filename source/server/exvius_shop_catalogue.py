@@ -72,6 +72,7 @@ def _labels():
             row = json.loads(line)
             names[kind, row['key'].rsplit('_', 1)[-1]] = row['v'][0].strip()
     result = {}
+    overrides = {row['jPV7Xc4N']: row['6uvHX2JG'] for row in _catalogue()[1] if row.get('6uvHX2JG')}
     for pid, offer in _catalogue()[2].items():
         texts = []
         for row in offer['rewards']:
@@ -81,7 +82,7 @@ def _labels():
             if row['count'] > 1:
                 name += ' x' + str(row['count'])
             texts.append(name)
-        title = ', '.join(texts)
+        title = overrides.get(pid) or ', '.join(texts)
         result[pid] = {'name': title, 'description': 'Exchange for ' + title + '.'}
     return result
 

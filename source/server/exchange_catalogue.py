@@ -66,6 +66,8 @@ def build_catalogue(rows, names, parse, *, permanent_shops, tickets=(), event_sh
         for position, row in enumerate(shop['products']):
             product(940001000 + index * 1000 + position, did, row['reward'], row['price'],
                     row['limit'], (kind, currency), shop['reset_months'])
+            if row.get('label'):
+                products[-1]['6uvHX2JG'] = row['label']
     if tickets or event_shops:
         ticket_order = tuple(tickets)
         tickets = set(ticket_order)

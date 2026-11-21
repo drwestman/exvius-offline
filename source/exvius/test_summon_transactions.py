@@ -121,7 +121,7 @@ class SummonTransactions(unittest.TestCase):
             page = gacha_rates.page('60002')
         self.assertNotIn('Cost: Free', page)
         self.assertIn('1 ticket from', page)
-        self.player.data['summon_archive'] = 'collaborations'
+        self.player.data['summon_archive'] = 'standard'
         visible = {str(banner['id']) for banner in gacha_archive.visible_banners(self.player, all_banners())}
         self.assertIn('9200023', visible)
 

@@ -61,7 +61,7 @@ def periods(row):
     area = str(row['area'])
     if area in ranked:
         return ranked[area]
-    if row.get('group') == 'permanent':
+    if row.get('group') == 'permanent' or row.get('availability') == 'permanent':
         return ()
     if area in recorded:
         return recorded[area]

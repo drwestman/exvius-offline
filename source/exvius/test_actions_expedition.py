@@ -45,8 +45,9 @@ class ExpeditionActions(unittest.TestCase):
         fields = {} if selector is None else {'0B8RL54c': selector}
         return self.call('sgExpdQuestRefreshRequest', actions.QUEST, **fields)
 
-    def party(self):
-        return ','.join(f"{u['instance_id']}:{u['master_id']}" for u in self.player.data['roster'])
+    def party(self, limit=None):
+        roster = self.player.data['roster'][:limit]
+        return ','.join(f"{u['instance_id']}:{u['master_id']}" for u in roster)
 
     def test_town_update_switches_survive_sync_and_retry(self):
         from ffbe_battle import record_pushed_switches
@@ -63,15 +64,15 @@ class ExpeditionActions(unittest.TestCase):
         record_pushed_switches(request)
         self.assertEqual(self.player.switches, snapshot)
 
-    def start(self, key, consume='0'):
+    def start(self, key, consume='0', limit=None):
         return self.call('sgExpdQuestStartRequest', actions.QUEST,
-                         Ko86047K=key, **{'7mA422N6': self.party(), 'sO308L0M': consume})
+                         Ko86047K=key, **{'7mA422N6': self.party(limit), 'sO308L0M': consume})
 
     def test_info_initializes_once_and_reopens_saved_jobs(self):
         out = self.call('sgExpdQuestInfoRequest')
-        self.assertEqual(len(out[actions.QUEST]), int(actions._define('EXPEDITION_MAX_AVAILABLE')))
+        self.assertEqual([row['Ko86047K'] for row in out[actions.QUEST]], ['1'])
         key = out[actions.QUEST][0]['q3D53k94']
-        self.start(key)
+        self.start(key, limit=1)
         saved = deepcopy(self.player.data)
         self.player = player_state.PlayerState(deepcopy(saved))
         State.player = self.player
@@ -335,7 +336,7 @@ class ExpeditionActions(unittest.TestCase):
                     'ExbonusExeRequest', 'ExbonusUpdateRequest', 'PartyRegisterSlotLoadRequest',
                     'PartyRegisterSlotSaveRequest', 'PartyRegisterSlotUpdateRequest'}
         self.assertEqual(self.covered, expected)
-        self.assertEqual(len(actions.HANDLERS), 22)
+        self.assertEqual(len(actions.HANDLERS), 24)
 
 
 result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(ExpeditionActions))

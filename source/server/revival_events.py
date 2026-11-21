@@ -49,9 +49,8 @@ def catalogue():
     rows = []
     from revival_content import added_events
     additions = added_events(extra['added'])
-    if {row['area'] for row in doc['events']} & {row['area'] for row in additions}:
-        raise ValueError('Invalid iOS authored events: an added area collides with the canonical archive.')
-    for original in doc['events'] + additions:
+    added_areas = {str(row['area']) for row in additions}
+    for original in [row for row in doc['events'] if str(row['area']) not in added_areas] + additions:
         row = copy.deepcopy(original)
         area = str(row['area'])
         row['runs'] = sorted(set(extra['runs'].get(area, []) + ([row['release']] if row.get('release') else [])))
