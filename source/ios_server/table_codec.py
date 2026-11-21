@@ -16,12 +16,31 @@ def master_rows(raw, key, *, mode='cbc'):
     return list(_master_rows(raw, key, mode=mode))
 
 
+def _master_lines(raw):
+    """Decode bounded chunks, retaining only fragments of an unfinished record."""
+    fragments = []
+    for offset in range(0, len(raw), 64 * 1024):
+        # Keep str.splitlines' ASCII separators, including CR-only sources. A
+        # CR/LF split across chunks adds a blank line, ignored by the reader.
+        for line in raw[offset:offset + 64 * 1024].decode('ascii').splitlines(keepends=True):
+            if not line.endswith(('\n', '\r', '\v', '\f', '\x1c', '\x1d', '\x1e')):
+                fragments.append(line)
+                continue
+            if fragments:
+                fragments.append(line)
+                line = ''.join(fragments)
+                fragments.clear()
+            yield line
+    if fragments:
+        yield ''.join(fragments)
+
+
 def _master_rows(raw, key, *, mode):
     """Share all validation rules without retaining the decoded table."""
     if mode not in ('cbc', 'ecb'):
         raise ValueError('Unsupported native master cipher.')
     found = False
-    for line in raw.decode('ascii').splitlines():
+    for line in _master_lines(raw):
         if not line.strip():
             continue
         base64.b64decode(line.strip(), validate=True)

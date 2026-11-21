@@ -81,6 +81,38 @@ class CompleteTableCodecs(unittest.TestCase):
             self.assertEqual([row[2] for row in out], [False, True])
             self.assertEqual(normalize_master(raw, 'fixture1', mode=mode), b'\n'.join(lines) + b'\n')
 
+    def test_given_large_encrypted_master_when_validated_then_bound_temporary_text_allocations(self):
+        for mode in ('cbc', 'ecb'):
+            record = harness.master('fixture1', [{'id': '1', 'value': 'x' * 768}], mode=mode)
+            raw = record * 4096
+            for source in (raw, bytearray(raw)):
+                with self.subTest(mode=mode, source=type(source).__name__):
+                    tracemalloc.start()
+                    try:
+                        self.assertIsNone(validate_master(source, 'fixture1', mode=mode))
+                        _, peak = tracemalloc.get_traced_memory()
+                    finally:
+                        tracemalloc.stop()
+                    self.assertEqual(source, raw)
+                    # Input is allocated before tracing. Validation needs records,
+                    # not a second table-sized string and a list of every line.
+                    self.assertLess(peak, 512 * 1024)
+
+    def test_given_long_records_and_ascii_breaks_when_read_then_keep_exact_rows_and_padding(self):
+        rows = [{'id': str(i), 'value': 'x' * size} for i, size in enumerate((1, 100003, 777, 200009))]
+        for mode in ('cbc', 'ecb'):
+            lines = harness.master('fixture1', rows, mode=mode).splitlines()
+            for separator in (b'\n', b'\r', b'\r\n', b'\v', b'\f', b'\x1c', b'\x1d', b'\x1e'):
+                raw = b' \t' + (separator + b'\t').join(lines) + b' \t' + separator
+                for source in (raw, bytearray(raw)):
+                    with self.subTest(mode=mode, separator=separator, source=type(source).__name__):
+                        self.assertIsNone(validate_master(source, 'fixture1', mode=mode))
+                        decoded = master_rows(source, 'fixture1', mode=mode)
+                        self.assertEqual([row for _, row, _ in decoded], rows)
+                        self.assertEqual([double for _, _, double in decoded], [False, True, False, True])
+                        self.assertEqual(normalize_master(source, 'fixture1', mode=mode), b'\n'.join(lines) + b'\n')
+                        self.assertEqual(source, raw)
+
     def test_given_invalid_tail_when_validated_then_reject_every_row_before_returning(self):
         for mode in ('cbc', 'ecb'):
             good = harness.master('fixture1', [{'id': '1'}], mode=mode)

@@ -346,6 +346,33 @@ with patch('ios_server.network.discover',return_value=network):
                 self.fail('Gameplay did not become ready: ' + self.errors.read_text()[-5000:])
             time.sleep(.025)
 
+    def test_given_current_prepared_campaign_when_engine_initializes_then_bind_assets_without_save_changes(self):
+        self.prepare()
+        before = self.config.state_file.read_bytes()
+        result = self.child('''
+import sys
+from pathlib import Path
+sys.path[:0] = sys.argv[1:3]
+from ios_server import vortex_art
+vortex_art.HERE = Path(sys.argv[4])
+from ios_server.config import Configuration
+from ios_server.engine import Engine
+config = Configuration(Path(sys.argv[3]), Path(sys.argv[5]))
+saved = config.state_file.read_bytes()
+engine = Engine(config, prepared=True)
+try:
+    server = engine.initialize()
+    assert engine.tables.manifest['version'] == 5
+    assert engine.tables.sounds is not None
+    assert engine.banners is not None and engine.banners.home is not None
+    assert server.State.native_tables is engine.tables
+    assert config.state_file.read_bytes() == saved
+finally:
+    engine.close()
+''', str(self.config.root), str(self.docs), str(self.config.data))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(before, self.config.state_file.read_bytes())
+
     def stop(self):
         if self.process is None: return
         try:
@@ -447,16 +474,40 @@ with patch('ios_server.network.discover',return_value=network):
         self.assertEqual(self.request('/' + row['path'], secure=True)[1], self.pack.sounds.read(row['path']))
         self.stop()
 
-    def test_given_missing_coordinated_features_when_preflight_runs_then_refuse_without_state_import_or_writes(self):
+    def test_given_missing_home_snapshot_when_startup_runs_then_fail_read_only_before_game_import(self):
         self.prepare()
         pointer = self.config.root / home_banners.POINTER
         pointer.unlink()
         before = {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
         modules = set(sys.modules)
-        with self.assertRaisesRegex(ValueError, 'prepare-home-banners'):
-            Gameplay(self.config).preflight()
+        Gameplay(self.config).preflight()
         self.assertEqual(before, {p: p.read_bytes() for p in before})
         self.assertFalse({'capture_server', 'data_paths', 'player_state'} & (set(sys.modules) - modules))
+        result = self.child('''
+import sys
+from pathlib import Path
+sys.path[:0] = sys.argv[1:3]
+from ios_server import vortex_art
+vortex_art.HERE = Path(sys.argv[4])
+from ios_server.config import Configuration
+from ios_server.engine import Engine
+config = Configuration(Path(sys.argv[3]), Path(sys.argv[5]))
+saved = config.state_file.read_bytes()
+engine = Engine(config, prepared=True)
+try:
+    try:
+        engine.initialize()
+    except ValueError as exc:
+        assert 'prepare-banners and prepare-home-banners' in str(exc), str(exc)
+    else:
+        raise AssertionError('startup accepted a missing home snapshot')
+    assert config.state_file.read_bytes() == saved
+    assert 'capture_server' not in sys.modules
+finally:
+    engine.close()
+''', str(self.config.root), str(self.docs), str(self.config.data))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
 
 
 if __name__ == '__main__': unittest.main()

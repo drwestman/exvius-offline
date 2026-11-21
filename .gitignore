@@ -27,3 +27,6 @@ local.properties
 /source/browser_bridge/dist/
 /source/browser_bridge/test-results/
 /source/browser_bridge/playwright-report/
+
+# Mac OS Specific
+.DS_Store

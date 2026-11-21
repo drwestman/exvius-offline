@@ -13,19 +13,12 @@ class Gameplay:
         return {'data': str(self.config.data), 'content': str(self.config.content_root), 'slot': self.config.slot}
 
     def preflight(self):
+        """Reject uninitialized saves before engine import; Engine owns asset validation."""
         from ios_server.queries import _saved
         from replay_calendar import read_anchor
         data = _saved(self.config)
         if data is None or read_anchor(data) is None:
             raise ValueError('Initialize this iOS campaign with init-campaign before gameplay hosting.')
-        from ios_server.preparation import open_prepared
-        tables = open_prepared(self.config)
-        if tables.manifest['version'] != 5 or not tables.manifest.get('packs') or tables.sounds is None:
-            raise ValueError('Gameplay requires prepare-sounds, then prepare-data --vortex-art --sounds.')
-        from ios_server.banner_snapshots import current
-        from ios_server.home_banners import current as home
-        if current(self.config) is None or home(self.config) is None:
-            raise ValueError('Run prepare-banners and prepare-home-banners before gameplay hosting.')
 
     def start(self, lease):
         self.preflight()

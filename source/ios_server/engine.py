@@ -46,10 +46,16 @@ class Engine:
             if self.prepared:
                 from ios_server.preparation import open_prepared
                 self.tables = open_prepared(self.config)
+                if (self.tables.manifest['version'] != 5 or not self.tables.manifest.get('packs')
+                        or self.tables.sounds is None):
+                    raise ValueError('Gameplay requires prepare-sounds, then prepare-data --vortex-art --sounds.')
                 from ios_server.banner_snapshots import current
-                self.banners = current(self.config)
                 from ios_server.home_banners import current as current_home, bind
-                self.banners = bind(self.banners, current_home(self.config))
+                banners = current(self.config)
+                home = current_home(self.config)
+                if banners is None or home is None:
+                    raise ValueError('Run prepare-banners and prepare-home-banners before gameplay hosting.')
+                self.banners = bind(banners, home)
                 if getattr(self.banners, 'home', None) is not None:
                     os.environ.setdefault('MARQUEE_FLAG', '1')
             os.environ.update(env)
