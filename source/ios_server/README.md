@@ -746,17 +746,21 @@ preparation without rebuilding it.
 
 Artifact-only sound reports retain `delivery_ready: false`; coordinated table
 reports expose `sound_delivery_ready: true`. In an explicitly prepared engine,
-exact iOS sound GET/HEAD paths read one pinned bank at a time and check its hash
-and length before responding. Old or unknown iOS sound versions return 404 without
+exact iOS sound GET/HEAD paths verify one pinned bank before responding. GET keeps
+the verified descriptor open and streams exact bytes in bounded 256 KiB chunks;
+HEAD returns the verified length without a body. Every request rechecks each byte,
+including same-size edits. Integrity is proven before headers; the generation
+directory is private, so a writer racing the stream is out of scope. Non-regular
+files (for example a FIFO) are refused. Old or unknown iOS sound versions return 404 without
 stock fallback. Damaged or missing bound files return an empty 500 response.
-HEAD hashes the pinned file in bounded chunks without retaining a bank-sized
-response body; it still rechecks every byte on each request, including same-size edits.
-Requests do not convert, refresh inputs, download, repair or write caches.
-Sound preparation alone does not activate delivery.
+Requests do not convert, refresh inputs, download, repair or write caches. Sound
+preparation alone does not activate delivery.
 
 Gameplay hosting uses these prepared sound bindings. The pinned story-text CPK
 rewrite remains disabled because the reference iPhone rejected its rebuilt packs;
-original scene packs remain in use. Physical-iPhone playback acceptance is pending.
+original scene packs remain in use. Music and button playback were confirmed on the
+iPhone in the dated acceptance record; this streaming change has not been measured
+on the device.
 
 ### Replay home banners
 

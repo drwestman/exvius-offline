@@ -1,23 +1,18 @@
 """Coordinate native sound versions/sizes with immutable, file-backed artifacts."""
+from contextlib import contextmanager
 from dataclasses import dataclass
-import hashlib
-import os
 from pathlib import Path
 import re
-from typing import Protocol
 
 from ios_server import native_tables as rules, sound_inputs, sound_snapshots, version_policy
 from ios_server.runtime import private_path
 from ios_server.table_codec import master_rows, patch_master
+from ios_server.verified_blob import VerifiedBlob, VerifiedBlobSource, open_regular, verify_and_rewind
 
 PIPELINE = 1
-HEAD_CHUNK = 256 * 1024
 
 
-class SoundSource(Protocol):
-    """What table_delivery needs from prepared sounds (queries only)."""
-    def read(self, relative): ...
-    def verified_size(self, relative): ...
+SoundSource = VerifiedBlobSource  # table_delivery needs queries only
 
 
 def owns(relative):
@@ -151,45 +146,32 @@ class Delivery:
         path = private_path(self.root, self.snapshot.directory.relative_to(self.root) / entry['path'])
         if not path.resolve().is_relative_to(self.snapshot.directory.resolve()):
             raise ValueError('Sound bank escapes its generation')
-        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-        return os.fdopen(descriptor, 'rb')
+        return open_regular(path)
 
     def _entry(self, relative):
         source = self.files.get(relative)
         return None if source is None else self.snapshot.manifest['banks'][source]
 
-    @staticmethod
-    def _check(entry, size, sha256):
-        """Single integrity rule shared by GET and HEAD."""
-        if size != entry['size'] or sha256 != entry['sha256']:
-            raise ValueError('Prepared sound checksum mismatch')
-
-    def read(self, relative):
-        """Read one pinned bank; recheck containment and integrity before any reply."""
-        entry = self._entry(relative)
-        if entry is None:
-            return None
-        with self._open(entry) as stream:
-            raw = stream.read(entry['size'] + 1)
-        self._check(entry, len(raw), sound_inputs.digest(raw))
-        return raw
-
     def verified_size(self, relative):
-        """Verify bytes in bounded chunks without retaining a body or caching integrity."""
+        """Verify in bounded chunks without retaining a body or caching integrity."""
+        with self.open_verified(relative) as opened:
+            return None if opened is None else opened.size
+
+    @contextmanager
+    def open_verified(self, relative):
+        """Verify then rewind the same descriptor for bounded, exact-byte delivery.
+
+        The descriptor stays open through the response, so no second pathname is
+        resolved and no bank is held in memory. Integrity is proven before headers;
+        the generation directory is private, so later writers are out of scope.
+        """
         entry = self._entry(relative)
         if entry is None:
-            return None
-        digest, size = hashlib.sha256(), 0
+            yield None
+            return
         with self._open(entry) as stream:
-            # Like GET, read at most the expected length plus one to detect growth.
-            # Every request rehashes: same-size edits must never hit a stat cache.
-            while size <= entry['size']:
-                block = stream.read(min(HEAD_CHUNK, entry['size'] + 1 - size))
-                if not block:
-                    break
-                digest.update(block); size += len(block)
-        self._check(entry, size, digest.hexdigest())
-        return size
+            verify_and_rewind(stream, entry['size'], entry['sha256'], 'Prepared sound checksum mismatch')
+            yield VerifiedBlob(stream, entry['size'])
 
 
 def load(config, manifest, outputs):

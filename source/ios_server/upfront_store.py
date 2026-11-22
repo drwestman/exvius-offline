@@ -10,11 +10,11 @@ import tempfile
 from typing import Protocol
 
 from ios_server.runtime import private_path
+from ios_server.verified_blob import VerifiedBlob, VerifiedBlobSource, open_regular, verify_and_rewind
 
 BLOB_DIR = 'assets/upfront/blobs'
 BLOB_PATTERN = re.compile(r'^assets/upfront/blobs/[a-f0-9]{64}\.cpk$')
 STAGE_CHUNK = 1024 * 1024
-HEAD_CHUNK = 256 * 1024
 
 
 class UpfrontBlobWriter(Protocol):
@@ -22,11 +22,9 @@ class UpfrontBlobWriter(Protocol):
     def stage(self, source_path: Path, expected_sha256: str, expected_size: int) -> str: ...
 
 
-class UpfrontBlobReader(Protocol):
+class UpfrontBlobReader(VerifiedBlobSource, Protocol):
     """Query/delivery-side contract for verifying and streaming private upfront CPK blobs."""
     def owns(self, relative: str) -> bool: ...
-    def verified_size(self, relative: str) -> int | None: ...
-    def open_verified(self, relative: str): ...
 
 
 def unversioned_path(relative: str) -> str:
@@ -151,22 +149,9 @@ class UpfrontDelivery:
         path = private_path(self.root, blob_rel)
         if not path.resolve().is_relative_to(blobs_dir):
             raise ValueError('Upfront CPK blob escapes private blob store')
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-        stream = os.fdopen(fd, 'rb')
+        stream = open_regular(path)
         try:
-            if not stat.S_ISREG(os.fstat(fd).st_mode):
-                raise ValueError('Upfront CPK blob is not a regular file')
-            digest, size = hashlib.sha256(), 0
-            expected_size = entry['size']
-            while size <= expected_size:
-                block = stream.read(min(HEAD_CHUNK, expected_size + 1 - size))
-                if not block:
-                    break
-                digest.update(block)
-                size += len(block)
-            if size != expected_size or digest.hexdigest() != entry['sha256']:
-                raise ValueError('Prepared upfront CPK checksum mismatch')
-            stream.seek(0)
+            verify_and_rewind(stream, entry['size'], entry['sha256'], 'Prepared upfront CPK checksum mismatch')
             return stream
         except BaseException:
             stream.close()
@@ -186,7 +171,7 @@ class UpfrontDelivery:
             yield None
             return
         with self._open_and_verify(entry) as stream:
-            yield stream, entry['size']
+            yield VerifiedBlob(stream, entry['size'])
 
     @classmethod
     def verify_all(cls, config, upfront_packs: dict[str, dict]):

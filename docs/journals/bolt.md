@@ -9,3 +9,7 @@
 ## 2026-11-21 - Cache static summon offer identities
 **Learning:** A warm iOS summon projection serialized unchanged offer identities 780 times per call. A recursive Python freeze was 4.8x slower than the JSON encoder; a one-catalogue signature cache reduced the 1,053-row projection from about 22 ms to 2.5 ms and retained about 6.2 MB of traced Python allocations. The first cold call stayed about the same because it still builds the signatures.
 **Action:** Cache only catalogue-derived signatures against the retained source tuple; recompute replay selection from campaign state and time on every query, and keep the cache bounded to one catalogue.
+
+## 2026-11-22 - Stream sound GETs after verification
+**Learning:** Native sound GET retained a full verified bank in memory. A 32.6 MB disposable bank increased process high-water RSS by 32.65 MB; streaming from a verified descriptor reduced request-attributable RSS to about 0.31 MB. Integrity still needs to be checked before response headers, including same-size edits.
+**Action:** Open the contained bank with `O_NOFOLLOW`, recheck its size and digest on every request, rewind that same descriptor, and stream only the recorded length in bounded chunks. Do not cache sound integrity by file metadata.

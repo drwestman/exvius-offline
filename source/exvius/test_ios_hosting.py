@@ -422,7 +422,7 @@ finally:
         shared = {p: p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()}
         expected = {entry['path']: self.pack.lookup(entry['path']) for entry in self.pack.manifest['tables'].values()}
         expected.update({entry['path']: self.pack.lookup(entry['path']) for entry in self.pack.manifest['packs'].values()})
-        expected.update({entry['path']: self.pack.sounds.read(entry['path']) for entry in self.pack.manifest['sounds']['banks'].values()})
+        expected.update({entry['path']: sound_fixture.sound_bytes(self.pack.sounds, entry['path']) for entry in self.pack.manifest['sounds']['banks'].values()})
         for name, version in versions.items():
             if name in native_tables.BY_NAME:
                 self.assertIn(native_tables.BY_NAME[name].path(version), expected)
@@ -471,7 +471,7 @@ finally:
         row = next(iter(self.pack.manifest['tables'].values()))
         self.assertEqual(self.request('/' + row['path'], secure=True)[1], self.pack.lookup(row['path']))
         row = next(iter(self.pack.manifest['sounds']['banks'].values()))
-        self.assertEqual(self.request('/' + row['path'], secure=True)[1], self.pack.sounds.read(row['path']))
+        self.assertEqual(self.request('/' + row['path'], secure=True)[1], sound_fixture.sound_bytes(self.pack.sounds, row['path']))
         self.stop()
 
     def test_given_missing_home_snapshot_when_startup_runs_then_fail_read_only_before_game_import(self):

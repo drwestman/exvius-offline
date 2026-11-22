@@ -1,5 +1,7 @@
 """Serve exact verified tables/packs; ordinary asset routing stays with the engine."""
-CHUNK = 256 * 1024
+from contextlib import ExitStack
+
+from ios_server.verified_blob import CHUNK
 
 
 def serve(handler, snapshot, relative):
@@ -8,10 +10,10 @@ def serve(handler, snapshot, relative):
     if snapshot is None or snapshot.manifest['version'] not in (3, 4, 5, 6):
         return False
     if getattr(snapshot, 'upfront', None) is not None and snapshot.upfront.owns(relative):
-        return _serve_upfront(handler, snapshot.upfront, relative)
+        return _serve_verified(handler, snapshot.upfront, relative)
     from ios_server.native_sounds import owns as sound_path
     if snapshot.sounds is not None and sound_path(relative):
-        return _serve_sound(handler, snapshot.sounds, relative)
+        return _serve_verified(handler, snapshot.sounds, relative)
     if not relative.startswith(('mst/', 'localized_texts/en/')):
         from ios_server.vortex_art import owns
         if 'packs' not in snapshot.manifest or not owns(relative):
@@ -20,19 +22,24 @@ def serve(handler, snapshot, relative):
     return _reply(handler, raw)
 
 
-def _serve_upfront(handler, upfront, relative):
+def _serve_verified(handler, source, relative):
+    """One delivery path for every VerifiedBlobSource (upfront CPKs, sound banks)."""
     if handler.command == 'HEAD':
         try:
-            size = upfront.verified_size(relative)
+            size = source.verified_size(relative)
         except (OSError, ValueError):
             return _reply(handler, None, 500)
         return _reply_head(handler, 404 if size is None else 200, size or 0)
-    try:
-        ctx = upfront.open_verified(relative)
-        opened = ctx.__enter__()
-    except (OSError, ValueError):
-        return _reply(handler, None, 500)
-    try:
+    return _stream_verified(handler, source.open_verified(relative))
+
+
+def _stream_verified(handler, context):
+    """Verify before headers, then write bounded chunks from the verified descriptor."""
+    with ExitStack() as stack:
+        try:
+            opened = stack.enter_context(context)
+        except (OSError, ValueError):
+            return _reply(handler, None, 500)
         if opened is None:
             return _reply(handler, None, 404)
         stream, size = opened
@@ -42,26 +49,15 @@ def _serve_upfront(handler, upfront, relative):
         handler.send_header('Cache-Control', 'no-store')
         handler.send_header('Connection', 'close')
         handler.end_headers()
-        while True:
-            block = stream.read(CHUNK)
+        remaining = size
+        while remaining:
+            block = stream.read(min(CHUNK, remaining))
             if not block:
                 break
             handler.wfile.write(block)
+            remaining -= len(block)
         handler.close_connection = True
         return True
-    finally:
-        ctx.__exit__(None, None, None)
-
-
-def _serve_sound(handler, sounds, relative):
-    head = handler.command == 'HEAD'
-    try:
-        result = sounds.verified_size(relative) if head else sounds.read(relative)
-    except (OSError, ValueError):
-        return _reply(handler, None, 500)
-    if head:
-        return _reply_head(handler, 404 if result is None else 200, result or 0)
-    return _reply(handler, result)
 
 
 def _reply_head(handler, status, length):

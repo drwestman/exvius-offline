@@ -1,5 +1,6 @@
 """BDD for atomic sound/table coordination and exact file-backed native delivery."""
 from concurrent.futures import ThreadPoolExecutor
+import contextlib
 import hashlib
 import io
 import json
@@ -21,7 +22,9 @@ from ios_server import sound_codec, sound_inputs, sound_snapshots
 from ios_server.config import Configuration
 from ios_server.runtime import InstanceLock
 from ios_server.table_codec import master_rows, patch_master
+from ios_server import table_delivery
 from ios_server.table_delivery import serve
+from ios_server.verified_blob import VerifiedBlob
 
 
 def handler(method='GET'):
@@ -30,6 +33,23 @@ def handler(method='GET'):
     result.send_header = lambda key, value: result.headers.update({key: value})
     result.end_headers = lambda: None
     return result
+
+
+def sound_bytes(delivery, relative):
+    """Test oracle: whole verified bank, never used by production delivery."""
+    with delivery.open_verified(relative) as opened:
+        return None if opened is None else opened.stream.read(opened.size)
+
+
+class DigestSink:
+    def __init__(self):
+        self.size = 0
+        self.digest = hashlib.sha256()
+
+    def write(self, block):
+        self.size += len(block)
+        self.digest.update(block)
+        return len(block)
 
 
 class SoundHeadVerification(unittest.TestCase):
@@ -69,6 +89,43 @@ class SoundHeadVerification(unittest.TestCase):
             tracemalloc.stop()
         self.assertEqual(result, (200, str(self.size), b''))
         self.assertLess(peak, 1024 * 1024, 'HEAD retained a whole sound bank')
+
+    def test_given_large_pinned_bank_when_get_then_stream_exact_bytes_with_bounded_memory(self):
+        response = handler('GET')
+        response.wfile = DigestSink()
+        tracemalloc.start()
+        try:
+            self.assertTrue(serve(response, self.pack, self.relative))
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        self.assertEqual((response.status, response.headers['Content-Length']), (200, str(self.size)))
+        self.assertEqual((response.wfile.size, response.wfile.digest.hexdigest()), (self.size, self.digest))
+        self.assertTrue(response.close_connection)
+        self.assertLess(peak, 1024 * 1024, 'GET retained a whole sound bank')
+
+    def test_given_concurrent_gets_when_streamed_then_each_receives_exact_bytes(self):
+        def get(_):
+            response = handler('GET'); response.wfile = DigestSink()
+            self.assertTrue(serve(response, self.pack, self.relative))
+            return response.status, response.wfile.size, response.wfile.digest.hexdigest()
+        with ThreadPoolExecutor(max_workers=4) as workers:
+            results = list(workers.map(get, range(8)))
+        self.assertEqual(results, [(200, self.size, self.digest)] * 8)
+
+    def test_given_file_grown_after_verification_when_streamed_then_send_only_declared_length(self):
+        stream = io.BytesIO(b'abcdef')
+        context = contextlib.nullcontext(VerifiedBlob(stream, 4))
+        response = handler('GET')
+        self.assertTrue(table_delivery._stream_verified(response, context))
+        self.assertEqual((response.headers['Content-Length'], response.wfile.getvalue()), ('4', b'abcd'))
+
+    def test_given_fifo_at_bank_path_when_requested_then_reject_without_blocking(self):
+        self.path.unlink(); os.mkfifo(self.path)
+        for method in ('GET', 'HEAD'):
+            response = handler(method)
+            self.assertTrue(serve(response, self.pack, self.relative))
+            self.assertEqual((response.status, response.wfile.getvalue()), (500, b''))
 
     def test_given_concurrent_heads_when_verified_then_each_request_succeeds(self):
         with ThreadPoolExecutor(max_workers=4) as workers:
@@ -149,7 +206,7 @@ class SoundTableDelivery(unittest.TestCase):
             self.assertEqual(len(pack.files), 364); self.assertFalse(list(pack.directory.rglob('*.acb')))
             target = pack.manifest['sounds']['banks'][self.stock]
             expected = sound_codec.prepare(self.original)[0]
-            self.assertEqual(pack.sounds.read(target['path']), expected)
+            self.assertEqual(sound_bytes(pack.sounds, target['path']), expected)
             for prefix, id_column in sound_inputs.FAMILIES:
                 for suffix in ('_VERSION_MST_LOCALIZE', '_CHECKSUM_MST'):
                     name = prefix + suffix; table = rules.BY_NAME[name]
@@ -224,14 +281,14 @@ class SoundTableDelivery(unittest.TestCase):
         pack = self.prepared(); entry = pack.manifest['sounds']['banks'][self.stock]
         (self.config.root / sound_snapshots.POINTER).write_bytes(b'bad pointer')
         loaded = prep.load_prepared(self.config)
-        self.assertEqual(loaded.sounds.read(entry['path']), pack.sounds.read(entry['path']))
+        self.assertEqual(sound_bytes(loaded.sounds, entry['path']), sound_bytes(pack.sounds, entry['path']))
         self.assertFalse(prep.verify_data(self.config)['ok'])
 
     def test_given_pinned_generation_and_replaced_pointer_when_loaded_then_ignore_even_escaping_current_symlink(self):
         pack = self.prepared(); pointer = self.config.root / sound_snapshots.POINTER
         pointer.unlink(); pointer.symlink_to(self.config.data / 'outside.json')
         self.assertIsNotNone(prep.load_prepared(self.config).sounds)
-        self.assertEqual(pack.sounds.read(next(iter(pack.manifest['sounds']['banks'].values()))['path']), sound_codec.prepare(self.original)[0])
+        self.assertEqual(sound_bytes(pack.sounds, next(iter(pack.manifest['sounds']['banks'].values()))['path']), sound_codec.prepare(self.original)[0])
 
     def test_given_bound_snapshot_when_verified_then_no_conversion_writes_or_campaign_imports(self):
         self.prepared(); before = self.bytes(); modules = set(__import__('sys').modules)
@@ -393,6 +450,8 @@ finally:engine.close()
 from local_game import LocalGame
 import ffbe_crypto as crypto
 engine=Engine(config,prepared=True)
+def open_bytes(delivery,relative):
+    with delivery.open_verified(relative) as opened:return opened.stream.read(opened.size)
 try:
     server=engine.initialize();pack=engine.tables
     ep=json.loads((Path(sys.argv[2])/'endpoints.json').read_text())['by_class']['InitializeRequest']
@@ -417,7 +476,7 @@ try:
         for method in ('GET','HEAD'):
             response=LocalGame.request(engine,method,'/'+entry['path']);assert response.status==200
             assert response.headers['Content-Length']==str(entry['size'])
-            assert response.body==(pack.sounds.read(entry['path']) if method=='GET' else b'')
+            assert response.body==(open_bytes(pack.sounds,entry['path']) if method=='GET' else b'')
         assert LocalGame.request(engine,'GET','/'+stock).status==404
     assert LocalGame.request(engine,'GET','/common_lang/sound/se/ios/Ver999_unknown.acb').status==404
     assert LocalGame.request(engine,'GET','/common_lang/sound/se/ios/%2e%2e/private.acb').status==400

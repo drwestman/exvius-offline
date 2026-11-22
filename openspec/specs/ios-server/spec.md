@@ -1709,6 +1709,15 @@ engine debug/status/new-game routes. HEAD SHALL omit bodies.
 - Then it receives an empty 500 without stock fallback
 - And the private campaign remains unchanged.
 
+#### Scenario: Stream a large bound sound
+
+- Given a prepared host with a multi-megabyte bound sound bank
+- When GET requests that bank
+- Then its size and SHA-256 are verified before response headers
+- And the same descriptor streams exactly the recorded length in bounded chunks
+- And request memory stays far below the bank size
+- And a non-regular file at the bank path is refused without blocking.
+
 ### Requirement: BoundNativePostFraming
 
 Native gameplay POST SHALL require one nonnegative decimal Content-Length no
