@@ -214,8 +214,9 @@ class NativeLabelPreparation(unittest.TestCase):
         report=prep.prepare_data(self.config); new=prep.load_prepared(self.config)
         self.assertEqual((report['generation'],report['tables']),(2,364))
         for name,row in old.manifest['tables'].items():
-            self.assertGreater(new.manifest['tables'][name]['version'],row['version'])
+            self.assertGreaterEqual(new.manifest['tables'][name]['version'],row['version'])
             self.assertEqual((old.directory/row['path']).read_bytes(),old.files[row['path']])
+        self.assertGreater(new.manifest['tables'][rules.INDEX.name]['version'], old.manifest['tables'][rules.INDEX.name]['version'])
 
     def test_given_core_snapshot_and_missing_new_source_when_expanding_then_leave_old_pointer_available(self):
         self.fixture(); self.core_snapshot(); before=self.pointer().read_bytes()

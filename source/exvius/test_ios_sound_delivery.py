@@ -144,7 +144,7 @@ class SoundTableDelivery(unittest.TestCase):
             self.fixture(managed); self.install(); sound_snapshots.prepare(self.config)
             original = {t.name: self.source(t).read_bytes() for t in sound_inputs.TABLES}
             report = prep.prepare_data(self.config, sounds=True); pack = prep.load_prepared(self.config)
-            self.assertEqual((report['tables'], report['sounds'], pack.manifest['version']), (364, 1, 5))
+            self.assertEqual((report['tables'], report['sounds'], pack.manifest['version']), (364, 1, 6))
             self.assertTrue(report['sound_delivery_ready']); self.assertFalse(report['gameplay_ready'])
             self.assertEqual(len(pack.files), 364); self.assertFalse(list(pack.directory.rglob('*.acb')))
             target = pack.manifest['sounds']['banks'][self.stock]
@@ -177,10 +177,10 @@ class SoundTableDelivery(unittest.TestCase):
 
     def test_given_vortex_and_sound_when_upgraded_then_retain_both_features_on_later_refresh(self):
         self.artwork(); self.install(); prep.prepare_data(self.config, vortex_art=True)
-        old = prep.load_prepared(self.config); self.assertEqual(old.manifest['version'], 4)
+        old = prep.load_prepared(self.config); self.assertEqual(old.manifest['version'], 6)
         sound_snapshots.prepare(self.config); prep.prepare_data(self.config, sounds=True)
         pack = prep.load_prepared(self.config)
-        self.assertEqual((pack.manifest['version'], len(pack.manifest['packs']), len(pack.manifest['sounds']['banks'])), (5, 1, 1))
+        self.assertEqual((pack.manifest['version'], len(pack.manifest['packs']), len(pack.manifest['sounds']['banks'])), (6, 1, 1))
         self.assertTrue(old.directory.is_dir())
         self.assertFalse(prep.prepare_data(self.config)['prepared_now'])
         self.assertTrue(prep.verify_data(self.config)['ok'])
@@ -189,10 +189,17 @@ class SoundTableDelivery(unittest.TestCase):
         self.fixture(); self.install(50000); sound_snapshots.prepare(self.config); prep.prepare_data(self.config, sounds=True)
         old = prep.load_prepared(self.config); previous = next(iter(old.manifest['sounds']['banks'].values()))
         self.android.unlink(); self.install(1); sound_snapshots.prepare(self.config)
-        prep.prepare_data(self.config); new = prep.load_prepared(self.config)
-        self.assertGreater(new.manifest['sounds']['banks'][self.stock]['version'], previous['version'])
-        self.assertTrue(all(row['version'] > old.manifest['tables'][name]['version'] for name, row in new.manifest['tables'].items()))
+        prep.prepare_data(self.config); same = prep.load_prepared(self.config)
+        self.assertEqual(same.manifest['sounds']['banks'][self.stock]['version'], previous['version'])
+        self.assertEqual(same.manifest['sounds']['banks'][self.stock]['version_generation'], 1)
+        self.assertTrue(all(row['version'] >= old.manifest['tables'][name]['version'] for name, row in same.manifest['tables'].items()))
         self.assertTrue(old.directory.is_dir()); self.assertTrue(prep.verify_data(self.config)['ok'])
+        self.android.write_bytes(audio.acb([audio.hca(0), audio.hca(0)]))
+        sound_snapshots.prepare(self.config); prep.prepare_data(self.config)
+        changed = prep.load_prepared(self.config)
+        self.assertGreater(changed.manifest['sounds']['banks'][self.stock]['version'], previous['version'])
+        self.assertEqual(changed.manifest['sounds']['banks'][self.stock]['version_generation'], changed.manifest['generation'])
+        self.assertTrue(prep.verify_data(self.config)['ok'])
 
     def test_given_overflowing_sound_version_when_binding_then_refuse_before_publication(self):
         self.fixture(); self.install(2147483647); sound_snapshots.prepare(self.config)
@@ -241,7 +248,7 @@ class SoundTableDelivery(unittest.TestCase):
     def test_given_unbound_table_snapshot_when_sounds_exist_then_retain_existing_delivery_behavior(self):
         self.fixture(); self.install(); sound_snapshots.prepare(self.config); prep.prepare_data(self.config)
         pack = prep.load_prepared(self.config)
-        self.assertEqual(pack.manifest['version'], 3); self.assertIsNone(pack.sounds)
+        self.assertEqual(pack.manifest['version'], 6); self.assertIsNone(pack.sounds)
         self.assertFalse(serve(handler(), pack, self.stock))
 
     def test_given_exact_get_and_head_when_served_then_use_pinned_bytes_lengths_and_no_query_writes(self):

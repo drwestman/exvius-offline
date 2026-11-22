@@ -46,7 +46,7 @@ class Engine:
             if self.prepared:
                 from ios_server.preparation import open_prepared
                 self.tables = open_prepared(self.config)
-                if (self.tables.manifest['version'] != 5 or not self.tables.manifest.get('packs')
+                if (self.tables.manifest['version'] not in (5, 6) or not self.tables.manifest.get('packs')
                         or self.tables.sounds is None):
                     raise ValueError('Gameplay requires prepare-sounds, then prepare-data --vortex-art --sounds.')
                 from ios_server.banner_snapshots import current

@@ -233,8 +233,20 @@ class NativePreparation(unittest.TestCase):
             self.assertEqual(report['generation'],2)
             self.assertTrue(prep.verify_data(self.config)['ok'])
         new=prep.load_prepared(self.config)
-        self.assertTrue(all(new.manifest['tables'][name]['version']>entry['version'] for name,entry in old.manifest['tables'].items()))
+        self.assertEqual({name:entry['version'] for name,entry in new.manifest['tables'].items()},
+                         {name:entry['version'] for name,entry in old.manifest['tables'].items()})
         self.assertEqual({rel:(old.directory/rel).read_bytes() for rel in before},before)
+        quest = self.source(rules.QUEST)
+        quest.write_bytes(master(rules.QUEST.key, [dict(row, keep='changed') for _, row, _ in master_rows(quest.read_bytes(), rules.QUEST.key)]))
+        report2 = prep.prepare_data(self.config)
+        self.assertEqual(report2['generation'], 3)
+        newer = prep.load_prepared(self.config)
+        self.assertGreater(newer.manifest['tables'][rules.QUEST.name]['version'], new.manifest['tables'][rules.QUEST.name]['version'])
+        self.assertEqual(newer.manifest['tables'][rules.QUEST.name]['version_generation'], 3)
+        for name, entry in newer.manifest['tables'].items():
+            if name != rules.QUEST.name:
+                self.assertEqual(entry['version'], new.manifest['tables'][name]['version'])
+                self.assertEqual(entry['version_generation'], 1)
 
     def test_given_snapshot_when_projected_then_versions_and_exact_asset_bytes_agree_without_mutation(self):
         self.fixture(); prep.prepare_data(self.config); pack=prep.load_prepared(self.config)

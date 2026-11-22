@@ -497,10 +497,48 @@ iPhone acceptance remain pending.
 
 Table preparation also measures available TUTO/PRE_TUTO CPKs, the two early
 resource packs and the required summon menu packs using exact overlay-first paths.
-Pipeline revision 5 records their paths, lengths and SHA-256s with the snapshot
-and corrects common/English iOS size fields to match the served files. Other
-platform fields and shared pack bytes stay unchanged. Missing packs are reported
-under `preparation.upfront.missing`; table-only fixtures remain supported.
+Pipeline revision 6 (`manifest['version'] = 6`) upgrades upfront provenance to
+`policy = 2` (recording `source_version` and canonical `relative` paths) while
+keeping `preparation.upfront` strictly input-derived. Whenever an upfront CPK's
+measured size differs from its advertised `F_RESOURCE_CHECKSUM_MST` value, or its
+SHA-256 changes from the previous generation (catching same-size edits), it is
+assigned a bumped managed native version (`source_version + 200000 + generation * 10000`),
+advertised in both `F_RESOURCE_VERSION_MST_LOCALIZE` and `F_RESOURCE_CHECKSUM_MST`,
+and staged atomically into an immutable, content-addressed private blob store at
+`assets/upfront/blobs/<sha256>.cpk` (`0700` dir, `0600` file, streamed copy without
+hardlinks) before `current.json` is replaced. Shared `CDN_ROOT` / `CDN_OVERLAY`
+files remain untouched. `table_delivery.serve` serves bumped upfront CPKs from
+`UpfrontDelivery` with containment/`O_NOFOLLOW` and per-request 256 KiB chunked
+SHA-256 checks, returns 404 for stock/superseded versions of bumped CPKs (no stock
+fallback), returns 500 on corrupt/missing/escaping blobs, and lets unbumped stock
+upfront CPKs pass through to `capture_server.py`. When `--vortex-art` is enabled,
+`upfront_resources` excludes resource `6108101` so `vortex_art` remains the sole
+owner of `spdungeon1.cpk`.
+
+### Schema-6 content-preserving incremental versioning
+
+Manifest schema 6 (`PIPELINE_VERSION = 6`) avoids unnecessary multi-gigabyte
+background cache invalidation on the iPhone by preserving previously published
+client versions for byte-identical artifacts across generations:
+
+1. **Five-stage dependency order**: `prepare_data` resolves leaf artifacts first
+   (upfront CPKs, Vortex `spdungeon1.cpk`, sound banks matched by `Ver0_`
+   identity, and localized text tables), then builds `F_LOCALIZED_TEXT_MST` and
+   master tables, applies upfront/Vortex/sound table projections, and finally
+   resolves non-localized master table versions against the prior generation.
+2. **Carry-forward vs. bump (`version_policy`)**: Any managed table, sound bank,
+   Vortex pack, or previously bumped upfront CPK whose output SHA-256 matches the
+   prior generation and whose carried version satisfies the current floor and
+   managed-offset bounds retains its prior `version` and `version_generation`.
+   Only changed artifacts or artifacts whose floor increased above their carried
+   version receive `floor + 200000 + generation * 10000` with
+   `version_generation = generation`.
+3. **Backward compatibility & diagnostics**: Schema 1–5 manifests remain readable
+   and strictly validated under their original formulas; upgrading from schema 5
+   (e.g., generation 8) to schema 6 (generation 9) carries forward all unchanged
+   tables, sound banks, and `spdungeon1.cpk`. `verify-data` / `prepare-data`
+   reports expose `version_reuse` counts (`reused` vs. `bumped`) per artifact
+   family.
 
 Source edits, including same-length changes, make preparation stale. Refresh
 with `prepare-data` and verify before restarting; existing Vortex/sound features
@@ -508,14 +546,17 @@ remain enabled. The actual acceptance corpus measures 60 packs and corrects
 three stale size fields. It needs a new table generation, without rewriting the
 shared CPKs. Physical download recovery is tracked in the acceptance record.
 
-The common/English `gacha1` UI packs and `monster3_common.cpk` (the detail scene's
-default Ochu preview) are marked TUTO even if their original class was background.
-Those three packs total 17,682,014 bytes in the acceptance corpus. The detail scene
-loads their textures/animation synchronously, so leaving them behind the bulk movie
-queue can show fallback squares and fail when opening a banner. Unrelated packs
-keep their original classification. Refresh prepared tables explicitly and allow
-startup downloads to complete before retrying Summon. The documented first-login
-relaunch still applies; a second app launch can be needed to use updated lists.
+The common/English `gacha1` UI packs, `monster3_common.cpk` (the detail scene's
+default Ochu preview), and non-movie unit sprite/icon/illustration CPKs
+(`dir=unit`, matching `unit<N>[_sg][_common].cpk`, excluding `LBMovie*` and
+`movie_sg*`) are marked TUTO even if their original class was background.
+Those synchronous UI scenes load unit and summon textures directly from their
+mounted CPK groups, so leaving them behind the multi-gigabyte bulk movie queue
+can show missing character icons/illustrations or fallback squares. Unrelated
+packs keep their original classification. Refresh prepared tables explicitly and
+allow startup downloads to complete before retrying Summon or Units. The
+documented first-login relaunch still applies; a second app launch can be needed
+to use updated lists.
 
 ### Native device diagnostics
 
@@ -914,6 +955,7 @@ while the server is stopped. The time-zone rules retain 10 PM across DST changes
 .venv-ios/bin/python -B source/exvius/test_ios_pack_install.py
 .venv-ios/bin/python -B source/exvius/test_ios_hosting.py
 .venv-ios/bin/python -B source/exvius/test_ios_launcher.py
+.venv-ios/bin/python -B source/exvius/test_ios_incremental_versioning.py
 ```
 
 Use Python 3.12 with the engine dependencies for the subprocess integration

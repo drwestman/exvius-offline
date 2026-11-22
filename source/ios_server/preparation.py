@@ -15,7 +15,7 @@ import shutil
 import tempfile
 
 from engine_profile import REVIVAL_COMMIT
-from ios_server import native_tables as rules
+from ios_server import native_tables as rules, upfront_store, version_policy
 from ios_server.runtime import InstanceLock, private_path
 
 SCOPE = 'native-tables'
@@ -58,7 +58,9 @@ def _complete_inputs(config, vortex_art=False, sounds=False):
         context = {**context, 'sound': sound.coverage}
         fingerprint = _sha(_json({'tables': fingerprint, 'sound': sound.provenance}))
     from ios_server import upfront_resources
-    upfront = upfront_resources.collect(config, sources)
+    from ios_server.vortex_art import RESOURCE_ID as VORTEX_RESOURCE_ID
+    exclude = (VORTEX_RESOURCE_ID,) if vortex_art else ()
+    upfront = upfront_resources.collect(config, sources, exclude_resources=exclude)
     records = {**records, 'upfront': upfront}
     context = {**context, 'upfront': upfront_resources.coverage(upfront)}
     fingerprint = _sha(_json({'tables': fingerprint, 'upfront': upfront}))
@@ -75,6 +77,7 @@ class PreparedTables:
     manifest: dict
     files: dict
     sounds: object = None
+    upfront: object = None
 
     def lookup(self, relative):
         """Only exact published version paths resolve; no path rewriting or writes."""
@@ -103,6 +106,23 @@ class PreparedTables:
         return out
 
     def describe(self):
+        extra = {}
+        if self.manifest['version'] >= 6:
+            generation = self.manifest['generation']
+
+            def counts(entries):
+                reused = sum(1 for row in entries if row['version_generation'] < generation)
+                return {'reused': reused, 'bumped': len(entries) - reused}
+
+            reuse = {'tables': counts(self.manifest['tables'].values())}
+            if 'packs' in self.manifest:
+                reuse['packs'] = counts(self.manifest['packs'].values())
+            if 'sounds' in self.manifest:
+                reuse['sounds'] = counts(self.manifest['sounds']['banks'].values())
+            reuse['upfront_packs'] = counts(self.manifest.get('upfront_packs', {}).values())
+            extra['version_reuse'] = reuse
+            if 'upfront_packs' in self.manifest:
+                extra['upfront_packs'] = len(self.manifest['upfront_packs'])
         return {'ok': True, 'scope': self.manifest['scope'], 'generation': self.manifest['generation'],
                 'directory': str(self.directory), 'tables': len(self.manifest['tables']),
                 'changed_rows': {name: row['changed_rows'] for name, row in self.manifest['tables'].items()},
@@ -110,15 +130,19 @@ class PreparedTables:
                                            if self.manifest['version'] >= 2 else {}),
                 **({'packs': len(self.manifest['packs'])} if 'packs' in self.manifest else {}),
                 **({'sounds': len(self.manifest['sounds']['banks']), 'sound_delivery_ready': True}
-                   if 'sounds' in self.manifest else {})}
+                   if 'sounds' in self.manifest else {}),
+                **extra}
 
 
 def _validate_sources(manifest, registry):
     """Validate recorded source inventories and policy before reading outputs."""
     version = manifest['version']
-    optional = ({'art'} if 'packs' in manifest else set()) | ({'sound'} if version == 5 else set())
+    optional = ({'art'} if 'packs' in manifest else set()) | (
+        {'sound'} if (version == 5 or version >= 6 and 'sounds' in manifest) else set())
     if version >= 3 and 'upfront' in manifest['sources']:
         optional |= {'upfront'}
+    if version >= 6 and 'upfront' not in optional:
+        raise ValueError('invalid expanded source inventory')
     if version == 1:
         if set(manifest['sources']) != registry.keys():
             raise ValueError('invalid core source inventory')
@@ -172,16 +196,17 @@ def load_prepared(config):
         if _sha(manifest_raw) != ref['manifest_sha256']:
             raise ValueError('manifest checksum mismatch')
         manifest = json.loads(manifest_raw)
-        version = manifest['version']
-        if type(version) is not int or version not in (1, 2, 3, 4, 5):
+        manifest_version = manifest['version']
+        if type(manifest_version) is not int or manifest_version not in (1, 2, 3, 4, 5, 6):
             raise ValueError('unsupported manifest version')
-        tables = rules.CORE_TABLES if version == 1 else rules.LABEL_TABLES if version == 2 else rules.TABLES
+        tables = rules.CORE_TABLES if manifest_version == 1 else rules.LABEL_TABLES if manifest_version == 2 else rules.TABLES
         registry = {table.name: table for table in tables}
         keys = {'version', 'scope', 'reference_commit', 'source_root', 'pipeline_version',
-                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if version >= 2 else set())
-        keys |= ({'packs'} if version == 4 or version == 5 and 'packs' in manifest else set())
-        keys |= ({'sounds'} if version == 5 else set())
-        if (set(manifest) != keys or manifest['scope'] != ('core-native-tables' if version == 1 else SCOPE)
+                'generation', 'fingerprint', 'sources', 'tables'} | ({'preparation'} if manifest_version >= 2 else set())
+        keys |= ({'packs'} if manifest_version == 4 or manifest_version >= 5 and 'packs' in manifest else set())
+        keys |= ({'sounds'} if manifest_version == 5 or manifest_version >= 6 and 'sounds' in manifest else set())
+        keys |= ({'upfront_packs'} if manifest_version >= 6 and 'upfront_packs' in manifest else set())
+        if (set(manifest) != keys or manifest['scope'] != ('core-native-tables' if manifest_version == 1 else SCOPE)
                 or manifest['reference_commit'] != REVIVAL_COMMIT
                 or type(manifest['generation']) is not int or not 1 <= manifest['generation'] <= 99999999
                 or type(manifest['pipeline_version']) is not int or manifest['pipeline_version'] < 1
@@ -190,40 +215,59 @@ def load_prepared(config):
                 or ref['directory'] != f"{manifest['generation']:08d}-{manifest['fingerprint']}"
                 or set(manifest['tables']) != registry.keys()):
             raise ValueError('unsupported manifest')
+        if manifest_version >= 6 and 'upfront_packs' in manifest:
+            if not isinstance(manifest['upfront_packs'], dict) or not manifest['upfront_packs']:
+                raise ValueError('invalid upfront_packs section')
         _validate_sources(manifest, registry)
         outputs, versions, files = {}, {}, {}
+        expected_table_keys = {'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'changed_rows'}
+        if manifest_version >= 3:
+            expected_table_keys |= {'version_floor'}
+        if manifest_version >= 6:
+            expected_table_keys |= {'version_generation'}
         for name, entry in manifest['tables'].items():
             table = registry[name]
-            version, base = entry['version'], entry['source_version']
-            floor = entry['version_floor'] if manifest['version'] >= 3 else base
-            if (set(entry) != ({'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'changed_rows'}
-                              | ({'version_floor'} if manifest['version'] >= 3 else set()))
-                    or type(version) is not int or type(base) is not int or base < 1 or version > 2147483647
+            table_version, base = entry['version'], entry['source_version']
+            floor = entry['version_floor'] if manifest_version >= 3 else base
+            if (set(entry) != expected_table_keys
+                    or type(table_version) is not int or type(base) is not int or base < 1 or table_version > 2147483647
                     or type(floor) is not int or floor < base
-                    or manifest['version'] >= 3 and floor != max(base, manifest['sources']['registry']['versions'][name])
-                    or version != floor + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP
-                    or entry['path'] != table.path(version) or type(entry['size']) is not int or entry['size'] < 1
+                    or manifest_version >= 3 and floor != max(base, manifest['sources']['registry']['versions'][name])
+                    or entry['path'] != table.path(table_version) or type(entry['size']) is not int or entry['size'] < 1
                     or type(entry['changed_rows']) is not int or entry['changed_rows'] < 0):
                 raise ValueError('invalid table identity: ' + name)
+            if manifest_version < 6:
+                if table_version != floor + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP:
+                    raise ValueError('invalid table identity: ' + name)
+            else:
+                version_policy.validate_version(
+                    table_version, entry['version_generation'], floor, manifest['generation'], label='Native table')
             path = private_path(config.root, directory.relative_to(config.root) / entry['path'])
             if not path.resolve().is_relative_to(directory.resolve()):
                 raise ValueError('table escapes its generation: ' + name)
             raw = path.read_bytes()
             if len(raw) != entry['size'] or _sha(raw) != entry['sha256'] or hashlib.md5(raw).hexdigest() != entry['md5']:
                 raise ValueError('table checksum mismatch: ' + name)
-            outputs[name], versions[name], files[entry['path']] = raw, version, raw
+            outputs[name], versions[name], files[entry['path']] = raw, table_version, raw
         rules.validate(outputs, versions, tables=tables)
-        if 'upfront' in manifest['sources']:
-            from ios_server.upfront_resources import project
-            project(manifest['sources']['upfront'], outputs, verify=True)
+        upfront_delivery = None
+        if manifest_version < 6:
+            if 'upfront' in manifest['sources']:
+                from ios_server.upfront_resources import project
+                project(manifest['sources']['upfront'], outputs, verify=True)
+        else:
+            from ios_server.upfront_resources import verify_manifest
+            verify_manifest(manifest, outputs)
+            if 'upfront_packs' in manifest:
+                upfront_delivery = upfront_store.UpfrontDelivery.verify_all(config, manifest['upfront_packs'])
         if 'packs' in manifest:
             from ios_server import vortex_art
             files.update(vortex_art.load(config, directory, manifest, outputs))
         sound = None
-        if manifest['version'] == 5:
+        if 'sounds' in manifest:
             from ios_server import native_sounds
             sound = native_sounds.load(config, manifest, outputs)
-        return PreparedTables(directory, manifest, files, sound)
+        return PreparedTables(directory, manifest, files, sound, upfront_delivery)
     except (OSError, KeyError, TypeError, AttributeError, ValueError) as exc:
         raise ValueError(f'Invalid native table snapshot: {exc}') from exc
 
@@ -250,7 +294,7 @@ def verify_data(config):
 def open_prepared(config):
     """Explicit consumer gate; require a current complete snapshot and recorded policy."""
     snapshot = load_prepared(config)
-    if snapshot is None or snapshot.manifest['version'] not in (3, 4, 5):
+    if snapshot is None or snapshot.manifest['version'] not in (3, 4, 5, 6):
         raise ValueError('Complete native tables are missing. Run prepare-data.')
     _, records, fingerprint, context, _, _, _ = _complete_inputs(config, 'packs' in snapshot.manifest,
                                                                'sounds' in snapshot.manifest)
@@ -311,6 +355,42 @@ def _publish(config, manifest, outputs, *, pointer_name=POINTER, entries=None):
     return destination
 
 
+def _compute_generation(current, sources, floors, records, art, sound, priors):
+    """Compute next monotonic generation and run pre-build overflow checks."""
+    p_tables, p_pack, p_sounds, p_upfront = priors
+    pairs = [(max(sources[t.name][0], floors[t.name]), p_tables.get(t.name)) for t in rules.TABLES]
+    if art is not None:
+        from ios_server import vortex_art as art_rules
+        pairs.append((art.version, p_pack))
+        vortex_upfront = p_upfront.get(art_rules.RESOURCE_ID + ':MLOSu5E0')
+        if vortex_upfront is not None and vortex_upfront.managed:
+            pairs.append((art.version, vortex_upfront))
+    if sound is not None:
+        from ios_server import native_sounds
+        for src in sound.snapshot.manifest['banks']:
+            base = int(re.match(r'Ver([0-9]+)_', Path(src).name)[1])
+            pairs.append((base, p_sounds.get(native_sounds.versioned(src, 0))))
+    for key, row in records['upfront']['files'].items():
+        prior_u = p_upfront.get(key)
+        if prior_u is not None and (prior_u.managed or row['size'] != row['advertised'] or row['sha256'] != prior_u.sha256):
+            pairs.append((row['source_version'], version_policy.PriorArtifact(
+                prior_u.version, prior_u.sha256, prior_u.version_generation, managed=True)))
+    generation = version_policy.next_generation(current.manifest if current is not None else None, pairs)
+    for table in rules.TABLES:
+        version_policy.check_bounds(max(sources[table.name][0], floors[table.name]), generation, label='Native table')
+    if art is not None:
+        version_policy.check_bounds(art.version, generation, label='Native pack')
+    if sound is not None:
+        for src in sound.snapshot.manifest['banks']:
+            base = int(re.match(r'Ver([0-9]+)_', Path(src).name)[1])
+            version_policy.check_bounds(base, generation, label='Native sound')
+    for key, row in records['upfront']['files'].items():
+        prior_u = p_upfront.get(key)
+        if row['size'] != row['advertised'] or (prior_u is not None and row['sha256'] != prior_u.sha256):
+            version_policy.check_bounds(row['source_version'], generation, label='Upfront CPK')
+    return generation
+
+
 def prepare_data(config, *, vortex_art=False, sounds=False):
     """Build and validate first, then publish under the exclusive private-runtime lock."""
     if type(vortex_art) is not bool:
@@ -321,6 +401,7 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
         current = load_prepared(config)
         vortex_art = vortex_art or current is not None and 'packs' in current.manifest
         sounds = sounds or current is not None and 'sounds' in current.manifest
+        # Stage 0: Collect inputs + compute generation + overflow pre-check
         sources, records, fingerprint, context, labels, art, sound = _complete_inputs(config, vortex_art, sounds)
         if current is not None and current.manifest['fingerprint'] == fingerprint:
             if (current.manifest['sources'] != records or current.manifest['source_root'] != str(config.data)
@@ -328,53 +409,96 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
                     or current.manifest.get('preparation') != context):
                 raise ValueError('Invalid native table snapshot provenance.')
             return {**current.describe(), 'prepared': True, 'prepared_now': False}
-        generation = current.manifest['generation'] + 1 if current else 1
         floors = records['registry']['versions']
-        if current is not None:
-            for name, entry in current.manifest['tables'].items():
-                floor = max(sources[name][0], floors[name])
-                generation = max(generation, (entry['version'] - floor - rules.VERSION_OFFSET) // rules.VERSION_STEP + 1)
-            if art is not None and current.manifest.get('packs'):
-                previous = next(iter(current.manifest['packs'].values()))['version']
-                generation = max(generation, (previous - art.version - rules.VERSION_OFFSET) // rules.VERSION_STEP + 1)
-        if sound is not None:
-            from ios_server import native_sounds
-            generation = native_sounds.advance(generation, sound, current.manifest.get('sounds') if current else None)
-        outputs, versions, changes = rules.build(sources, generation, labels=labels,
-            economy=context['economy']['settings'], floors=floors, update=context.get('update'))
-        from ios_server.upfront_resources import CHECKSUM, project
-        changes[CHECKSUM] += project(records['upfront'], outputs)
+        prior_manifest = current.manifest if current is not None else None
+        p_tables = version_policy.prior_tables(prior_manifest)
+        p_pack = version_policy.prior_pack(prior_manifest)
+        p_sounds = version_policy.prior_sounds(prior_manifest)
+        p_upfront = version_policy.prior_upfront(prior_manifest)
+        generation = _compute_generation(
+            current, sources, floors, records, art, sound, (p_tables, p_pack, p_sounds, p_upfront))
+
+        # Stage 1: Leaf artifacts (upfront CPKs, Vortex CPK, sound banks, localized text tables)
+        from ios_server import upfront_resources
+        upfront_packs = upfront_resources.resolve(records['upfront'], generation, p_upfront)
         packs = {}
+        pack_entry = pack_raw = None
         if art is not None:
             from ios_server import vortex_art as art_rules
-            entry, raw, converted = art_rules.prepare(art, generation, outputs)
-            for name, count in converted.items():
-                changes[name] += count
-            packs[art_rules.PACK] = entry
-            rules.validate(outputs, versions)
-            outputs[art_rules.PACK] = raw
-        sound_binding = None
+            pack_entry, pack_raw = art_rules.build_pack(art, generation, prior=p_pack)
+        sound_banks = sound_binding = None
         if sound is not None:
-            sound_binding, converted = native_sounds.prepare(sound, generation, outputs)
-            for name, count in converted.items():
+            from ios_server import native_sounds
+            sound_banks = native_sounds.inventory(sound.snapshot, generation, prior=p_sounds)
+        outputs, changes, localized_resolved = rules.build_localized(
+            sources, generation, labels=labels, floors=floors, prior=p_tables)
+
+        # Stage 2: Master table projections
+        localized_versions = {name: item.version for name, item in localized_resolved.items()}
+        rules.build_masters(sources, outputs, changes, localized_versions,
+                            economy=context['economy']['settings'], update=context.get('update'))
+        for name, count in upfront_resources.project(records['upfront'], outputs, bumped=upfront_packs).items():
+            changes[name] += count
+        if art is not None:
+            for name, count in art_rules.project(outputs, pack_entry['version'], pack_raw).items():
                 changes[name] += count
-            rules.validate(outputs, versions)
-        manifest = {'version': 5 if sound is not None else 4 if art is not None else 3,
+            art_rules.validate(outputs, pack_entry, pack_raw, schema_version=6)
+            packs[art_rules.PACK] = pack_entry
+            outputs[art_rules.PACK] = pack_raw
+        if sound is not None:
+            for name, count in native_sounds._project(sound.snapshot, sound_banks, outputs).items():
+                changes[name] += count
+            sound_binding = {'snapshot': sound.provenance['snapshot'], 'banks': sound_banks}
+
+        # Stage 3: Master table version resolution against prior generation
+        versions, table_resolved = rules.resolve_masters(
+            outputs, sources, generation, localized_resolved, floors=floors, prior=p_tables)
+
+        # Stage 4: In-memory cross-validation
+        rules.validate(outputs, versions)
+        manifest = {'version': 6,
                     'scope': SCOPE, 'reference_commit': REVIVAL_COMMIT,
                     'source_root': str(config.data), 'pipeline_version': rules.PIPELINE_VERSION,
-                    'generation': generation, 'fingerprint': fingerprint, 'sources': records, 'preparation': context, 'tables': {}}
+                    'generation': generation, 'fingerprint': fingerprint, 'sources': records,
+                    'preparation': context, 'tables': {}}
         for table in rules.TABLES:
             raw = outputs[table.name]
-            manifest['tables'][table.name] = {'path': table.path(versions[table.name]),
-                'version': versions[table.name], 'source_version': sources[table.name][0], 'size': len(raw),
-                'sha256': _sha(raw), 'md5': hashlib.md5(raw).hexdigest(), 'changed_rows': changes[table.name]}
-            manifest['tables'][table.name]['version_floor'] = max(sources[table.name][0], floors[table.name])
+            manifest['tables'][table.name] = {
+                'path': table.path(versions[table.name]),
+                'version': versions[table.name],
+                'source_version': sources[table.name][0],
+                'version_generation': table_resolved[table.name].version_generation,
+                'size': len(raw),
+                'sha256': _sha(raw),
+                'md5': hashlib.md5(raw).hexdigest(),
+                'changed_rows': changes[table.name],
+                'version_floor': max(sources[table.name][0], floors[table.name]),
+            }
         if packs:
             manifest['packs'] = packs
         if sound_binding is not None:
             manifest['sounds'] = sound_binding
-            # Validate the binding and both resource families before publishing.
-            native_sounds.load(config, manifest, outputs)
+        if upfront_packs:
+            manifest['upfront_packs'] = upfront_packs
+        upfront_resources.verify_manifest(manifest, outputs)
+        sound_delivery = None
+        if sound_binding is not None:
+            sound_delivery = native_sounds.load(config, manifest, outputs)
+
+        # Stage 5: Atomic publication (stage upfront blobs -> stage generation dir -> swap current.json)
+        upfront_delivery = None
+        if upfront_packs:
+            blob_store = upfront_store.BlobStore(config.root, config.data)
+            for key, entry in upfront_packs.items():
+                src_path = config.data / records['upfront']['files'][key]['path']
+                staged_blob = blob_store.stage(src_path, entry['sha256'], entry['size'])
+                if staged_blob != entry['blob']:
+                    raise ValueError('Upfront CPK blob path mismatch: ' + key)
+            upfront_delivery = upfront_store.UpfrontDelivery.from_manifest(config.root, upfront_packs)
         destination = _publish(config, manifest, outputs)
-        snapshot = PreparedTables(destination, manifest, {_entries(manifest)[name]['path']: raw for name, raw in outputs.items()})
+        snapshot = PreparedTables(
+            destination, manifest,
+            {_entries(manifest)[name]['path']: raw for name, raw in outputs.items()},
+            sound_delivery, upfront_delivery,
+        )
         return {**snapshot.describe(), 'prepared': True, 'prepared_now': True}

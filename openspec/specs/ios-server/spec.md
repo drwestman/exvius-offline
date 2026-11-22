@@ -1868,12 +1868,39 @@ published native table identities SHALL receive prepared file versions.
   Testing only an alternate browser/hook URL does not establish that contract.
   Discovered November 12, 2026: the advertised sg_summons_list.php route returned
   an empty 404 while the existing banner-specific HTML route returned valid rates.
+
+- Unchanged native tables, sound banks, Vortex pack, and upfront CPKs must retain
+  their previously published client versions across generations; unconditional
+  per-generation re-versioning forces multi-gigabyte background cache invalidation
+  and mid-download null master lookups (`EXC_BAD_ACCESS` at `0x60`/`0x90`).
+  Discovered November 21, 2026 during generation 8 physical-iPhone crash
+  diagnosis: re-versioning 239 unchanged tables (138 MB) and 735 sound banks
+  (2.2 GB) triggered ~2.6 GB of background re-downloads.
+
+- Upfront CPKs whose bytes drift from their advertised stock size (`size != advertised`)
+  or prior generation SHA-256 must be published under a bumped managed native
+  version from an immutable private blob store without mutating shared CDN data.
+  Discovered November 21, 2026: upstream v0.1.35 modified four upfront CPKs in
+  place without bumping their native version numbers.
+
+- Native unit sprite/icon/illustration archives (`dir=unit`, matching
+  `unit<N>[_sg][_common].cpk`) must be classified as upfront `TUTO` and measured
+  by `upfront_resources.collect`, while keeping `LBMovie*` and `movie_sg*` video
+  packs in the background queue. Unit List, Party, Equip, and Unit Detail scenes
+  load unit icons/illustrations synchronously without triggering on-demand
+  downloads. Discovered November 21, 2026: Global-original units such as Demon
+  Rain, White Witch Fina, Elza, White Knight Noel, Santa Roselia
+  (`unit1_sg_common.cpk`, index 520) and Dangerous Ariana (`unit2_sg_common.cpk`,
+  index 521) sat behind ~4.5 GB of background movie packs with empty download
+  class, and 16 JP-restored `unit*_common.cpk` packs (such as `unit4_common.cpk`
+  for Hunter Lid/Lasswell/Jake) carried stale stock iOS size rows.
 <!-- /manual -->
 
 ### Requirement: ReconcileUpfrontIosResourceSizes
 
-Preparation SHALL measure available TUTO/PRE_TUTO CPKs, both early resource packs
-and the required summon menu packs from exact overlay-first CDN paths. It SHALL record contained paths, byte
+Preparation SHALL measure available TUTO/PRE_TUTO CPKs, both early resource packs,
+the required summon menu packs, and non-movie unit artwork packs (`unit<N>[_sg][_common].cpk`)
+from exact overlay-first CDN paths. It SHALL record contained paths, byte
 lengths and SHA-256s, and correct only common/English iOS size fields. Other
 platform fields and source files SHALL remain unchanged. Missing files SHALL be
 reported without invented sizes; escaping paths SHALL fail.
@@ -1942,14 +1969,16 @@ serve report files.
 
 ### Requirement: PreloadSynchronousSummonDependencies
 
-Native preparation SHALL classify gacha1_common.cpk, gacha1.cpk and
-monster3_common.cpk for upfront TUTO download when present in the resource list.
-Existing TUTO/PRE_TUTO classifications SHALL be retained. Unversioned resources
-SHALL remain omitted, and unrelated background packs SHALL keep their class.
+Native preparation SHALL classify gacha1_common.cpk, gacha1.cpk,
+monster3_common.cpk, and non-movie unit artwork CPKs (`3LHdc6Qa == 'unit'`
+matching `^unit[0-9]+(?:_sg)?(?:_common)?\.cpk$`) for upfront TUTO download
+when present in the resource list. Existing TUTO/PRE_TUTO classifications SHALL
+be retained. Unversioned resources SHALL remain omitted, and movie packs
+(`LBMovie*`, `movie_sg*`) and unrelated background packs SHALL keep their class.
 Exact file provenance and iOS sizes SHALL be bound through upfront collection
 without changing source files, summon costs, pools, awards or legacy projections.
 
-- **Implementation**: `build::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`
+- **Implementation**: `build::source/ios_server/native_tables.py`, `is_upfront_pack::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`
 
 #### Scenario: Open summon detail before the bulk movie queue finishes
 
@@ -1957,6 +1986,13 @@ without changing source files, summon costs, pools, awards or legacy projections
 - When native tables are prepared
 - Then those three dependencies are advertised for upfront download with exact iOS sizes
 - And an unrelated background pack, source files and campaign remain unchanged.
+
+#### Scenario: Open unit list or party before the bulk movie queue finishes
+
+- Given unit sprite/icon/illustration archives (`unit1_sg_common.cpk`, `unit4_common.cpk`, `unit22.cpk`) and unit movie archives (`LBMovie*`, `movie_sg2_common.cpk`) have background classifications
+- When native tables are prepared
+- Then the unit artwork packs are advertised as upfront TUTO with exact iOS sizes and managed versions when drifted
+- And unit movie packs remain background without entering upfront provenance.
 
 ### Requirement: ServeNativeDropRatesWebView
 
@@ -2145,3 +2181,52 @@ Pack installation SHALL not claim completed native image projection integration.
 - When the iOS default manifest is queried
 - Then all destination pack definitions and application metadata remain intact
 - And the source manifest file is unchanged.
+
+### Requirement: PreserveUnchangedNativeVersionsAcrossGenerations
+
+Schema 6 native preparation (`PIPELINE_VERSION = 6`) SHALL resolve leaf artifacts
+(upfront CPKs, Vortex pack, sound banks, and localized text tables) before
+dependent master tables and carry forward the prior generation's published
+client version and `version_generation` for every managed artifact whose output
+SHA-256 is identical and whose carried version satisfies the current floor and
+managed-offset bounds (`>= max(source_version, version_floor)` and `>= 210000`).
+Only changed artifacts or artifacts whose floor rose above their carried version
+SHALL receive a strictly higher generation version. Pre-build overflow checks
+SHALL fail before expensive pack rebuilds. Schema 1–5 manifests SHALL remain
+readable and strictly validated under their original formulas, and read-only
+verification/loading SHALL perform zero writes.
+
+- **Implementation**: `next_generation::source/ios_server/version_policy.py`, `resolve_managed::source/ios_server/version_policy.py`, `validate_version::source/ios_server/version_policy.py`, `prepare_data::source/ios_server/preparation.py`
+
+#### Scenario: Modify only one master table across generations
+
+- Given a prepared schema-6 generation
+- When only one master table's source bytes change and native preparation runs
+- Then only that table receives a higher version and current `version_generation`
+- And all other 363 tables, sound banks, Vortex pack, and unchanged upfront CPKs retain their prior versions
+- And read-only verification succeeds without writing files.
+
+### Requirement: ReversionAndDeliverDriftedUpfrontCpks
+
+Schema 6 preparation SHALL publish an upfront CPK under a bumped managed native
+version whenever `size != advertised`, `sha256 != previous_sha256`, or a prior
+bumped version fell below `source_version`, carrying forward the bumped version
+across subsequent generations while its SHA-256 remains identical. When Vortex
+artwork is enabled, `upfront_resources` SHALL exclude resource `6108101`.
+Bumped upfront CPKs SHALL be staged atomically by streamed `O_NOFOLLOW` copy
+into private `assets/upfront/blobs/<sha256>.cpk` (`0700` dir, `0600` file, no
+hardlinks) without mutating shared CDN data. `table_delivery.serve` SHALL verify
+containment and chunk-hashed SHA-256 before serving HTTP 200 GET/HEAD responses,
+return 404 for stock or superseded versions of bumped CPKs without CDN fallback,
+return 500 on corrupt, missing, or escaping blobs, and pass unbumped stock
+upfront CPKs through to `capture_server.py`.
+
+- **Implementation**: `resolve_upfront::source/ios_server/version_policy.py`, `resolve::source/ios_server/upfront_resources.py`, `BlobStore::source/ios_server/upfront_store.py`, `UpfrontDelivery::source/ios_server/upfront_store.py`, `serve::source/ios_server/table_delivery.py`
+
+#### Scenario: Upgrade a schema-5 snapshot containing a stock-drifted upfront CPK
+
+- Given a schema-5 generation containing a stock-drifted upfront CPK (`size != advertised`) alongside unchanged tables, sound banks, and Vortex pack
+- When schema-6 `prepare-data` runs
+- Then the drifted upfront CPK is bumped into the managed version namespace, staged under `assets/upfront/blobs/`, and advertised in `F_RESOURCE_VERSION_MST_LOCALIZE` and `F_RESOURCE_CHECKSUM_MST`
+- And unchanged tables, sound banks, and Vortex pack retain their prior versions
+- And GET/HEAD for the bumped path returns 200 while the stock version returns 404.

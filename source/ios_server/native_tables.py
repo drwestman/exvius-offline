@@ -1,22 +1,44 @@
 """Native iOS table preparation rules; no filesystem or engine state access."""
 from dataclasses import dataclass
 import hashlib
+import re
 
+from ios_server import version_policy
 from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines, normalize_master, validate_master
 from ios_server.native_registry import definitions
 from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
 import revival_economy
 
-PIPELINE_VERSION = 5
-VERSION_OFFSET = 200000
-VERSION_STEP = 10000
+PIPELINE_VERSION = 6
+VERSION_OFFSET = version_policy.VERSION_OFFSET
+VERSION_STEP = version_policy.VERSION_STEP
 EARLY_PACKS = frozenset(('resources_common.cpk', 'resources.cpk'))
 # Gacha detail opens synchronously: its UI and default Ochu preview cannot wait
 # behind the background movie queue (confirmed by native reports on 2026-11-11).
 MENU_PACKS = frozenset(('gacha1_common.cpk', 'gacha1.cpk', 'monster3_common.cpk'))
 UPFRONT_PACKS = EARLY_PACKS | MENU_PACKS
+# Unit list, party, equip, and unit detail scenes load unit icons/illustrations
+# synchronously from the `unit` CPK group without triggering on-demand downloads.
+# Leaving unit*_common.cpk / unit*_sg_common.cpk / unit22.cpk in background traps
+# Global-original packs (unit1_sg_common.cpk..unit3_sg_common.cpk) behind ~4.5 GB
+# of LBMovie/beastMovie packs and leaves JP-restored unit packs unreconciled.
+UNIT_ART_PACK = re.compile(r'^unit[0-9]+(?:_sg)?(?:_common)?\.cpk$')
 RATE_URL = 'https://v910-lapis.gumi.sg/lapisProd/app/php/web/statics/probability/sg_summons_list.php'
+
+
+def is_promoted_menu_pack(row):
+    name = row.get('pJ56sAEo', '')
+    if not isinstance(name, str):
+        return False
+    if name in MENU_PACKS:
+        return True
+    return row.get('3LHdc6Qa') == 'unit' and bool(UNIT_ART_PACK.fullmatch(name))
+
+
+def is_upfront_pack(row):
+    name = row.get('pJ56sAEo', '')
+    return name in EARLY_PACKS or is_promoted_menu_pack(row)
 
 
 @dataclass(frozen=True)
@@ -85,19 +107,32 @@ def english_versions(raw, *, tables=TEXT_TABLES):
     return result
 
 
-def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None, update=None):
-    """Sources are {table name: (native source version, raw bytes)}."""
+def _floor(sources, name, floors):
+    return max(sources[name][0], (floors or {}).get(name, 0))
+
+
+def build_localized(sources, generation, *, labels=None, tables=TABLES, floors=None, prior=None):
+    """Build localized text tables and resolve their content-preserving versions."""
     if type(generation) is not int or generation < 1:
         raise ValueError('Native table version generation is out of range.')
-    versions = {table.name: max(sources[table.name][0], (floors or {}).get(table.name, 0))
-                + VERSION_OFFSET + generation * VERSION_STEP for table in tables}
-    if any(v > 2147483647 for v in versions.values()):
-        raise ValueError('Native table version generation is out of range.')
-    outputs, changes = {}, {}
+    for table in tables:
+        version_policy.check_bounds(_floor(sources, table.name, floors), generation, label='Native table')
+    outputs, changes, resolved = {}, {}, {}
     labels = additions() if labels is None else labels
+    prior = prior or {}
     for table in tables:
         if table.localized:
-            outputs[table.name], changes[table.name] = patch_text(sources[table.name][1], table.key, labels.get(table.name, {}))
+            raw, count = patch_text(sources[table.name][1], table.key, labels.get(table.name, {}))
+            outputs[table.name] = raw
+            changes[table.name] = count
+            resolved[table.name] = version_policy.resolve_managed(
+                _floor(sources, table.name, floors), hashlib.sha256(raw).hexdigest(),
+                prior.get(table.name), generation, label='Native table')
+    return outputs, changes, resolved
+
+
+def build_masters(sources, outputs, changes, localized_versions, *, economy=None, tables=TABLES, update=None):
+    """Build non-localized master tables using resolved localized versions in F_LOCALIZED_TEXT_MST."""
     unversioned = {str(r.get('9ZCEWn0z')) for _, r, _ in master_rows(sources[VERSIONS.name][1], VERSIONS.key)
                    if str(r.get('OzT5lSz3') or '0') == '0' and str(r.get('86SWOBTb') or '0') == '0'}
     found = set()
@@ -107,8 +142,8 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floo
             return None
         if row.get('pJ56sAEo') in EARLY_PACKS:
             found.add(row['pJ56sAEo'])
-        if row.get('pJ56sAEo') in UPFRONT_PACKS:
-            if not row.get('81fTkEDP') or (row.get('pJ56sAEo') in MENU_PACKS
+        if is_upfront_pack(row):
+            if not row.get('81fTkEDP') or (is_promoted_menu_pack(row)
                     and str(row.get('81fTkEDP', '')).upper() not in ('TUTO', 'PRE_TUTO')):
                 row['81fTkEDP'] = 'TUTO'
         return row
@@ -131,11 +166,13 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floo
                    for key, value in row.items()}
         return row
 
+    localized_names = {table.name for table in tables if table.localized}
+
     def index(row):
         name = row.get('a4hXTIm0')
-        if name in outputs and name in {table.name for table in tables if table.localized}:
+        if name in outputs and name in localized_names:
             raw = outputs[name]
-            row.update({'00zAYGYS': str(versions[name]), 'zptmZGqa': hashlib.md5(raw).hexdigest(),
+            row.update({'00zAYGYS': str(localized_versions[name]), 'zptmZGqa': hashlib.md5(raw).hexdigest(),
                         'MLOSu5E0': str(len(raw))})
         return row
 
@@ -156,6 +193,34 @@ def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floo
     if update:
         from ios_server.update_tables import prepare
         prepare(outputs, changes, tables, select_limited=update['settings']['select_limited'])
+    return outputs, changes
+
+
+def resolve_masters(outputs, sources, generation, localized_resolved, *, tables=TABLES, floors=None, prior=None):
+    """Resolve versions for non-localized master tables after all projections complete."""
+    prior = prior or {}
+    resolved = dict(localized_resolved)
+    for table in tables:
+        if not table.localized:
+            resolved[table.name] = version_policy.resolve_managed(
+                _floor(sources, table.name, floors),
+                hashlib.sha256(outputs[table.name]).hexdigest(),
+                prior.get(table.name),
+                generation,
+                label='Native table',
+            )
+    versions = {name: item.version for name, item in resolved.items()}
+    return versions, resolved
+
+
+def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None, update=None, prior=None):
+    """Sources are {table name: (native source version, raw bytes)}."""
+    outputs, changes, localized_resolved = build_localized(
+        sources, generation, labels=labels, tables=tables, floors=floors, prior=prior)
+    localized_versions = {name: item.version for name, item in localized_resolved.items()}
+    build_masters(sources, outputs, changes, localized_versions, economy=economy, tables=tables, update=update)
+    versions, _ = resolve_masters(
+        outputs, sources, generation, localized_resolved, tables=tables, floors=floors, prior=prior)
     validate(outputs, versions, tables=tables)
     return outputs, versions, changes
 

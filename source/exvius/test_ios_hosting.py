@@ -362,7 +362,7 @@ saved = config.state_file.read_bytes()
 engine = Engine(config, prepared=True)
 try:
     server = engine.initialize()
-    assert engine.tables.manifest['version'] == 5
+    assert engine.tables.manifest['version'] == 6
     assert engine.tables.sounds is not None
     assert engine.banners is not None and engine.banners.home is not None
     assert server.State.native_tables is engine.tables

@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from typing import Protocol
 
-from ios_server import native_tables as rules, sound_inputs, sound_snapshots
+from ios_server import native_tables as rules, sound_inputs, sound_snapshots, version_policy
 from ios_server.runtime import private_path
 from ios_server.table_codec import master_rows, patch_master
 
@@ -60,29 +60,39 @@ def collect(config, sources):
 
 def advance(generation, inputs, previous):
     """Keep client file identities monotonic even when source versions decrease."""
-    if previous is not None:
-        old = previous['banks']
-        by_identity = {}
-        for path, row in old.items():
-            identity = versioned(path, 0)
-            by_identity[identity] = max(by_identity.get(identity, 0), row['version'])
-        for path in inputs.snapshot.manifest['banks']:
-            prior = by_identity.get(versioned(path, 0))
-            if prior is not None:
-                source = int(re.match(r'Ver([0-9]+)_', Path(path).name)[1])
-                generation = max(generation, (prior - source - rules.VERSION_OFFSET) // rules.VERSION_STEP + 1)
-    return generation
+    if previous is None:
+        return generation
+    by_identity = {}
+    for path, row in previous['banks'].items():
+        identity = versioned(path, 0)
+        existing = by_identity.get(identity)
+        if existing is None or row['version'] > existing.version:
+            by_identity[identity] = version_policy.PriorArtifact(
+                version=row['version'],
+                sha256=row['sha256'],
+                version_generation=row.get('version_generation', generation),
+                managed=True,
+            )
+    pairs = []
+    for path in inputs.snapshot.manifest['banks']:
+        source = int(re.match(r'Ver([0-9]+)_', Path(path).name)[1])
+        pairs.append((source, by_identity.get(versioned(path, 0))))
+    return max(generation, version_policy.next_generation({'generation': generation - 1}, pairs))
 
 
-def inventory(snapshot, generation):
+def inventory(snapshot, generation, *, prior=None, include_generation=True):
+    prior = prior or {}
     result = {}
     for source, bank in snapshot.manifest['banks'].items():
         base = int(re.match(r'Ver([0-9]+)_', Path(source).name)[1])
-        version = base + rules.VERSION_OFFSET + generation * rules.VERSION_STEP
-        if version > 2147483647:
-            raise ValueError('Native sound version generation is out of range.')
-        result[source] = {'path': versioned(source, version), 'version': version,
-                          'source_version': base, 'size': bank['size'], 'sha256': bank['sha256']}
+        identity = versioned(source, 0)
+        resolved = version_policy.resolve_managed(
+            base, bank['sha256'], prior.get(identity), generation, label='Native sound')
+        entry = {'path': versioned(source, resolved.version), 'version': resolved.version,
+                 'source_version': base, 'size': bank['size'], 'sha256': bank['sha256']}
+        if include_generation:
+            entry['version_generation'] = resolved.version_generation
+        result[source] = entry
     if len({row['path'] for row in result.values()}) != len(result):
         raise ValueError('Conflicting prepared sound paths')
     return result
@@ -125,8 +135,8 @@ def _project(snapshot, banks, outputs, *, verify=False):
     return changes
 
 
-def prepare(inputs, generation, outputs):
-    banks = inventory(inputs.snapshot, generation)
+def prepare(inputs, generation, outputs, *, prior=None):
+    banks = inventory(inputs.snapshot, generation, prior=prior)
     changes = _project(inputs.snapshot, banks, outputs)
     return {'snapshot': inputs.provenance['snapshot'], 'banks': banks}, changes
 
@@ -191,9 +201,29 @@ def load(config, manifest, outputs):
         raise ValueError('Invalid native sound binding')
     snapshot = sound_snapshots.load(config, reference=binding['snapshot'])
     if (snapshot.manifest['source_root'] != manifest['source_root']
-            or manifest['preparation']['sound'] != coverage(snapshot)
-            or binding['banks'] != inventory(snapshot, manifest['generation'])):
+            or manifest['preparation']['sound'] != coverage(snapshot)):
         raise ValueError('Invalid native sound inventory or provenance')
+    if manifest['version'] < 6:
+        if binding['banks'] != inventory(snapshot, manifest['generation'], include_generation=False):
+            raise ValueError('Invalid native sound inventory or provenance')
+    else:
+        if set(binding['banks']) != set(snapshot.manifest['banks']):
+            raise ValueError('Invalid native sound inventory or provenance')
+        if len({row['path'] for row in binding['banks'].values()}) != len(binding['banks']):
+            raise ValueError('Conflicting prepared sound paths')
+        for source, entry in binding['banks'].items():
+            bank = snapshot.manifest['banks'][source]
+            base = int(re.match(r'Ver([0-9]+)_', Path(source).name)[1])
+            if (not isinstance(entry, dict)
+                    or set(entry) != {'path', 'version', 'source_version', 'version_generation', 'size', 'sha256'}
+                    or entry['source_version'] != base
+                    or entry['size'] != bank['size']
+                    or entry['sha256'] != bank['sha256']
+                    or entry['path'] != versioned(source, entry['version'])):
+                raise ValueError('Invalid native sound bank entry: ' + source)
+            version_policy.validate_version(
+                entry['version'], entry['version_generation'], base,
+                manifest['generation'], label='Native sound')
     for table in sound_inputs.TABLES:
         if snapshot.manifest['sources']['tables'][table.name] != manifest['sources']['tables'][table.name]:
             raise ValueError('Native and sound table provenance disagree: ' + table.name)

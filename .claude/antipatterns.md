@@ -40,7 +40,7 @@
 - **Class**: ordering
 - **Symptom**: Native summon detail reported missing button textures and monster animation data immediately before the app crashed; their intact packs were still queued behind background movies.
 - **Rule**: Preload a synchronous scene's mandatory packs or wait for their availability before opening it; file presence on the server does not establish readiness on the client.
-- **Additional evidence**: On 2026-11-17, Running Through Daybreak's inner tiles referenced 15 icons in separate story-area packs. The first embedding trial passed host checks but was followed by physical Home/Vortex failures on 2026-11-18; it is disabled. Validate native mounting and scene compatibility before treating an upfront dependency copy as accepted.
+- **Additional evidence**: On 2026-11-17, Running Through Daybreak's inner tiles referenced 15 icons in separate story-area packs. The first embedding trial passed host checks but was followed by physical Home/Vortex failures on 2026-11-18; it is disabled. Validate native mounting and scene compatibility before treating an upfront dependency copy as accepted. On 2026-11-21, Global-original unit icons/illustrations (Demon Rain, White Witch Fina, Elza, White Knight Noel, Santa Roselia in `unit1_sg_common.cpk` at index 520; Dangerous Ariana in `unit2_sg_common.cpk` at index 521) were missing on Unit List/Party/Detail screens because all non-tutorial unit art CPKs had empty download class behind ~4.5 GB of background `LBMovie*`/`beastMovie*` packs, and 16 JP-restored `unit*_common.cpk` packs carried stale stock iOS size rows.
 - **Discovered**: 2026-11-11 via the iPhone's uploaded summon-crash session.
 
 ## AP-007 — Losing reserved binary values in text round trips

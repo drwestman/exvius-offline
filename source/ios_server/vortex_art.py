@@ -7,7 +7,7 @@ import re
 import struct
 import zlib
 
-from ios_server import cpk, native_tables as rules
+from ios_server import cpk, native_tables as rules, version_policy
 from ios_server.runtime import private_path
 from ios_server.table_codec import master_rows, patch_master
 
@@ -159,8 +159,10 @@ def project(outputs, version, raw):
     return changed
 
 
-def validate(outputs, entry, raw):
+def validate(outputs, entry, raw, *, schema_version=rules.PIPELINE_VERSION):
     expected = {'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'files', 'added'}
+    if schema_version >= 6:
+        expected |= {'version_generation'}
     if (set(entry) != expected or type(entry['version']) is not int or not 1 <= entry['version'] <= 2147483647
             or type(entry['source_version']) is not int or entry['source_version'] < 1
             or entry['path'] != pack_path(entry['version']) or type(entry['size']) is not int or len(raw) != entry['size']
@@ -180,17 +182,23 @@ def validate(outputs, entry, raw):
             raise ValueError('Vortex table disagrees with prepared pack: ' + table.name)
 
 
-def prepare(inputs, generation, outputs):
-    """Build one validated artifact and its coordinated table projection in memory."""
-    version = inputs.version + rules.VERSION_OFFSET + generation * rules.VERSION_STEP
-    if version > 2147483647:
-        raise ValueError('Native pack version generation is out of range.')
+def build_pack(inputs, generation, *, prior=None):
+    """Build and version-resolve the Vortex pack in memory without touching master outputs."""
+    version_policy.check_bounds(inputs.version, generation, label='Native pack')
     raw, added = cpk.rebuild(inputs.raw, inputs.images)
-    changes = project(outputs, version, raw)
-    entry = {'path': pack_path(version), 'version': version, 'source_version': inputs.version,
-             'size': len(raw), 'sha256': hashlib.sha256(raw).hexdigest(), 'md5': hashlib.md5(raw).hexdigest(),
-             'files': cpk.inspect(raw)[0]['Files'], 'added': added}
-    validate(outputs, entry, raw)
+    sha256 = hashlib.sha256(raw).hexdigest()
+    resolved = version_policy.resolve_managed(inputs.version, sha256, prior, generation, label='Native pack')
+    entry = {'path': pack_path(resolved.version), 'version': resolved.version, 'source_version': inputs.version,
+             'version_generation': resolved.version_generation, 'size': len(raw), 'sha256': sha256,
+             'md5': hashlib.md5(raw).hexdigest(), 'files': cpk.inspect(raw)[0]['Files'], 'added': added}
+    return entry, raw
+
+
+def prepare(inputs, generation, outputs, *, prior=None):
+    """Build one validated artifact and its coordinated table projection in memory."""
+    entry, raw = build_pack(inputs, generation, prior=prior)
+    changes = project(outputs, entry['version'], raw)
+    validate(outputs, entry, raw, schema_version=rules.PIPELINE_VERSION)
     return entry, raw, changes
 
 
@@ -204,12 +212,20 @@ def load(config, directory, manifest, outputs):
             or type(source['pipeline']) is not int or source['pipeline'] < 1
             or source['coverage'] != manifest['preparation']['art']
             or entry['source_version'] != source['pack']['version']
-            or entry['version'] != entry['source_version'] + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP
             or entry['path'] != pack_path(entry['version'])):
         raise ValueError('invalid Vortex pack provenance/version')
+    if manifest['version'] < 6:
+        if entry['version'] != entry['source_version'] + rules.VERSION_OFFSET + manifest['generation'] * rules.VERSION_STEP:
+            raise ValueError('invalid Vortex pack provenance/version')
+    else:
+        if 'version_generation' not in entry:
+            raise ValueError('missing Vortex pack version_generation')
+        version_policy.validate_version(
+            entry['version'], entry['version_generation'], entry['source_version'],
+            manifest['generation'], label='Vortex pack')
     path = private_path(config.root, directory.relative_to(config.root) / entry['path'])
     if not path.resolve().is_relative_to(directory.resolve()):
         raise ValueError('pack escapes its generation')
     raw = path.read_bytes()
-    validate(outputs, entry, raw)
+    validate(outputs, entry, raw, schema_version=manifest['version'])
     return {entry['path']: raw}
