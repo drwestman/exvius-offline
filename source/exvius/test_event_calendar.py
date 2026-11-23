@@ -195,6 +195,54 @@ class AnnualEventBehavior(unittest.TestCase):
             row['name'] = 'changed'
         self.assertEqual([dated, undated], before)
 
+    def test_given_dst_and_permanent_rows_when_selected_then_preserve_windows_and_independent_copies(self):
+        from event_calendar import select
+        rows = [event(100, '2016-11-01', missions=['1000101']),
+                event(104, group='permanent', missions=['1040101'])]
+        original = copy.deepcopy(rows)
+
+        selected = select(rows, event_harness.NOW)
+
+        self.assertEqual(selected[0]['event_windows'], [{
+            'starts_at': '2026-11-01T00:00:00-04:00',
+            'ends_at': '2026-11-15T00:00:00-05:00',
+        }])
+        self.assertEqual([row['area'] for row in selected], ['100', '104'])
+        selected[0]['missions'].append('changed')
+        selected[1]['missions'].append('changed')
+        self.assertEqual(rows, original)
+        repeated = select(rows, event_harness.NOW)
+        self.assertEqual(repeated[0]['missions'], original[0]['missions'])
+        self.assertEqual(repeated[1]['missions'], original[1]['missions'])
+
+    def test_given_occurrences_when_queried_then_merge_overlapping_windows_and_distinguish_closed_or_permanent(self):
+        from event_calendar import EventWindow, occurrences, periods
+        dated = event(99990, windows=[['2017-01-06', '2017-01-19'], ['2019-01-15', '2019-01-25']])
+        permanent = event(99991, group='permanent')
+        start = datetime(2027, 1, 10, tzinfo=NY)
+        end = datetime(2027, 1, 21, tzinfo=NY)
+        self.assertEqual(occurrences(dated, start, end), (
+            EventWindow(datetime(2027, 1, 6, tzinfo=NY), datetime(2027, 1, 26, tzinfo=NY)),
+        ))
+        self.assertEqual(occurrences(dated, datetime(2027, 2, 1, tzinfo=NY), datetime(2027, 2, 2, tzinfo=NY)), ())
+        self.assertTrue(periods(dated))
+        self.assertEqual(occurrences(permanent, start, end), ())
+        self.assertEqual(periods(permanent), ())
+
+    def test_given_invalid_selection_interval_when_selecting_or_querying_occurrences_then_raise_value_error(self):
+        from event_calendar import occurrences, select
+        row = event(99990, windows=[['2017-01-06', '2017-01-19']])
+        aware = datetime(2027, 1, 10, tzinfo=NY)
+        naive = datetime(2027, 1, 10)
+        for bad_start, bad_end in ((naive, aware), (aware, naive), (aware, aware), (aware, aware - timedelta(seconds=1))):
+            with self.subTest(bad_start=bad_start, bad_end=bad_end):
+                with self.assertRaisesRegex(ValueError, 'increasing timezone-aware interval'):
+                    occurrences(row, bad_start, bad_end)
+                with self.assertRaisesRegex(ValueError, 'increasing timezone-aware interval'):
+                    select([], bad_start, until=bad_end)
+                with self.assertRaisesRegex(ValueError, 'increasing timezone-aware interval'):
+                    select([row], bad_start, until=bad_end)
+
     def test_given_midweek_event_when_news_is_rendered_then_show_real_window_and_original_release(self):
         import revival_events
         import revival_notices

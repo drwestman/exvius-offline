@@ -75,16 +75,15 @@ def _anniversary(day, year):
                 not calendar.isleap(year) else day.day)
 
 
-def occurrences(row, start, end):
-    """Return merged occurrences overlapping [start, end); () also marks undated rows.
-
-    Call periods(row) to distinguish an undated/permanent row from a closed dated row.
-    """
+def _selection_interval(start, end):
     if start.utcoffset() is None or end.utcoffset() is None or end <= start:
         raise ValueError('Event selection requires an increasing timezone-aware interval')
-    start, end = start.astimezone(EVENT_TIMEZONE), end.astimezone(EVENT_TIMEZONE)
+    return start.astimezone(EVENT_TIMEZONE), end.astimezone(EVENT_TIMEZONE)
+
+
+def _occurrences(values, start, end):
     found = []
-    for first, last in periods(row):
+    for first, last in values:
         wraps = (last.month, last.day) < (first.month, first.day)
         for year in range(max(1, start.year - 1), min(9998, end.year) + 1):
             begin = datetime.combine(_anniversary(first, year), time.min, EVENT_TIMEZONE)
@@ -100,16 +99,27 @@ def occurrences(row, start, end):
     return tuple(merged)
 
 
+def occurrences(row, start, end):
+    """Return merged occurrences overlapping [start, end); () also marks undated rows.
+
+    Call periods(row) to distinguish an undated/permanent row from a closed dated row.
+    """
+    start, end = _selection_interval(start, end)
+    return _occurrences(periods(row), start, end)
+
+
 def select(rows, now=None, *, until=None):
     """Rows open in [now, until); every returned row is an independent copy."""
     now = clock() if now is None else now
     end = until if until is not None else now + timedelta(microseconds=1)
+    interval = _selection_interval(now, end)
     chosen = []
     for row in rows:
-        windows = occurrences(row, now, end)
+        values = periods(row)
+        windows = _occurrences(values, *interval)
         if windows:
             chosen.append(dict(copy.deepcopy(row), event_windows=[w.describe() for w in windows]))
-        elif not periods(row):
+        elif not values:
             chosen.append(copy.deepcopy(row))
     return tuple(chosen)
 
@@ -133,10 +143,18 @@ class Availability:
 
     @classmethod
     def at(cls, catalogue, moment):
-        rows = tuple(catalogue)
-        return cls(moment,
-                   frozenset(str(row['area']) for row in rows if periods(row)),
-                   {str(row['area']): row for row in select(rows, moment) if row.get('event_windows')})
+        interval = _selection_interval(moment, moment + timedelta(microseconds=1))
+        dated, active = set(), {}
+        for row in catalogue:
+            values = periods(row)
+            if not values:
+                continue
+            area = str(row['area'])
+            dated.add(area)
+            windows = _occurrences(values, *interval)
+            if windows:
+                active[area] = dict(copy.deepcopy(row), event_windows=[w.describe() for w in windows])
+        return cls(moment, frozenset(dated), active)
 
     def is_open(self, area):
         area = str(area)
