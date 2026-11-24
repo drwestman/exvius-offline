@@ -338,12 +338,15 @@ PIPELINE: tuple = (
     # will fetch -- four rows there is `MST_LOAD_FAILED` before character creation (2026-09-20).
     Step("serve_version_table", lambda c: serve_version_table(c.spec), "spec", "c1qYg84Q",
          "the only source of the table versions a cleared client will fetch"),
+    # Segregated CQRS boot steps: read-only lEHBdOEf early table projection vs. settled 75fYdNxq/Daud71Hn commands.
+    Step("project_revival_boot_early", lambda c: __import__('revival_boot').project_for_reply(c.spec, c.reply_id, c.plaintext, State),
+         "spec", "c1qYg84Q", "read-only early table projection for returning iOS devices on lEHBdOEf"),
+    Step("synchronize_revival_boot", lambda c: __import__('revival_boot').synchronize(c.spec, c.reply_id, c.plaintext, State, st.STATE_FILE, st.STATE_PERSIST),
+         "state", "State.player.ios_native_boot", "login/home receipt commands under atomic settle"),
     # The EMBLEM family. `serve_emblem_info` answers the select screen's entry request (an EMPTY body there
     # is a connection error, measured live 2026-09-30); `apply_emblem_setting` records the *Set* press.
     # Both sit immediately before the projection: the setting writes `player_emblem_id`, and the reply it
     # builds carries `3oU9Ktb7` so the projection is what actually fills it in.
-    Step("synchronize_revival_boot", lambda c: __import__('revival_boot').synchronize(c.spec, c.reply_id, c.plaintext, State, st.STATE_FILE, st.STATE_PERSIST),
-         "state", "State.player.ios_native_boot", "login/home commands; early advertisement is read-only"),
     Step("serve_emblem_info", lambda c: serve_emblem_info(c.spec, c.reply_id), "spec", EMBLEM_GROUP),
     Step("apply_emblem_setting", lambda c: apply_emblem_setting(c.plaintext, c.spec),
          "spec", f"State.player.profile / {EMBLEM_GROUP}"),
@@ -428,6 +431,8 @@ PIPELINE_EDGES: tuple = (
     Edge("credit_mission_lapis", "settle_revival_update_rewards", "State.player.exvius_repeat.attempt", "require durable successful completion"),
     Edge("settle_revival_update_rewards", "apply_to_reply", "State.player", "project credited rewards"),
     Edge("settle_revival_carry", "apply_to_reply", "State.player.inventory", "item consumption precedes bag projection"),
+    Edge("serve_version_table", "project_revival_boot_early", "c1qYg84Q",
+         "early projection runs after canonical version-table overlay"),
     Edge("serve_version_table", "synchronize_revival_boot", "c1qYg84Q", "record the exact prepared function-table version"),
     Edge("initialize_revival_campaign", "synchronize_revival_daily", "State.player.ios_economy",
          "record policy before freezing the day's selection and rewards"),

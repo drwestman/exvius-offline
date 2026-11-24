@@ -39,6 +39,26 @@ class NativeUpdateBehavior(unittest.TestCase):
         self.state.native_tables.manifest['tables']['F_FUNCTION_MST']['version'] = 201
         self.assertEqual(step({}, 'lEHBdOEf', self.req, self.state), {})
 
+    def test_given_returning_client_with_resource_catalog_when_bumped_then_advertise_new_resource_tables_without_stale_function(self):
+        self.state.native_tables.manifest['tables'].update({
+            'F_RESOURCE_MST': {'version': 300},
+            'F_RESOURCE_VERSION_MST_LOCALIZE': {'version': 301},
+            'F_RESOURCE_CHECKSUM_MST': {'version': 302},
+        })
+        step({}, '75fYdNxq', self.req, self.state)
+        step({}, 'Daud71Hn', self.req, self.state)
+        self.state.native_tables.manifest['tables']['F_FUNCTION_MST']['version'] = 201
+        self.state.native_tables.manifest['tables']['F_RESOURCE_MST']['version'] = 310
+        out = step({}, 'lEHBdOEf', self.req, self.state)
+        self.assertEqual(
+            out['c1qYg84Q'],
+            [
+                {'a4hXTIm0': 'F_RESOURCE_MST', 'wM9AfX6I': '310'},
+                {'a4hXTIm0': 'F_RESOURCE_VERSION_MST_LOCALIZE', 'wM9AfX6I': '301'},
+                {'a4hXTIm0': 'F_RESOURCE_CHECKSUM_MST', 'wM9AfX6I': '302'},
+            ],
+        )
+
     def test_given_other_campaign_identity_or_frozen_player_when_synchronizing_then_write_nothing(self):
         before = copy.deepcopy(self.player.data)
         step({}, '75fYdNxq', self.req.replace('123', '456'), self.state)

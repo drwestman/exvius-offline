@@ -15,6 +15,7 @@ HERE = Path(__file__).resolve().parents[1] / 'server'
 DOCUMENTS = ('event_art.json', 'event_archive.json', 'event_history.json', 'raid_archive.json')
 PACK = 'spdungeon1.cpk'
 RESOURCE_ID = '6108101'
+MANIFEST_SCHEMA_VERSION = 6
 PIPELINE = 4  # Publish a higher version of the pre-trial native menu inventory.
 # Revision 3 passed host checks but failed physical iPhone acceptance (missing
 # Home icons and an exit at GateEntryScene). Keep its collector testable without
@@ -159,7 +160,7 @@ def project(outputs, version, raw):
     return changed
 
 
-def validate(outputs, entry, raw, *, schema_version=rules.PIPELINE_VERSION):
+def validate(outputs, entry, raw, *, schema_version=MANIFEST_SCHEMA_VERSION):
     expected = {'path', 'version', 'source_version', 'size', 'sha256', 'md5', 'files', 'added'}
     if schema_version >= 6:
         expected |= {'version_generation'}
@@ -198,7 +199,7 @@ def prepare(inputs, generation, outputs, *, prior=None):
     """Build one validated artifact and its coordinated table projection in memory."""
     entry, raw = build_pack(inputs, generation, prior=prior)
     changes = project(outputs, entry['version'], raw)
-    validate(outputs, entry, raw, schema_version=rules.PIPELINE_VERSION)
+    validate(outputs, entry, raw, schema_version=MANIFEST_SCHEMA_VERSION)
     return entry, raw, changes
 
 

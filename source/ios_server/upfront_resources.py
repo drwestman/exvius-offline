@@ -3,7 +3,7 @@ import hashlib
 from pathlib import Path
 import re
 
-from ios_server import native_tables as rules, version_policy
+from ios_server import cpk_foreground_policy, native_tables as rules, version_policy
 from ios_server.table_codec import master_rows, patch_master
 from ios_server.upfront_store import BLOB_PATTERN, unversioned_path
 
@@ -78,7 +78,7 @@ def _find(config, roots, relative):
     return None
 
 
-def collect(config, sources, *, exclude_resources=()):
+def collect(config, sources, *, exclude_resources=(), cpk_policy=cpk_foreground_policy.ALL_CPKS):
     excluded = frozenset(exclude_resources)
     versions = {row.get('9ZCEWn0z'): row for row in _rows(sources, VERSIONS)}
     checksums = {row.get('9ZCEWn0z'): row for row in _rows(sources, CHECKSUM)}
@@ -87,12 +87,11 @@ def collect(config, sources, *, exclude_resources=()):
     files, missing = {}, []
     for row in _rows(sources, 'F_RESOURCE_MST'):
         name, identity = row.get('pJ56sAEo', ''), row.get('9ZCEWn0z', '')
-        if (not isinstance(name, str) or not name.endswith('.cpk') or identity in excluded
-                or str(row.get('81fTkEDP', '')).upper() not in ('TUTO', 'PRE_TUTO') and not rules.is_upfront_pack(row)):
+        if not cpk_foreground_policy.should_audit_upfront(row, cpk_policy, exclude_resources=excluded):
             continue
         if not isinstance(identity, str) or not identity.isascii() or not identity.isdigit() or int(identity) < 1:
             raise ValueError('Invalid upfront CPK resource ID')
-        directory = row.get('3LHdc6Qa') or ('resources' if name in rules.EARLY_PACKS else '')
+        directory = row.get('3LHdc6Qa') or ('resources' if name in cpk_foreground_policy.EARLY_PACKS else '')
         for locale, version_field, size_field in FIELDS:
             version = versions.get(identity, {}).get(version_field, '0')
             if not isinstance(version, str) or not version.isascii() or not version.isdigit() or int(version) < 1:

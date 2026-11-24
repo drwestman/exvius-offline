@@ -515,11 +515,13 @@ upfront CPKs pass through to `capture_server.py`. When `--vortex-art` is enabled
 `upfront_resources` excludes resource `6108101` so `vortex_art` remains the sole
 owner of `spdungeon1.cpk`.
 
-### Schema-6 content-preserving incremental versioning
+### Schema-6 content-preserving incremental versioning and full-CPK foreground downloads
 
-Manifest schema 6 (`PIPELINE_VERSION = 6`) avoids unnecessary multi-gigabyte
-background cache invalidation on the iPhone by preserving previously published
-client versions for byte-identical artifacts across generations:
+Manifest schema 6 (currently `PIPELINE_VERSION = 7`, upgrading from `6`) avoids
+unnecessary multi-gigabyte background cache invalidation on the iPhone by preserving
+previously published client versions for byte-identical artifacts across generations,
+while promoting all empty-phase versioned `.cpk` packs to foreground `TUTO`
+(`cpk_foreground_policy.ALL_CPKS`):
 
 1. **Five-stage dependency order**: `prepare_data` resolves leaf artifacts first
    (upfront CPKs, Vortex `spdungeon1.cpk`, sound banks matched by `Ver0_`
@@ -533,30 +535,37 @@ client versions for byte-identical artifacts across generations:
    Only changed artifacts or artifacts whose floor increased above their carried
    version receive `floor + 200000 + generation * 10000` with
    `version_generation = generation`.
-3. **Backward compatibility & diagnostics**: Schema 1–5 manifests remain readable
+3. **Full-CPK foreground policy (`cpk_foreground_policy.py`)**: Under
+   `PIPELINE_VERSION = 7` (`ALL_CPKS`), every empty-phase `.cpk` row in
+   `F_RESOURCE_MST` (including monster, battle background, area, beast,
+   vision card, item, and `LBMovie*` / `movie_sg*` archives) is promoted to
+   `'TUTO'` and audited by `upfront_resources.collect` (while preserving
+   `'PRE_TUTO'`, `'TUTO'`, `'tuto'`, `'DEFINE'` banner tags, and `.acb` audio
+   rows). Any drifted (`size != advertised`) non-Vortex `.cpk` pack is bumped
+   and staged privately in `assets/upfront/blobs/`.
+4. **Launch-1 early resource-catalog projection (`revival_boot.py`)**: For
+   returning initialized devices (`device_hash in ios_native_boot.held`),
+   `lEHBdOEf` advertises `F_RESOURCE_MST`, `F_RESOURCE_VERSION_MST_LOCALIZE`,
+   and `F_RESOURCE_CHECKSUM_MST` at their current prepared versions alongside
+   receipt-matched `F_FUNCTION_MST`, so Gate 1 / Gate 2 enter
+   `InitialDownloadScene` on the first launch after `prepare-data`. Set
+   `FFBE_IOS_EARLY_RESOURCE_CATALOG=0` to roll back `lEHBdOEf` to legacy
+   `F_FUNCTION_MST`-only advertisement without code changes.
+   *(Authored `ResourceAllDownloadRequest` / `i0d5n1Dp` remains deferred pending
+   Phase-0 wire-contract verification.)*
+5. **Backward compatibility & diagnostics**: Schema 1–5 manifests remain readable
    and strictly validated under their original formulas; upgrading from schema 5
-   (e.g., generation 8) to schema 6 (generation 9) carries forward all unchanged
-   tables, sound banks, and `spdungeon1.cpk`. `verify-data` / `prepare-data`
-   reports expose `version_reuse` counts (`reused` vs. `bumped`) per artifact
-   family.
+   or earlier `PIPELINE_VERSION = 6` snapshots carries forward all unchanged
+   tables, sound banks, `spdungeon1.cpk`, and previously bumped upfront CPKs.
+   `verify-data` / `prepare-data` reports expose `version_reuse` counts
+   (`reused` vs. `bumped`) per artifact family.
 
 Source edits, including same-length changes, make preparation stale. Refresh
 with `prepare-data` and verify before restarting; existing Vortex/sound features
-remain enabled. The actual acceptance corpus measures 60 packs and corrects
-three stale size fields. It needs a new table generation, without rewriting the
-shared CPKs. Physical download recovery is tracked in the acceptance record.
-
-The common/English `gacha1` UI packs, `monster3_common.cpk` (the detail scene's
-default Ochu preview), and non-movie unit sprite/icon/illustration CPKs
-(`dir=unit`, matching `unit<N>[_sg][_common].cpk`, excluding `LBMovie*` and
-`movie_sg*`) are marked TUTO even if their original class was background.
-Those synchronous UI scenes load unit and summon textures directly from their
-mounted CPK groups, so leaving them behind the multi-gigabyte bulk movie queue
-can show missing character icons/illustrations or fallback squares. Unrelated
-packs keep their original classification. Refresh prepared tables explicitly and
-allow startup downloads to complete before retrying Summon or Units. The
-documented first-login relaunch still applies; a second app launch can be needed
-to use updated lists.
+remain enabled. Refresh prepared tables explicitly and allow startup downloads
+to complete before entering Home. For returning devices, `lEHBdOEf` advertises
+updated `F_RESOURCE_*` catalog tables on the first launch after `prepare-data`
+(unless `FFBE_IOS_EARLY_RESOURCE_CATALOG=0` is set).
 
 ### Native device diagnostics
 

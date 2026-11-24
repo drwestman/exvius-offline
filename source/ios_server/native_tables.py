@@ -1,44 +1,19 @@
 """Native iOS table preparation rules; no filesystem or engine state access."""
 from dataclasses import dataclass
 import hashlib
-import re
 
-from ios_server import version_policy
+from ios_server import cpk_foreground_policy, version_policy
+from ios_server.cpk_foreground_policy import EARLY_PACKS
 from ios_server.table_codec import master_rows, patch_master, patch_text, text_lines, normalize_master, validate_master
 from ios_server.native_registry import definitions
 from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
 import revival_economy
 
-PIPELINE_VERSION = 6
+PIPELINE_VERSION = 7
 VERSION_OFFSET = version_policy.VERSION_OFFSET
 VERSION_STEP = version_policy.VERSION_STEP
-EARLY_PACKS = frozenset(('resources_common.cpk', 'resources.cpk'))
-# Gacha detail opens synchronously: its UI and default Ochu preview cannot wait
-# behind the background movie queue (confirmed by native reports on 2026-11-11).
-MENU_PACKS = frozenset(('gacha1_common.cpk', 'gacha1.cpk', 'monster3_common.cpk'))
-UPFRONT_PACKS = EARLY_PACKS | MENU_PACKS
-# Unit list, party, equip, and unit detail scenes load unit icons/illustrations
-# synchronously from the `unit` CPK group without triggering on-demand downloads.
-# Leaving unit*_common.cpk / unit*_sg_common.cpk / unit22.cpk in background traps
-# Global-original packs (unit1_sg_common.cpk..unit3_sg_common.cpk) behind ~4.5 GB
-# of LBMovie/beastMovie packs and leaves JP-restored unit packs unreconciled.
-UNIT_ART_PACK = re.compile(r'^unit[0-9]+(?:_sg)?(?:_common)?\.cpk$')
 RATE_URL = 'https://v910-lapis.gumi.sg/lapisProd/app/php/web/statics/probability/sg_summons_list.php'
-
-
-def is_promoted_menu_pack(row):
-    name = row.get('pJ56sAEo', '')
-    if not isinstance(name, str):
-        return False
-    if name in MENU_PACKS:
-        return True
-    return row.get('3LHdc6Qa') == 'unit' and bool(UNIT_ART_PACK.fullmatch(name))
-
-
-def is_upfront_pack(row):
-    name = row.get('pJ56sAEo', '')
-    return name in EARLY_PACKS or is_promoted_menu_pack(row)
 
 
 @dataclass(frozen=True)
@@ -131,7 +106,10 @@ def build_localized(sources, generation, *, labels=None, tables=TABLES, floors=N
     return outputs, changes, resolved
 
 
-def build_masters(sources, outputs, changes, localized_versions, *, economy=None, tables=TABLES, update=None):
+def build_masters(
+    sources, outputs, changes, localized_versions,
+    *, economy=None, tables=TABLES, update=None, cpk_policy=cpk_foreground_policy.ALL_CPKS,
+):
     """Build non-localized master tables using resolved localized versions in F_LOCALIZED_TEXT_MST."""
     unversioned = {str(r.get('9ZCEWn0z')) for _, r, _ in master_rows(sources[VERSIONS.name][1], VERSIONS.key)
                    if str(r.get('OzT5lSz3') or '0') == '0' and str(r.get('86SWOBTb') or '0') == '0'}
@@ -142,10 +120,9 @@ def build_masters(sources, outputs, changes, localized_versions, *, economy=None
             return None
         if row.get('pJ56sAEo') in EARLY_PACKS:
             found.add(row['pJ56sAEo'])
-        if is_upfront_pack(row):
-            if not row.get('81fTkEDP') or (is_promoted_menu_pack(row)
-                    and str(row.get('81fTkEDP', '')).upper() not in ('TUTO', 'PRE_TUTO')):
-                row['81fTkEDP'] = 'TUTO'
+        promoted = cpk_foreground_policy.target_phase(row, cpk_policy)
+        if promoted != row.get('81fTkEDP', ''):
+            row['81fTkEDP'] = promoted
         return row
 
     def quest(row):
@@ -213,12 +190,18 @@ def resolve_masters(outputs, sources, generation, localized_resolved, *, tables=
     return versions, resolved
 
 
-def build(sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None, update=None, prior=None):
+def build(
+    sources, generation, *, labels=None, economy=None, tables=TABLES, floors=None, update=None, prior=None,
+    cpk_policy=cpk_foreground_policy.ALL_CPKS,
+):
     """Sources are {table name: (native source version, raw bytes)}."""
     outputs, changes, localized_resolved = build_localized(
         sources, generation, labels=labels, tables=tables, floors=floors, prior=prior)
     localized_versions = {name: item.version for name, item in localized_resolved.items()}
-    build_masters(sources, outputs, changes, localized_versions, economy=economy, tables=tables, update=update)
+    build_masters(
+        sources, outputs, changes, localized_versions,
+        economy=economy, tables=tables, update=update, cpk_policy=cpk_policy,
+    )
     versions, _ = resolve_masters(
         outputs, sources, generation, localized_resolved, tables=tables, floors=floors, prior=prior)
     validate(outputs, versions, tables=tables)

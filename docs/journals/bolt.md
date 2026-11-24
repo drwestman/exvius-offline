@@ -13,3 +13,7 @@
 ## 2026-11-22 - Stream sound GETs after verification
 **Learning:** Native sound GET retained a full verified bank in memory. A 32.6 MB disposable bank increased process high-water RSS by 32.65 MB; streaming from a verified descriptor reduced request-attributable RSS to about 0.31 MB. Integrity still needs to be checked before response headers, including same-size edits.
 **Action:** Open the contained bank with `O_NOFOLLOW`, recheck its size and digest on every request, rewind that same descriptor, and stream only the recorded length in bounded chunks. Do not cache sound integrity by file metadata.
+
+## 2026-11-24 - Native News list builds unused detail projections
+**Learning:** The `CQ4jTm2F` native list query runs under the canonical `STATE_LOCK`. `revival_notices.add_rows()` builds a full summary for every retained week, then uses only its caption; an eight-week synthetic baseline measured about 53 ms warm and profiled eight summon plans, eight event plans, and roughly 116,000 recursive copy calls.
+**Action:** Keep native captions as a read-only projection separate from HTML summaries, and do not retain campaign- or time-dependent notice results across requests.

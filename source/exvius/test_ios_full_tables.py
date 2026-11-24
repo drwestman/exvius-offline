@@ -270,30 +270,35 @@ class CompleteTablePreparation(unittest.TestCase):
             self.assertIn(identity + ':' + field, pack.manifest['upfront_packs'])
             self.assertEqual(ver_rows[identity][version_field], str(pack.manifest['upfront_packs'][identity + ':' + field]['version']))
         self.assertEqual(resources['903']['81fTkEDP'], 'BACKGROUND')
-        self.assertEqual(sizes['903']['JwbkKrjA'], '1')
-        self.assertEqual(ver_rows['903']['OzT5lSz3'], '7')
+        self.assertEqual(sizes['903']['JwbkKrjA'], str(len(b'CPK fixture')))
+        self.assertIn('903:JwbkKrjA', pack.manifest['sources']['upfront']['files'])
+        self.assertIn('903:JwbkKrjA', pack.manifest['upfront_packs'])
+        self.assertEqual(ver_rows['903']['OzT5lSz3'], str(pack.manifest['upfront_packs']['903:JwbkKrjA']['version']))
         self.assertEqual(before, {p: p.read_bytes() for p in before})
 
-    def test_given_background_unit_art_packs_when_prepared_then_preload_unit_packs_and_leave_movies_in_background(self):
+    def test_given_background_unit_art_and_movie_packs_when_prepared_then_promote_all_empty_cpks_and_preserve_define_and_sounds(self):
         self.fixture()
         resource, versions, checksums = (rules.BY_NAME[name] for name in
             ('F_RESOURCE_MST', 'F_RESOURCE_VERSION_MST_LOCALIZE', 'F_RESOURCE_CHECKSUM_MST'))
         rows = {t.name: [row for _, row, _ in master_rows(self.source(t).read_bytes(), t.key)]
                 for t in (resource, versions, checksums)}
         cases = (
-            ('9400506', 'unit', 'unit1_sg_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '4', b'CPK sg unit', len(b'CPK sg unit')),
-            ('101004', 'unit', 'unit4_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '15', b'CPK drifted unit', 1),
-            ('1101022', 'unit', 'unit22.cpk', 'en', '86SWOBTb', 'MLOSu5E0', '1', b'CPK en unit', len(b'CPK en unit')),
-            ('101501', 'unit', 'LBMovie100000225_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '3', b'CPK movie', 1),
-            ('101689', 'unit', 'movie_sg2_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '1', b'CPK sg movie', 1),
+            ('9400506', 'unit', 'unit1_sg_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '4', b'CPK sg unit', len(b'CPK sg unit'), ''),
+            ('101004', 'unit', 'unit4_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '15', b'CPK drifted unit', 1, ''),
+            ('1101022', 'unit', 'unit22.cpk', 'en', '86SWOBTb', 'MLOSu5E0', '1', b'CPK en unit', len(b'CPK en unit'), ''),
+            ('101501', 'unit', 'LBMovie100000225_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '3', b'CPK movie', 1, ''),
+            ('101689', 'unit', 'movie_sg2_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '1', b'CPK sg movie', len(b'CPK sg movie'), ''),
+            ('116002', 'banner', 'banner2_common.cpk', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '2', b'CPK banner', len(b'CPK banner'), 'DEFINE'),
+            ('12', 'sound/bgm', 'Bgm001.acb', 'common_lang', 'OzT5lSz3', 'JwbkKrjA', '5', b'ACB bgm', 1, 'GAME'),
         )
-        for identity, directory, name, locale, version_field, size_field, version, payload, advertised in cases:
+        for identity, directory, name, locale, version_field, size_field, version, payload, advertised, phase in cases:
             rows[resource.name].append({'9ZCEWn0z': identity, '3LHdc6Qa': directory,
-                                        'pJ56sAEo': name, '81fTkEDP': ''})
+                                        'pJ56sAEo': name, '81fTkEDP': phase})
             rows[versions.name].append({'9ZCEWn0z': identity, version_field: version})
             rows[checksums.name].append({'9ZCEWn0z': identity, size_field: str(advertised), 'mYtcPkQQ': 'android'})
-            path = self.native / f'{locale}/sd/{directory}/Ver{version}_{name}'
-            path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(payload)
+            if name.endswith('.cpk'):
+                path = self.native / f'{locale}/sd/{directory}/Ver{version}_{name}'
+                path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(payload)
         for table in (resource, versions, checksums):
             self.source(table).write_bytes(harness.master(table.key, rows[table.name]))
         before = {p: p.read_bytes() for p in self.config.data.rglob('*') if p.is_file()}
@@ -303,10 +308,10 @@ class CompleteTablePreparation(unittest.TestCase):
                     master_rows(pack.lookup(pack.manifest['tables'][table.name]['path']), table.key)
                     if '9ZCEWn0z' in row}
         resources, sizes, ver_rows = published(resource), published(checksums), published(versions)
-        # Unit sprite/icon/illustration packs are promoted to upfront TUTO.
-        for identity, _dir, _name, _loc, vfield, sfield, version, payload, advertised in cases[:3]:
+        # All '' CPK rows (including movies) are promoted to TUTO; DEFINE keeps its tag while still audited.
+        for identity, _dir, _name, _loc, vfield, sfield, version, payload, advertised, phase in cases[:6]:
             key = identity + ':' + sfield
-            self.assertEqual(resources[identity]['81fTkEDP'], 'TUTO')
+            self.assertEqual(resources[identity]['81fTkEDP'], 'DEFINE' if phase == 'DEFINE' else 'TUTO')
             self.assertEqual(sizes[identity][sfield], str(len(payload)))
             self.assertEqual(sizes[identity]['mYtcPkQQ'], 'android')
             self.assertIn(key, pack.manifest['sources']['upfront']['files'])
@@ -316,12 +321,11 @@ class CompleteTablePreparation(unittest.TestCase):
             else:
                 self.assertIn(key, pack.manifest['upfront_packs'])
                 self.assertEqual(ver_rows[identity][vfield], str(pack.manifest['upfront_packs'][key]['version']))
-        # Movie packs in dir=unit stay background and out of upfront collection.
-        for identity, _dir, _name, _loc, vfield, sfield, version, _payload, advertised in cases[3:]:
-            self.assertEqual(resources[identity]['81fTkEDP'], '')
-            self.assertNotIn(identity + ':' + sfield, pack.manifest['sources']['upfront']['files'])
-            self.assertEqual(sizes[identity][sfield], str(advertised))
-            self.assertEqual(ver_rows[identity][vfield], version)
+        # Sound (.acb) rows stay GAME and out of upfront collection.
+        self.assertEqual(resources['12']['81fTkEDP'], 'GAME')
+        self.assertNotIn('12:JwbkKrjA', pack.manifest['sources']['upfront']['files'])
+        self.assertEqual(sizes['12']['JwbkKrjA'], '1')
+        self.assertEqual(ver_rows['12']['OzT5lSz3'], '5')
         self.assertEqual(before, {p: p.read_bytes() for p in before})
 
     def test_given_exact_overlay_pack_when_prepared_then_size_and_provenance_follow_served_overlay(self):

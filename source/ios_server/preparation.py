@@ -15,7 +15,7 @@ import shutil
 import tempfile
 
 from engine_profile import REVIVAL_COMMIT
-from ios_server import native_tables as rules, upfront_store, version_policy
+from ios_server import cpk_foreground_policy, native_tables as rules, upfront_store, version_policy
 from ios_server.runtime import InstanceLock, private_path
 
 SCOPE = 'native-tables'
@@ -38,7 +38,7 @@ def _inputs(config):
         raise ValueError(f'Invalid native preparation metadata: {exc}') from exc
 
 
-def _complete_inputs(config, vortex_art=False, sounds=False):
+def _complete_inputs(config, vortex_art=False, sounds=False, *, cpk_policy=cpk_foreground_policy.ALL_CPKS):
     sources, records, fingerprint, context, labels = _inputs(config)
     art = None
     if vortex_art:
@@ -60,7 +60,7 @@ def _complete_inputs(config, vortex_art=False, sounds=False):
     from ios_server import upfront_resources
     from ios_server.vortex_art import RESOURCE_ID as VORTEX_RESOURCE_ID
     exclude = (VORTEX_RESOURCE_ID,) if vortex_art else ()
-    upfront = upfront_resources.collect(config, sources, exclude_resources=exclude)
+    upfront = upfront_resources.collect(config, sources, exclude_resources=exclude, cpk_policy=cpk_policy)
     records = {**records, 'upfront': upfront}
     context = {**context, 'upfront': upfront_resources.coverage(upfront)}
     fingerprint = _sha(_json({'tables': fingerprint, 'upfront': upfront}))
@@ -391,7 +391,7 @@ def _compute_generation(current, sources, floors, records, art, sound, priors):
     return generation
 
 
-def prepare_data(config, *, vortex_art=False, sounds=False):
+def prepare_data(config, *, vortex_art=False, sounds=False, cpk_policy=cpk_foreground_policy.ALL_CPKS):
     """Build and validate first, then publish under the exclusive private-runtime lock."""
     if type(vortex_art) is not bool:
         raise ValueError('Vortex preparation must be explicitly enabled or disabled.')
@@ -402,7 +402,8 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
         vortex_art = vortex_art or current is not None and 'packs' in current.manifest
         sounds = sounds or current is not None and 'sounds' in current.manifest
         # Stage 0: Collect inputs + compute generation + overflow pre-check
-        sources, records, fingerprint, context, labels, art, sound = _complete_inputs(config, vortex_art, sounds)
+        sources, records, fingerprint, context, labels, art, sound = _complete_inputs(
+            config, vortex_art, sounds, cpk_policy=cpk_policy)
         if current is not None and current.manifest['fingerprint'] == fingerprint:
             if (current.manifest['sources'] != records or current.manifest['source_root'] != str(config.data)
                     or current.manifest['pipeline_version'] != rules.PIPELINE_VERSION
@@ -436,7 +437,8 @@ def prepare_data(config, *, vortex_art=False, sounds=False):
         # Stage 2: Master table projections
         localized_versions = {name: item.version for name, item in localized_resolved.items()}
         rules.build_masters(sources, outputs, changes, localized_versions,
-                            economy=context['economy']['settings'], update=context.get('update'))
+                            economy=context['economy']['settings'], update=context.get('update'),
+                            cpk_policy=cpk_policy)
         for name, count in upfront_resources.project(records['upfront'], outputs, bumped=upfront_packs).items():
             changes[name] += count
         if art is not None:

@@ -208,9 +208,13 @@ class VortexPreparation(unittest.TestCase):
             original = [row for _, row, _ in master_rows(self.source(table).read_bytes(), table.key, mode=table.cipher)]
             self.source(table).write_bytes(harness.master(table.key, original + additions, mode=table.cipher))
         self.icon = 'map_icon_3120101.png'
+        icon_pack_raw = cpk.rebuild(fixture_pack(), {self.icon: png(4), 'unrelated.png': png(5)})[0]
+        checksum_rows = [row for _, row, _ in master_rows(self.source(art.CHECKSUM).read_bytes(), art.CHECKSUM.key)]
+        checksum_rows.append({'9ZCEWn0z': '108010', 'JwbkKrjA': str(len(icon_pack_raw)), 'MLOSu5E0': str(len(icon_pack_raw))})
+        self.source(art.CHECKSUM).write_bytes(harness.master(art.CHECKSUM.key, checksum_rows))
         self.icon_pack = self.native/'common_lang/sd/area/Ver6_area10.cpk'
         self.icon_pack.parent.mkdir(parents=True)
-        self.icon_pack.write_bytes(cpk.rebuild(fixture_pack(), {self.icon: png(4), 'unrelated.png': png(5)})[0])
+        self.icon_pack.write_bytes(icon_pack_raw)
 
     def test_given_native_crash_quarantine_when_prepared_then_retain_previous_menu_inventory(self):
         self.inner_icons()

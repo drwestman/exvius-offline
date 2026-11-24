@@ -1981,27 +1981,54 @@ serve report files.
 Native preparation SHALL classify gacha1_common.cpk, gacha1.cpk,
 monster3_common.cpk, and non-movie unit artwork CPKs (`3LHdc6Qa == 'unit'`
 matching `^unit[0-9]+(?:_sg)?(?:_common)?\.cpk$`) for upfront TUTO download
-when present in the resource list. Existing TUTO/PRE_TUTO classifications SHALL
-be retained. Unversioned resources SHALL remain omitted, and movie packs
-(`LBMovie*`, `movie_sg*`) and unrelated background packs SHALL keep their class.
+when present in the resource list (modeled by `cpk_foreground_policy.LEGACY_MENU_AND_UNITS`,
+and superseded as the active default by `PromoteAllVersionedCpksToForegroundDownload`
+under `PIPELINE_VERSION = 7` / `ALL_CPKS`). Existing TUTO/PRE_TUTO classifications
+SHALL be retained, and unversioned resources SHALL remain omitted.
 Exact file provenance and iOS sizes SHALL be bound through upfront collection
 without changing source files, summon costs, pools, awards or legacy projections.
 
-- **Implementation**: `build::source/ios_server/native_tables.py`, `is_upfront_pack::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`
+- **Implementation**: `build::source/ios_server/native_tables.py`, `is_upfront_pack::source/ios_server/cpk_foreground_policy.py`, `collect::source/ios_server/upfront_resources.py`
 
 #### Scenario: Open summon detail before the bulk movie queue finishes
 
 - Given the summon UI and default preview packs have background classifications
 - When native tables are prepared
 - Then those three dependencies are advertised for upfront download with exact iOS sizes
-- And an unrelated background pack, source files and campaign remain unchanged.
+- And source files and campaign remain unchanged.
 
 #### Scenario: Open unit list or party before the bulk movie queue finishes
 
-- Given unit sprite/icon/illustration archives (`unit1_sg_common.cpk`, `unit4_common.cpk`, `unit22.cpk`) and unit movie archives (`LBMovie*`, `movie_sg2_common.cpk`) have background classifications
+- Given unit sprite/icon/illustration archives (`unit1_sg_common.cpk`, `unit4_common.cpk`, `unit22.cpk`) have empty background classifications
 - When native tables are prepared
 - Then the unit artwork packs are advertised as upfront TUTO with exact iOS sizes and managed versions when drifted
-- And unit movie packs remain background without entering upfront provenance.
+- And under `cpk_foreground_policy.LEGACY_MENU_AND_UNITS`, movie packs remain background without entering upfront provenance.
+
+### Requirement: PromoteAllVersionedCpksToForegroundDownload
+
+Under `PIPELINE_VERSION = 7` (`cpk_foreground_policy.ALL_CPKS` with `audit_all_cpks=True`),
+native preparation SHALL promote every empty-phase or `None`-phase versioned `.cpk` row
+in `F_RESOURCE_MST` (including monster, battle background, area, beast, vision card,
+item, and `LBMovie*` / `movie_sg*` archives) to `TUTO`, while preserving existing
+`PRE_TUTO`, `TUTO`, `tuto`, and `DEFINE` banner tags and leaving `.acb` audio
+rows untouched. `cpk_foreground_policy.should_audit_upfront` SHALL enforce the LSP
+audit invariant so every `.cpk` row promoted to `TUTO` or `PRE_TUTO` by `target_phase`
+is audited by `upfront_resources.collect`. `upfront_resources.collect` SHALL audit
+every non-Vortex versioned `.cpk` row under `ALL_CPKS` and bump any drifted
+(`size != advertised`) or byte-changed pack into `upfront_packs` and `assets/upfront/blobs/`
+while carrying forward unchanged prior schema-6 tables, sound banks, Vortex pack, and
+previously bumped CPKs. Preparation and collection boundaries SHALL accept injected
+`cpk_policy` descriptors defaulting to `ALL_CPKS`.
+
+- **Implementation**: `ForegroundCpkPolicy::source/ios_server/cpk_foreground_policy.py`, `target_phase::source/ios_server/cpk_foreground_policy.py`, `should_audit_upfront::source/ios_server/cpk_foreground_policy.py`, `build_masters::source/ios_server/native_tables.py`, `build::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`, `prepare_data::source/ios_server/preparation.py`, `MANIFEST_SCHEMA_VERSION::source/ios_server/vortex_art.py`
+
+#### Scenario: Promote empty-phase CPKs including movies while preserving DEFINE and audio rows
+
+- Given `F_RESOURCE_MST` contains `PRE_TUTO`, `TUTO`, `tuto`, `DEFINE` banner CPKs, empty-phase CPKs including `LBMovie*` / `movie_sg*`, and `.acb` audio rows
+- When native tables are prepared under `PIPELINE_VERSION = 7`
+- Then every empty-phase `.cpk` row is promoted to `TUTO`
+- And `PRE_TUTO`, `TUTO`, `tuto`, `DEFINE`, and `.acb` phase tags remain unchanged
+- And every non-Vortex `.cpk` row (including `DEFINE`) is audited by `upfront_resources.collect` without auditing `.acb` audio rows.
 
 ### Requirement: ServeNativeDropRatesWebView
 
@@ -2110,12 +2137,15 @@ when adding records, and bind changed bytes through the existing generation.
 
 Explicit login/home commands SHALL record bounded hashed per-device function-table
 receipts. Early version projection SHALL require the current campaign identity
-and a receipt for the exact prepared version, without changing the save. Carried
+and a returning-device receipt without changing the save: `F_FUNCTION_MST` SHALL
+be emitted only when the device's held receipt matches the exact prepared
+version, while `AdvertiseResourceCatalogEarlyForReturningDevices` MAY emit the
+prepared resource-catalog tables alongside it. Carried
 items SHALL be excluded from the projected bag, bounded by total ownership, and
 consumed once against their loaded attempt. Empty native reports SHALL remain
 ambiguous and SHALL NOT consume items.
 
-- **Implementation**: `step::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`
+- **Implementation**: `next_receipt_ledger::source/server/revival_boot.py`, `record_receipt::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`, `project_for_reply::source/server/revival_boot.py`, `project_early_versions::source/server/revival_boot.py`, `step::source/server/revival_boot.py`
 - **Implementation**: `fit::source/server/revival_carry.py`, `settle::source/server/revival_carry.py`, `report::source/server/revival_quests.py`
 
 #### Scenario: Match the returning phone's table generation
@@ -2123,13 +2153,43 @@ ambiguous and SHALL NOT consume items.
 - Given a phone that reached Home after downloading the function table
 - When its next cold launch requests early versions
 - Then the recorded function-table version is advertised
-- And a later prepared generation invalidates that receipt until another login.
+- And a later prepared generation invalidates the `F_FUNCTION_MST` receipt until another login.
 
 #### Scenario: Retry after refilling the item set
 
 - Given a battle whose carry consumption was settled and a subsequently refilled set
 - When the old result is repeated
 - Then no additional stock is consumed.
+
+### Requirement: AdvertiseResourceCatalogEarlyForReturningDevices
+
+On `GetBackgroundDownloadInfoRequest` (`lEHBdOEf`), `revival_boot.project_for_reply`
+and `revival_boot.project_early_versions` SHALL remain strictly read-only,
+resolving `EarlyCatalogPolicy` at the adapter edge and delegating row construction
+to pure `revival_boot.build_early_version_rows`. Projection SHALL emit nothing for
+uninitialized devices (`device_hash` absent from `ios_native_boot.held`),
+non-`ios-revival` profiles, or mismatched campaign identities, and SHALL safely
+ignore incomplete table entries missing a `'version'` field. For returning
+initialized devices with `EARLY_RESOURCE_CATALOG` enabled (and
+`FFBE_IOS_EARLY_RESOURCE_CATALOG != '0'`), it SHALL non-destructively merge
+`F_RESOURCE_MST`, `F_RESOURCE_VERSION_MST_LOCALIZE`, and `F_RESOURCE_CHECKSUM_MST`
+at their current prepared versions alongside any receipt-matched `F_FUNCTION_MST`
+row into `c1qYg84Q`, preserving unrelated pre-existing rows even when
+`F_FUNCTION_MST` or `F_RESOURCE_*` versions changed after the previous boot.
+In `ffbe_pipeline.py`, `project_revival_boot_early` (`writes='spec'`) SHALL run
+read-only after `serve_version_table`, segregated from `synchronize_revival_boot`
+(`writes='state'`, scoped solely to `75fYdNxq` and `Daud71Hn` via
+`revival_boot.next_receipt_ledger`).
+
+- **Implementation**: `EarlyCatalogPolicy::source/server/revival_boot.py`, `resolve_early_catalog_policy::source/server/revival_boot.py`, `build_early_version_rows::source/server/revival_boot.py`, `project_early_versions::source/server/revival_boot.py`, `project_for_reply::source/server/revival_boot.py`, `next_receipt_ledger::source/server/revival_boot.py`, `record_receipt::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`, `step::source/server/revival_boot.py`
+- **Implementation**: `validate_pipeline::source/server/ffbe_pipeline.py`
+
+#### Scenario: Returning device after a new prepared generation
+
+- Given a device recorded in `ios_native_boot.held` and a new prepared generation that bumped `F_FUNCTION_MST` and `F_RESOURCE_*`
+- When `lEHBdOEf` is handled
+- Then `F_FUNCTION_MST` is omitted from `c1qYg84Q`
+- And `F_RESOURCE_MST`, `F_RESOURCE_VERSION_MST_LOCALIZE`, and `F_RESOURCE_CHECKSUM_MST` are advertised at their new prepared versions without mutating `player.data` or `dirty`.
 
 ### Requirement: SettleRecordedUpdateQuestRewards
 
@@ -2193,7 +2253,7 @@ Pack installation SHALL not claim completed native image projection integration.
 
 ### Requirement: PreserveUnchangedNativeVersionsAcrossGenerations
 
-Schema 6 native preparation (`PIPELINE_VERSION = 6`) SHALL resolve leaf artifacts
+Schema 6 native preparation (`PIPELINE_VERSION >= 6`, currently `7`) SHALL resolve leaf artifacts
 (upfront CPKs, Vortex pack, sound banks, and localized text tables) before
 dependent master tables and carry forward the prior generation's published
 client version and `version_generation` for every managed artifact whose output

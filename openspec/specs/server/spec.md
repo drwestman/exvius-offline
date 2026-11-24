@@ -19,9 +19,16 @@ event catalogues. See SelectReplayVortexEvents in the iOS-server specification.
 The detailed upgrade, conversion, replay, carry, bootstrap, collection and native
 table requirements are defined in the iOS-server specification. Its implementation
 ledger identifies pending upstream capabilities; these selective ports SHALL NOT
-be represented as complete parity with d6e8858.
+be represented as complete parity with d6e8858. In `ffbe_pipeline`, the iOS
+early resource-catalog projection (`project_revival_boot_early` via
+`revival_boot.project_for_reply`) is segregated as a read-only `spec` step from
+login/home receipt persistence (`synchronize_revival_boot` via
+`revival_boot.synchronize`); see `RecordNativeBootstrapAndCarryFacts` and
+`AdvertiseResourceCatalogEarlyForReturningDevices` in
+`openspec/specs/ios-server/spec.md`.
 
 - **Implementation**: `reply_pipeline::source/server/ffbe_pipeline.py`, `sacrifice::source/server/exvius_actions.py`, `unit_class_up::source/server/exvius_actions.py`
+- **Implementation**: `project_for_reply::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`, `build_early_version_rows::source/server/revival_boot.py`, `next_receipt_ledger::source/server/revival_boot.py`
 - **Implementation**: `_execute::source/server/exvius_gacha_select.py`, `_action::source/server/exvius_actions_shops.py`, `mission_update::source/server/exvius_actions_expedition.py`
 - **Implementation**: `begin_attempt::source/server/exvius_repeat.py`, `serve_unit_mix::source/server/ffbe_player.py`, `_handle::source/server/capture_server.py`
 - **Implementation**: `_unit_rows::source/server/player_state.py`, `item_rows::source/server/player_state.py`, `groups::source/server/player_state.py`, `expand_pool::source/server/player_state.py`
