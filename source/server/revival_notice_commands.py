@@ -7,12 +7,10 @@ import revival_notices as policy
 def serve(spec, req, reply_id):
     from ffbe_state import State, STATE_FILE, STATE_PERSIST
     player = State.player
+    if reply_id != 'pC3a2JWU' or player.mode != 'live':
+        return policy.project_query(spec, player.data, reply_id)
     policy.settings(player.data)
     now = policy.clock()
-    if reply_id == 'CQ4jTm2F':
-        spec = policy.add_rows(spec, player.data, now)
-    if reply_id != 'pC3a2JWU' or player.mode != 'live':
-        return policy.project(spec, player.data)
     if not STATE_PERSIST:
         raise ValueError('iOS notice receipts require state persistence.')
     saved_index, marked = policy.ledger(player.data)
