@@ -35,12 +35,14 @@ import revival_boot
 
 
 class ForegroundCpkClassification(unittest.TestCase):
-    def test_given_resource_rows_when_classified_then_promote_empty_cpks_and_preserve_define_and_sounds(self):
+    def test_given_resource_rows_when_classified_then_promote_empty_and_define_cpks_and_preserve_sounds(self):
         rows = [
             {'9ZCEWn0z': '1', '3LHdc6Qa': 'resources', 'pJ56sAEo': 'resources_common.cpk', '81fTkEDP': 'PRE_TUTO'},
             {'9ZCEWn0z': '2', '3LHdc6Qa': 'unit', 'pJ56sAEo': 'unit1.cpk', '81fTkEDP': 'TUTO'},
             {'9ZCEWn0z': '3', '3LHdc6Qa': 'area', 'pJ56sAEo': 'area_tuto.cpk', '81fTkEDP': 'tuto'},
             {'9ZCEWn0z': '116002', '3LHdc6Qa': 'banner', 'pJ56sAEo': 'banner2_common.cpk', '81fTkEDP': 'DEFINE'},
+            {'9ZCEWn0z': '116501', '3LHdc6Qa': 'banner', 'pJ56sAEo': 'banner_home1.cpk', '81fTkEDP': 'DEFINE'},
+            {'9ZCEWn0z': '9400512', '3LHdc6Qa': 'banner', 'pJ56sAEo': 'banner2.cpk', '81fTkEDP': 'DEFINE'},
             {'9ZCEWn0z': '101', '3LHdc6Qa': 'unit', 'pJ56sAEo': 'unit1_sg_common.cpk', '81fTkEDP': ''},
             {'9ZCEWn0z': '102', '3LHdc6Qa': 'monster', 'pJ56sAEo': 'monster1_common.cpk', '81fTkEDP': ''},
             {'9ZCEWn0z': '103', '3LHdc6Qa': 'battleBg', 'pJ56sAEo': 'battlebg1.cpk', '81fTkEDP': ''},
@@ -51,33 +53,36 @@ class ForegroundCpkClassification(unittest.TestCase):
             {'9ZCEWn0z': '201', '3LHdc6Qa': 'sound/bgm', 'pJ56sAEo': 'Bgm001.acb', '81fTkEDP': 'GAME'},
         ]
 
+        self.assertEqual(policy.POLICY_VERSION, 2)
         phases = {row['9ZCEWn0z']: policy.target_phase(row) for row in rows}
         self.assertEqual(phases['1'], 'PRE_TUTO')
         self.assertEqual(phases['2'], 'TUTO')
         self.assertEqual(phases['3'], 'tuto')
-        self.assertEqual(phases['116002'], 'DEFINE')
-        for empty_id in ('101', '102', '103', '104', '105', '106', '107'):
-            self.assertEqual(phases[empty_id], 'TUTO')
+        for promoted_id in ('116002', '116501', '9400512', '101', '102', '103', '104', '105', '106', '107'):
+            self.assertEqual(phases[promoted_id], 'TUTO')
         self.assertEqual(phases['201'], 'GAME')
 
-        # Opt-in DEFINE promotion promotes banner CPKs without touching .acb rows.
-        define_promoted = policy.ForegroundCpkPolicy(
-            name='all-including-define', promote_empty_phase=True, promote_define_phase=True
-        )
-        self.assertEqual(policy.target_phase(rows[3], policy=define_promoted), 'TUTO')
-        self.assertEqual(policy.target_phase(rows[-1], policy=define_promoted), 'GAME')
+        # ALL_EMPTY_CPKS preserves DEFINE banner CPKs while still promoting empty CPKs and leaving .acb untouched.
+        empty_only_phases = {row['9ZCEWn0z']: policy.target_phase(row, policy=policy.ALL_EMPTY_CPKS) for row in rows}
+        for define_id in ('116002', '116501', '9400512'):
+            self.assertEqual(empty_only_phases[define_id], 'DEFINE')
+        self.assertEqual(empty_only_phases['102'], 'TUTO')
+        self.assertEqual(empty_only_phases['201'], 'GAME')
 
-        # Legacy policy leaves movies/monsters/areas in '' while promoting unit art.
-        self.assertEqual(policy.target_phase(rows[4], policy=policy.LEGACY_MENU_AND_UNITS), 'TUTO')
-        self.assertEqual(policy.target_phase(rows[5], policy=policy.LEGACY_MENU_AND_UNITS), '')
-        self.assertEqual(policy.target_phase(rows[8], policy=policy.LEGACY_MENU_AND_UNITS), '')
+        # Legacy policy leaves DEFINE, movies, monsters, and areas untouched while promoting unit art.
+        self.assertEqual(policy.target_phase(rows[3], policy=policy.LEGACY_MENU_AND_UNITS), 'DEFINE')
+        self.assertEqual(policy.target_phase(rows[6], policy=policy.LEGACY_MENU_AND_UNITS), 'TUTO')
+        self.assertEqual(policy.target_phase(rows[7], policy=policy.LEGACY_MENU_AND_UNITS), '')
+        self.assertEqual(policy.target_phase(rows[10], policy=policy.LEGACY_MENU_AND_UNITS), '')
 
         # Upfront audit covers every non-Vortex CPK (including DEFINE and movies), never .acb.
         audited = {
             row['9ZCEWn0z']: policy.should_audit_upfront(row, exclude_resources=('6108101',))
             for row in rows
         }
-        self.assertTrue(all(audited[rid] for rid in ('1', '2', '3', '116002', '101', '102', '103', '104', '105', '106', '107')))
+        self.assertTrue(
+            all(audited[rid] for rid in ('1', '2', '3', '116002', '116501', '9400512', '101', '102', '103', '104', '105', '106', '107'))
+        )
         self.assertFalse(audited['201'])
         self.assertFalse(policy.should_audit_upfront(
             {'9ZCEWn0z': '6108101', '3LHdc6Qa': 'area', 'pJ56sAEo': 'spdungeon1.cpk', '81fTkEDP': ''},
@@ -151,18 +156,20 @@ class ForegroundCpkPreparation(unittest.TestCase):
         path.write_bytes(content)
         return path
 
-    def test_given_vortex_and_all_cpks_when_prepared_then_audit_all_non_vortex_and_bump_drifted(self):
-        self.artwork()
-        # Ensure stock early packs have files on disk too so missing=[]
+    def _install_early_packs(self):
+        t_chk = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
         for identity, name, ver in (('1', 'resources.cpk', 8), ('2', 'resources_common.cpk', 9)):
             p = self.native / f'common_lang/sd/resources/Ver{ver}_{name}'
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_bytes(b'EARLY')
-            t_chk = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
             rows = [r for _, r, _ in master_rows(self.source(t_chk).read_bytes(), t_chk.key)]
             rows = [r for r in rows if r.get('9ZCEWn0z') != identity]
             rows.append({'9ZCEWn0z': identity, 'JwbkKrjA': str(len(b'EARLY')), 'mYtcPkQQ': 'android'})
             self.source(t_chk).write_bytes(harness.master(t_chk.key, rows))
+
+    def test_given_vortex_and_all_cpks_when_prepared_then_audit_all_non_vortex_and_bump_drifted(self):
+        self.artwork()
+        self._install_early_packs()
         self.add_resource('900', 'monster', 'monster1_common.cpk', 'common_lang', 5, b'DRIFTED-MONSTER', 1, phase='')
         self.add_resource('901', 'unit', 'LBMovie100000225_common.cpk', 'common_lang', 3, b'STOCK-MOVIE', 11, phase='')
         self.add_resource('902', 'banner', 'banner2_common.cpk', 'common_lang', 4, b'BANNER', 6, phase='DEFINE')
@@ -182,21 +189,13 @@ class ForegroundCpkPreparation(unittest.TestCase):
         }
         self.assertEqual(res_rows['900']['81fTkEDP'], 'TUTO')
         self.assertEqual(res_rows['901']['81fTkEDP'], 'TUTO')
-        self.assertEqual(res_rows['902']['81fTkEDP'], 'DEFINE')
+        self.assertEqual(res_rows['902']['81fTkEDP'], 'TUTO')
         self.assertEqual(res_rows[art.RESOURCE_ID]['81fTkEDP'], 'TUTO')
 
-    def test_given_prior_pipeline6_generation_when_upgraded_to_pipeline7_then_reuse_unchanged_artifacts(self):
+    def test_given_prior_pipeline6_generation_when_upgraded_to_pipeline8_then_reuse_unchanged_artifacts(self):
         self.artwork()
         self.install_two_sounds(v1=2, v2=3)
-        for identity, name, ver in (('1', 'resources.cpk', 8), ('2', 'resources_common.cpk', 9)):
-            p = self.native / f'common_lang/sd/resources/Ver{ver}_{name}'
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_bytes(b'EARLY')
-            t_chk = rules.BY_NAME['F_RESOURCE_CHECKSUM_MST']
-            rows = [r for _, r, _ in master_rows(self.source(t_chk).read_bytes(), t_chk.key)]
-            rows = [r for r in rows if r.get('9ZCEWn0z') != identity]
-            rows.append({'9ZCEWn0z': identity, 'JwbkKrjA': str(len(b'EARLY')), 'mYtcPkQQ': 'android'})
-            self.source(t_chk).write_bytes(harness.master(t_chk.key, rows))
+        self._install_early_packs()
         # Prior drifted unit pack + newly discovered drifted monster pack + stock movie pack
         self.add_resource('900', 'unit', 'unit4_common.cpk', 'common_lang', 15, b'UNIT-DRIFT', 1, phase='TUTO')
         self.add_resource('901', 'monster', 'monster5_common.cpk', 'common_lang', 12, b'MONSTER-DRIFT', 1, phase='')
@@ -216,7 +215,7 @@ class ForegroundCpkPreparation(unittest.TestCase):
         self.assertEqual(g1.manifest['pipeline_version'], 6)
         self.assertEqual(set(g1.manifest['upfront_packs']), {'900:JwbkKrjA'})
 
-        # Upgrade to PIPELINE_VERSION = 7 (ALL_CPKS)
+        # Upgrade to PIPELINE_VERSION = 8 (ALL_CPKS)
         r2 = prep.prepare_data(self.config)
         self.assertEqual(r2['generation'], 2)
         self.assertEqual(r2['version_reuse']['packs'], {'reused': 1, 'bumped': 0})
@@ -225,7 +224,7 @@ class ForegroundCpkPreparation(unittest.TestCase):
         self.assertEqual(r2['version_reuse']['tables'], {'reused': 361, 'bumped': 3})
 
         g2 = prep.load_prepared(self.config)
-        self.assertEqual(g2.manifest['pipeline_version'], 7)
+        self.assertEqual(g2.manifest['pipeline_version'], 8)
         self.assertEqual(g2.manifest['upfront_packs']['900:JwbkKrjA']['version'], g1.manifest['upfront_packs']['900:JwbkKrjA']['version'])
         self.assertEqual(g2.manifest['upfront_packs']['900:JwbkKrjA']['version_generation'], 1)
         self.assertEqual(g2.manifest['upfront_packs']['901:JwbkKrjA']['version_generation'], 2)
@@ -237,6 +236,61 @@ class ForegroundCpkPreparation(unittest.TestCase):
             bumped_tables,
             {'F_RESOURCE_MST', 'F_RESOURCE_VERSION_MST_LOCALIZE', 'F_RESOURCE_CHECKSUM_MST'},
         )
+        self.assertTrue(prep.verify_data(self.config)['ok'])
+
+    def test_given_prior_pipeline7_all_empty_generation_when_upgraded_to_pipeline8_then_bump_only_resource_mst(self):
+        self.artwork()
+        self.install_two_sounds(v1=2, v2=3)
+        self._install_early_packs()
+        self.add_resource('900', 'unit', 'unit4_common.cpk', 'common_lang', 15, b'UNIT-DRIFT', 1, phase='TUTO')
+        self.add_resource('901', 'monster', 'monster5_common.cpk', 'common_lang', 12, b'MONSTER-DRIFT', 1, phase='')
+        self.add_resource('902', 'unit', 'LBMovie1_common.cpk', 'common_lang', 4, b'MOVIE-STOCK', 11, phase='')
+        self.add_resource('116002', 'banner', 'banner2_common.cpk', 'common_lang', 1, b'BANNER2-COMMON', 14, phase='DEFINE')
+        self.add_resource('116501', 'banner', 'banner_home1.cpk', 'en', 17, b'BANNER-HOME1', 12, phase='DEFINE')
+        self.add_resource('9400512', 'banner', 'banner2.cpk', 'en', 1, b'BANNER2-EN', 10, phase='DEFINE')
+        sound_snapshots.prepare(self.config)
+
+        with patch.object(rules, 'PIPELINE_VERSION', 7):
+            r1 = prep.prepare_data(
+                self.config,
+                vortex_art=True,
+                sounds=True,
+                cpk_policy=policy.ALL_EMPTY_CPKS,
+            )
+        self.assertEqual(r1['generation'], 1)
+        g1 = prep.load_prepared(self.config)
+        self.assertEqual(g1.manifest['pipeline_version'], 7)
+        self.assertEqual(set(g1.manifest['upfront_packs']), {'900:JwbkKrjA', '901:JwbkKrjA'})
+        res1 = {
+            r['9ZCEWn0z']: r for _, r, _ in master_rows(
+                g1.lookup(g1.manifest['tables']['F_RESOURCE_MST']['path']), rules.RESOURCE.key
+            )
+        }
+        for define_id in ('116002', '116501', '9400512'):
+            self.assertEqual(res1[define_id]['81fTkEDP'], 'DEFINE')
+
+        # Upgrade to PIPELINE_VERSION = 8 (ALL_CPKS with promote_define_phase=True)
+        r2 = prep.prepare_data(self.config)
+        self.assertEqual(r2['generation'], 2)
+        self.assertEqual(r2['version_reuse']['packs'], {'reused': 1, 'bumped': 0})
+        self.assertEqual(r2['version_reuse']['sounds'], {'reused': 2, 'bumped': 0})
+        self.assertEqual(r2['version_reuse']['upfront_packs'], {'reused': 2, 'bumped': 0})
+        self.assertEqual(r2['version_reuse']['tables'], {'reused': 363, 'bumped': 1})
+
+        g2 = prep.load_prepared(self.config)
+        self.assertEqual(g2.manifest['pipeline_version'], 8)
+        bumped_tables = {
+            name for name, entry in g2.manifest['tables'].items()
+            if entry['version_generation'] == 2
+        }
+        self.assertEqual(bumped_tables, {'F_RESOURCE_MST'})
+        res2 = {
+            r['9ZCEWn0z']: r for _, r, _ in master_rows(
+                g2.lookup(g2.manifest['tables']['F_RESOURCE_MST']['path']), rules.RESOURCE.key
+            )
+        }
+        for define_id in ('116002', '116501', '9400512'):
+            self.assertEqual(res2[define_id]['81fTkEDP'], 'TUTO')
         self.assertTrue(prep.verify_data(self.config)['ok'])
 
     def test_given_direct_upfront_collect_when_overlay_missing_audio_and_vortex_present_then_apply_policy_and_precedence(self):

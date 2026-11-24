@@ -32,3 +32,13 @@ Physical iPhone diagnostic reports (`report-99c095bf8d4e45c1a59ec64b79f9408a.jso
 - Fresh preparation on `PIPELINE_VERSION = 7` promotes all empty-phase `.cpk` archives to foreground `'TUTO'` and reconciles all drifted `.cpk` packs while reusing unchanged tables, sounds, Vortex pack, and prior bumped CPKs.
 - Returning devices receive updated `F_RESOURCE_*` versions on Launch 1 `lEHBdOEf` without mutating `player.data` or `dirty`; uninitialized devices and non-`ios-revival` profiles retain prior behavior.
 - Manifest schema 6 remains backward-compatible with prior schema 1–6 artifacts; `verify-data` and `open_prepared` enforce `PIPELINE_VERSION = 7`.
+
+## Addendum (2026-11-24 — `PIPELINE_VERSION = 8`: Promote `'DEFINE'` Banner CPKs & Static Bundle PNG Boundary)
+
+Live physical-iPhone CDN logs showed the 3 `'DEFINE'`-phase banner CPKs (`116002 banner2_common.cpk` 2,864,093 B, `116501 banner_home1.cpk` 60,220 B, `9400512 banner2.cpk` 4,722 B) plus 11 `/banner/{locale}/sd/static_banner/bundle/*.png` files downloading outside `InitialDownloadScene` under `CriFsWebInstaller/2.01.08`:
+
+1. **Promote `'DEFINE'` banner CPKs (`PIPELINE_VERSION = 8`, `POLICY_VERSION = 2`)**:
+   - Update `cpk_foreground_policy.ALL_CPKS` to `promote_define_phase=True` while exporting `ALL_EMPTY_CPKS` (`promote_define_phase=False`) as an explicit rollback descriptor.
+   - Bump `native_tables.PIPELINE_VERSION = 8` (keeping manifest schema `version = 6`). Under Schema-6 carry-forward from `PIPELINE_VERSION = 7`, **only `F_RESOURCE_MST`** bumps version; all 3 `'DEFINE'` banner CPKs are already size-exact (`0` new blobs staged) and all other tables, sounds, Vortex packs, and upfront CPKs retain their carried versions.
+2. **Server-only boundary for `/banner/.../sd/static_banner/bundle/*.png`**:
+   - Those 11 PNGs are not `F_RESOURCE_MST` entries (`F_RESOURCE_MST` contains 0 `.png` rows); they are unversioned shop bundle icons/banners triggered by `BundleInfo` (`fMohhKK8` `cSUSxGZA`/`hJs2B3X5` in `ffbe_player.py`) and served via `capture_server.py` (`banner-art basename`, ~400 KB total). Stock `InitialDownloadScene` cannot install unversioned `/banner/.../static_banner/bundle/*.png` assets server-only without patching the iOS client binary.

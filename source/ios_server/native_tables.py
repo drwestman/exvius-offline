@@ -10,7 +10,7 @@ from revival_daily import text_rows
 from ios_server.native_text import TEXT_SPECS
 import revival_economy
 
-PIPELINE_VERSION = 7
+PIPELINE_VERSION = 8
 VERSION_OFFSET = version_policy.VERSION_OFFSET
 VERSION_STEP = version_policy.VERSION_STEP
 RATE_URL = 'https://v910-lapis.gumi.sg/lapisProd/app/php/web/statics/probability/sg_summons_list.php'

@@ -276,7 +276,7 @@ class CompleteTablePreparation(unittest.TestCase):
         self.assertEqual(ver_rows['903']['OzT5lSz3'], str(pack.manifest['upfront_packs']['903:JwbkKrjA']['version']))
         self.assertEqual(before, {p: p.read_bytes() for p in before})
 
-    def test_given_background_unit_art_and_movie_packs_when_prepared_then_promote_all_empty_cpks_and_preserve_define_and_sounds(self):
+    def test_given_background_unit_art_movie_and_define_packs_when_prepared_then_promote_all_cpks_and_preserve_sounds(self):
         self.fixture()
         resource, versions, checksums = (rules.BY_NAME[name] for name in
             ('F_RESOURCE_MST', 'F_RESOURCE_VERSION_MST_LOCALIZE', 'F_RESOURCE_CHECKSUM_MST'))
@@ -308,10 +308,10 @@ class CompleteTablePreparation(unittest.TestCase):
                     master_rows(pack.lookup(pack.manifest['tables'][table.name]['path']), table.key)
                     if '9ZCEWn0z' in row}
         resources, sizes, ver_rows = published(resource), published(checksums), published(versions)
-        # All '' CPK rows (including movies) are promoted to TUTO; DEFINE keeps its tag while still audited.
-        for identity, _dir, _name, _loc, vfield, sfield, version, payload, advertised, phase in cases[:6]:
+        # All '' and DEFINE CPK rows (including movies and banner packs) are promoted to TUTO and audited.
+        for identity, _dir, _name, _loc, vfield, sfield, version, payload, advertised, _phase in cases[:6]:
             key = identity + ':' + sfield
-            self.assertEqual(resources[identity]['81fTkEDP'], 'DEFINE' if phase == 'DEFINE' else 'TUTO')
+            self.assertEqual(resources[identity]['81fTkEDP'], 'TUTO')
             self.assertEqual(sizes[identity][sfield], str(len(payload)))
             self.assertEqual(sizes[identity]['mYtcPkQQ'], 'android')
             self.assertIn(key, pack.manifest['sources']['upfront']['files'])

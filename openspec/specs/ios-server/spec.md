@@ -1983,7 +1983,7 @@ monster3_common.cpk, and non-movie unit artwork CPKs (`3LHdc6Qa == 'unit'`
 matching `^unit[0-9]+(?:_sg)?(?:_common)?\.cpk$`) for upfront TUTO download
 when present in the resource list (modeled by `cpk_foreground_policy.LEGACY_MENU_AND_UNITS`,
 and superseded as the active default by `PromoteAllVersionedCpksToForegroundDownload`
-under `PIPELINE_VERSION = 7` / `ALL_CPKS`). Existing TUTO/PRE_TUTO classifications
+under `PIPELINE_VERSION >= 7` / `ALL_CPKS`, currently `8`). Existing TUTO/PRE_TUTO classifications
 SHALL be retained, and unversioned resources SHALL remain omitted.
 Exact file provenance and iOS sizes SHALL be bound through upfront collection
 without changing source files, summon costs, pools, awards or legacy projections.
@@ -2006,15 +2006,16 @@ without changing source files, summon costs, pools, awards or legacy projections
 
 ### Requirement: PromoteAllVersionedCpksToForegroundDownload
 
-Under `PIPELINE_VERSION = 7` (`cpk_foreground_policy.ALL_CPKS` with `audit_all_cpks=True`),
-native preparation SHALL promote every empty-phase or `None`-phase versioned `.cpk` row
-in `F_RESOURCE_MST` (including monster, battle background, area, beast, vision card,
-item, and `LBMovie*` / `movie_sg*` archives) to `TUTO`, while preserving existing
-`PRE_TUTO`, `TUTO`, `tuto`, and `DEFINE` banner tags and leaving `.acb` audio
-rows untouched. `cpk_foreground_policy.should_audit_upfront` SHALL enforce the LSP
-audit invariant so every `.cpk` row promoted to `TUTO` or `PRE_TUTO` by `target_phase`
-is audited by `upfront_resources.collect`. `upfront_resources.collect` SHALL audit
-every non-Vortex versioned `.cpk` row under `ALL_CPKS` and bump any drifted
+Under `PIPELINE_VERSION = 8` (`cpk_foreground_policy.ALL_CPKS` with `promote_define_phase=True`
+and `audit_all_cpks=True`), native preparation SHALL promote every empty-phase, `None`-phase,
+or `DEFINE`-phase versioned `.cpk` row in `F_RESOURCE_MST` (including monster, battle
+background, area, beast, vision card, item, `LBMovie*` / `movie_sg*`, and banner archives)
+to `TUTO`, while preserving existing `PRE_TUTO`, `TUTO`, and `tuto` tags and leaving `.acb`
+audio rows untouched. `cpk_foreground_policy.ALL_EMPTY_CPKS` SHALL remain available to retain
+`DEFINE` phase tags when explicitly injected. `cpk_foreground_policy.should_audit_upfront`
+SHALL enforce the LSP audit invariant so every `.cpk` row promoted to `TUTO` or `PRE_TUTO`
+by `target_phase` is audited by `upfront_resources.collect`. `upfront_resources.collect` SHALL
+audit every non-Vortex versioned `.cpk` row under `ALL_CPKS` and bump any drifted
 (`size != advertised`) or byte-changed pack into `upfront_packs` and `assets/upfront/blobs/`
 while carrying forward unchanged prior schema-6 tables, sound banks, Vortex pack, and
 previously bumped CPKs. Preparation and collection boundaries SHALL accept injected
@@ -2022,13 +2023,13 @@ previously bumped CPKs. Preparation and collection boundaries SHALL accept injec
 
 - **Implementation**: `ForegroundCpkPolicy::source/ios_server/cpk_foreground_policy.py`, `target_phase::source/ios_server/cpk_foreground_policy.py`, `should_audit_upfront::source/ios_server/cpk_foreground_policy.py`, `build_masters::source/ios_server/native_tables.py`, `build::source/ios_server/native_tables.py`, `collect::source/ios_server/upfront_resources.py`, `prepare_data::source/ios_server/preparation.py`, `MANIFEST_SCHEMA_VERSION::source/ios_server/vortex_art.py`
 
-#### Scenario: Promote empty-phase CPKs including movies while preserving DEFINE and audio rows
+#### Scenario: Promote empty-phase and DEFINE CPKs including movies while preserving PRE_TUTO, TUTO, and audio rows
 
 - Given `F_RESOURCE_MST` contains `PRE_TUTO`, `TUTO`, `tuto`, `DEFINE` banner CPKs, empty-phase CPKs including `LBMovie*` / `movie_sg*`, and `.acb` audio rows
-- When native tables are prepared under `PIPELINE_VERSION = 7`
-- Then every empty-phase `.cpk` row is promoted to `TUTO`
-- And `PRE_TUTO`, `TUTO`, `tuto`, `DEFINE`, and `.acb` phase tags remain unchanged
-- And every non-Vortex `.cpk` row (including `DEFINE`) is audited by `upfront_resources.collect` without auditing `.acb` audio rows.
+- When native tables are prepared under `PIPELINE_VERSION = 8`
+- Then every empty-phase and `DEFINE` `.cpk` row is promoted to `TUTO`
+- And `PRE_TUTO`, `TUTO`, `tuto`, and `.acb` phase tags remain unchanged
+- And every non-Vortex `.cpk` row (including promoted `DEFINE` banner packs) is audited by `upfront_resources.collect` without auditing `.acb` audio rows.
 
 ### Requirement: ServeNativeDropRatesWebView
 
@@ -2253,7 +2254,7 @@ Pack installation SHALL not claim completed native image projection integration.
 
 ### Requirement: PreserveUnchangedNativeVersionsAcrossGenerations
 
-Schema 6 native preparation (`PIPELINE_VERSION >= 6`, currently `7`) SHALL resolve leaf artifacts
+Schema 6 native preparation (`PIPELINE_VERSION >= 6`, currently `8`) SHALL resolve leaf artifacts
 (upfront CPKs, Vortex pack, sound banks, and localized text tables) before
 dependent master tables and carry forward the prior generation's published
 client version and `version_generation` for every managed artifact whose output

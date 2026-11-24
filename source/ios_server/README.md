@@ -517,10 +517,10 @@ owner of `spdungeon1.cpk`.
 
 ### Schema-6 content-preserving incremental versioning and full-CPK foreground downloads
 
-Manifest schema 6 (currently `PIPELINE_VERSION = 7`, upgrading from `6`) avoids
+Manifest schema 6 (currently `PIPELINE_VERSION = 8`, upgrading from `6`/`7`) avoids
 unnecessary multi-gigabyte background cache invalidation on the iPhone by preserving
 previously published client versions for byte-identical artifacts across generations,
-while promoting all empty-phase versioned `.cpk` packs to foreground `TUTO`
+while promoting all empty-phase and `'DEFINE'` banner `.cpk` packs to foreground `TUTO`
 (`cpk_foreground_policy.ALL_CPKS`):
 
 1. **Five-stage dependency order**: `prepare_data` resolves leaf artifacts first
@@ -536,13 +536,14 @@ while promoting all empty-phase versioned `.cpk` packs to foreground `TUTO`
    version receive `floor + 200000 + generation * 10000` with
    `version_generation = generation`.
 3. **Full-CPK foreground policy (`cpk_foreground_policy.py`)**: Under
-   `PIPELINE_VERSION = 7` (`ALL_CPKS`), every empty-phase `.cpk` row in
-   `F_RESOURCE_MST` (including monster, battle background, area, beast,
-   vision card, item, and `LBMovie*` / `movie_sg*` archives) is promoted to
-   `'TUTO'` and audited by `upfront_resources.collect` (while preserving
-   `'PRE_TUTO'`, `'TUTO'`, `'tuto'`, `'DEFINE'` banner tags, and `.acb` audio
-   rows). Any drifted (`size != advertised`) non-Vortex `.cpk` pack is bumped
-   and staged privately in `assets/upfront/blobs/`.
+   `PIPELINE_VERSION = 8` (`ALL_CPKS`, `POLICY_VERSION = 2`), every empty-phase
+   and `'DEFINE'` banner `.cpk` row in `F_RESOURCE_MST` (including monster,
+   battle background, area, beast, vision card, item, banner, and `LBMovie*` /
+   `movie_sg*` archives) is promoted to `'TUTO'` and audited by
+   `upfront_resources.collect` (while preserving `'PRE_TUTO'`, `'TUTO'`,
+   `'tuto'`, and `.acb` audio rows; `ALL_EMPTY_CPKS` remains available if
+   `'DEFINE'` tags must be retained). Any drifted (`size != advertised`)
+   non-Vortex `.cpk` pack is bumped and staged privately in `assets/upfront/blobs/`.
 4. **Launch-1 early resource-catalog projection (`revival_boot.py`)**: For
    returning initialized devices (`device_hash in ios_native_boot.held`),
    `lEHBdOEf` advertises `F_RESOURCE_MST`, `F_RESOURCE_VERSION_MST_LOCALIZE`,
@@ -555,7 +556,7 @@ while promoting all empty-phase versioned `.cpk` packs to foreground `TUTO`
    Phase-0 wire-contract verification.)*
 5. **Backward compatibility & diagnostics**: Schema 1–5 manifests remain readable
    and strictly validated under their original formulas; upgrading from schema 5
-   or earlier `PIPELINE_VERSION = 6` snapshots carries forward all unchanged
+   or earlier `PIPELINE_VERSION = 6`/`7` snapshots carries forward all unchanged
    tables, sound banks, `spdungeon1.cpk`, and previously bumped upfront CPKs.
    `verify-data` / `prepare-data` reports expose `version_reuse` counts
    (`reused` vs. `bumped`) per artifact family.

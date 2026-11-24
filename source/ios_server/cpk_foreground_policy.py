@@ -5,7 +5,7 @@ No filesystem, network, or engine-state imports.
 from dataclasses import dataclass
 import re
 
-POLICY_VERSION = 1
+POLICY_VERSION = 2
 
 EARLY_PACKS = frozenset(('resources_common.cpk', 'resources.cpk'))
 # Gacha detail opens synchronously: its UI and default Ochu preview cannot wait
@@ -29,6 +29,12 @@ class ForegroundCpkPolicy:
 
 ALL_CPKS = ForegroundCpkPolicy(
     name='all-cpks',
+    promote_empty_phase=True,
+    promote_define_phase=True,
+    audit_all_cpks=True,
+)
+ALL_EMPTY_CPKS = ForegroundCpkPolicy(
+    name='all-empty-cpks',
     promote_empty_phase=True,
     promote_define_phase=False,
     audit_all_cpks=True,
