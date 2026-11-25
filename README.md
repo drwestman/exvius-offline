@@ -154,20 +154,6 @@ When you open the app online, it checks GitHub for updates. If there is nothing 
 
 Changed data downloads in the background and is installed after you close and reopen the app. Existing data is reused across app updates.
 
-## Still being worked on
-
-Some advanced upgrades and event interactions still need fixes. Loading can also be slow on some devices.
-Restored text, artwork and events may have mistakes, so please report anything you find.
-To report a problem, [open an issue](https://github.com/Elvlin/exvius-offline/issues). Tell me which screen or quest you were on, what you tried and what happened. A screenshot helps.
-
-## Support or get in touch
-
-If you would like to support the project, you can find me on [Ko-fi](https://ko-fi.com/elvlin) or [Patreon](https://www.patreon.com/c/ElvlinGame).
-
-You can also contact me there if you have a project request or an idea you want to discuss. 
-
-Join the community on [Discord](https://discord.gg/ffszTTDTf3).
-
 ## Files in this repository
 
 - [source/](source/): the code and build instructions.
