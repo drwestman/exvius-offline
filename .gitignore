@@ -14,3 +14,19 @@ __pycache__/
 *.part
 .env
 local.properties
+
+# openlore analysis artifacts
+.openlore/
+
+# Local browser Python runtime
+.venv-browser/
+.venv-ios/
+
+# Browser streaming build/dependencies; private certificates live outside the repo.
+/source/browser_bridge/node_modules/
+/source/browser_bridge/dist/
+/source/browser_bridge/test-results/
+/source/browser_bridge/playwright-report/
+
+# Mac OS Specific
+.DS_Store

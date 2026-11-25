@@ -1,0 +1,24 @@
+{
+  "revision": "d6e8858861969a2764e31345884453dde79fc71f",
+  "documents": {
+    "medal_exchange_fixes.json": "2f911942218bf1de905f8de4d42725f87f13f496935953617c221a09ff130d98",
+    "event_runs.json": "f86aa4c187f95f5e6c4b91be1326526813e447cb93e067706cf6bb8af284fac7",
+    "banner_runs.json": "7992ef447ef4d1a03420757331b26b0f1bc73b89f0e162f483c387691daf126d",
+    "event_exchanges.json": "75a92a7018e60a9611ab47b81e07fe2d27b7d7e96389311a7a751876a26c5134",
+    "event_quest_dates.json": "72111e81aa38e2e915c394213789170f35a5c9753afb52d7bd616de6cb9477f0",
+    "story_recipes.json": "5669916e79bf7265e0a131c9bb1bab2ee8581f281fae98ad408b2adaafb0bde5",
+    "restored_unit_text.json": "ee59928d288b79fb324209cb59b07405c53a863666c8078c19923eecd660b2fd",
+    "late_banners.json": "24b1c8ca692ade1907cb134fb4499c9107e981c62ecf09b68510b770519921ae",
+    "clone_quests.json": "9607929454cbba768dacdeb0b51374bed7cf98df73e9a3379f0a5e7369fe3e21",
+    "unit_release_global.json": "11017670c9c0eba5c0c548e578630ce3f027795bf3f1f63af1070781a9ef4624",
+    "collection_points.json": "f15a72a6c6dfad38766520ee837f1b20da911f38359569d749cd47f51f75a48c",
+    "summon_exclusions.json": "9aab488a6307d4ee20f162451bf666ed2751e52f6a2c177ee9098ee306873304",
+    "reward_overrides.json": "91947f07f8b0a575f83da12bc0067164ace012be880c1e64e6e95fa3eec28bd7",
+    "raid_summons.json": "9121997afb8229323edfaae7458aab4b5afa3b888d412825b6b4d4a7baf2ea1c",
+    "global_drops.json": "421594def44822356b2092aa0fec52cbffbfd74d5d5fbf6a78757e410d2851e6",
+    "scenario_fights.json": "096a4fc13f59d1cb34d6b2d32d752052ff1da7a5023d148dfff2cae602f21c24",
+    "recipe_substitutes.json": "4d93f874541523d7f039af80d7995404874f912a6395079ab59d214aebb2bb10",
+    "exploration_fields.json": "5d64577909044fa90a51b3aff0cf3ce6085c56d91af77eb93e2effab51d2cd11",
+    "nv_random_vision_cards.json": "2dd02ad1ef44836a6bb8d24d222b71d7c4c9491333e03376a58200a4e90fc676"
+  }
+}

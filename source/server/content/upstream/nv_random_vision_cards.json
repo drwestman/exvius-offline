@@ -1,0 +1,172 @@
+{
+ "_meta": {
+  "what": "The random Vision Cards a summoned Neo Vision unit came with on Global, each from the day it joined the summon pool (player_state.nv_summon_vision_card). A unit's own card came from EX awakening (EX+1/EX+3, F_NV_EX_CLASS_UP_MST), not from the summon. See ios-server/research/NV_VISION_CARDS.md.",
+  "sources": [
+   "https://exvius.fandom.com/wiki/Vision_Cards",
+   "https://exvius.fandom.com/wiki/Update_Schedule#Global_Update_History"
+  ]
+ },
+ "cards": [
+  {
+   "id": "100000201",
+   "name": "Knights who Soar the Skies",
+   "joined": "2020-08-20",
+   "source": "https://exvius.fandom.com/wiki/Knights_who_Soar_the_Skies",
+   "record": "in the wiki's Random Cards list with no \"later added\" note; dated to Global's NV launch (Update Schedule 20-Aug-2020: \"Neo Visions, Neo Vision Cards\"), which no record states for the card itself",
+   "date_basis": "inference (operator approved 2026-11-10): no record dates it; NV launch date"
+  },
+  {
+   "id": "100000301",
+   "name": "The Water God and Priestess",
+   "joined": "2020-08-20",
+   "source": "https://exvius.fandom.com/wiki/The_Water_God_and_Priestess",
+   "record": "in the wiki's Random Cards list with no \"later added\" note; dated to Global's NV launch (Update Schedule 20-Aug-2020: \"Neo Visions, Neo Vision Cards\"), which no record states for the card itself",
+   "date_basis": "inference (operator approved 2026-11-10): no record dates it; NV launch date"
+  },
+  {
+   "id": "100000401",
+   "name": "A Vengeful Blow",
+   "joined": "2020-08-20",
+   "source": "https://exvius.fandom.com/wiki/A_Vengeful_Blow",
+   "record": "in the wiki's Random Cards list with no \"later added\" note; dated to Global's NV launch (Update Schedule 20-Aug-2020: \"Neo Visions, Neo Vision Cards\"), which no record states for the card itself",
+   "date_basis": "inference (operator approved 2026-11-10): no record dates it; NV launch date"
+  },
+  {
+   "id": "100000101",
+   "name": "A New Journey",
+   "joined": "2021-01-14",
+   "source": "https://exvius.fandom.com/wiki/A_New_Journey",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-01-14\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100000801",
+   "name": "Wake-Up Coeurl",
+   "joined": "2021-02-04",
+   "source": "https://exvius.fandom.com/wiki/Wake-Up_Coeurl",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-02-04\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100001001",
+   "name": "Beach Beauties",
+   "joined": "2021-03-04",
+   "source": "https://exvius.fandom.com/wiki/Beach_Beauties",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-03-04\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100001401",
+   "name": "Morze's Soiree",
+   "joined": "2021-04-01",
+   "source": "https://exvius.fandom.com/wiki/Morze's_Soiree",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-04-01\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100001601",
+   "name": "One Last Battle",
+   "joined": "2021-05-06",
+   "source": "https://exvius.fandom.com/wiki/One_Last_Battle",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-05-06\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100002401",
+   "name": "No Matter the Cost",
+   "joined": "2021-06-02",
+   "source": "https://exvius.fandom.com/wiki/No_Matter_the_Cost",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-06-02\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100002701",
+   "name": "The Dragon's Seal",
+   "joined": "2021-07-01",
+   "source": "https://exvius.fandom.com/wiki/The_Dragon's_Seal",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-07-01\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100002801",
+   "name": "Entrusted for the Future",
+   "joined": "2021-08-05",
+   "source": "https://exvius.fandom.com/wiki/Entrusted_for_the_Future",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-08-05\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100002901",
+   "name": "Chores with Grandpa",
+   "joined": "2021-09-02",
+   "source": "https://exvius.fandom.com/wiki/Chores_with_Grandpa",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-09-02\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100003101",
+   "name": "Tomoe vs. Gravey",
+   "joined": "2021-10-07",
+   "source": "https://exvius.fandom.com/wiki/Tomoe_vs._Gravey",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-10-07\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100003301",
+   "name": "Fight and Flight",
+   "joined": "2021-11-04",
+   "source": "https://exvius.fandom.com/wiki/Fight_and_Flight",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-11-04\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100003601",
+   "name": "A Story of Beginnings",
+   "joined": "2021-12-02",
+   "source": "https://exvius.fandom.com/wiki/A_Story_of_Beginnings",
+   "record": "card page: \"later added in the summoning pools when summoning an NV unit as of 2021-12-02\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100003701",
+   "name": "A Kooky Chef!?",
+   "joined": "2022-01-06",
+   "source": "https://exvius.fandom.com/wiki/A_Kooky_Chef!?",
+   "record": "in the wiki's Random Cards list; no record of when it joined the summon pool",
+   "date_basis": "stand-in approved by the operator 2026-11-10: the next first-Thursday slot in the monthly pattern (2021-01-14 ... 2021-12-02)"
+  },
+  {
+   "id": "100003901",
+   "name": "Fond Memory",
+   "joined": "2022-02-03",
+   "source": "https://exvius.fandom.com/wiki/Fond_Memory",
+   "record": "in the wiki's Random Cards list; no record of when it joined the summon pool",
+   "date_basis": "stand-in approved by the operator 2026-11-10: the next first-Thursday slot in the monthly pattern (2021-01-14 ... 2021-12-02)"
+  },
+  {
+   "id": "100008001",
+   "name": "Parting in Self-Sacrifice",
+   "joined": "2022-05-21",
+   "source": "https://exvius.fandom.com/wiki/Update_Schedule#Global_Update_History",
+   "record": "Update Schedule, Global history: \"Vision Card added to the random VC summon pool\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100008701",
+   "name": "Dragon King in Darkness",
+   "joined": "2022-05-21",
+   "source": "https://exvius.fandom.com/wiki/Update_Schedule#Global_Update_History",
+   "record": "Update Schedule, Global history: \"Vision Card added to the random VC summon pool\"",
+   "date_basis": "record"
+  },
+  {
+   "id": "100008501",
+   "name": "Esper and E-Spear",
+   "joined": "2022-11-16",
+   "source": "https://exvius.fandom.com/wiki/Update_Schedule#Global_Update_History",
+   "record": "Update Schedule, Global history: \"Vision Card added to the random VC summon pool\"",
+   "date_basis": "record"
+  }
+ ],
+ "held_back": []
+}

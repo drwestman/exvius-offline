@@ -14,7 +14,7 @@ class Events(unittest.TestCase):
     def test_chronicle_and_ranking_use_release_seasons_without_expiration(self):
         from event_archive import events, menu
         rows = {str(row['area']): row for row in events()}
-        chronicles = [row for row in rows.values() if row.get('vortex_tab') == 4]
+        chronicles = [row for row in rows.values() if row.get('vortex_tab') == 4 and row.get('kind') == 'Chronicle Battle']
         ranking = [row for row in rows.values() if row['name'] in ('Dark Visions', 'Clash of Wills')]
         self.assertEqual(len(chronicles), 20)
         self.assertEqual(len(ranking), 67)
@@ -24,7 +24,8 @@ class Events(unittest.TestCase):
         self.assertTrue(all(row['availability'] == 'permanent' for row in chronicles))
         self.assertEqual(rows['7104']['release'], '2021-11-18')
         self.assertEqual(rows['7150']['release'], '2021-04-15')
-        groups = {row['id']: row for row in menu(None)['groups']}
+        with patch('event_archive.weekly_events', return_value=list(rows.values())):
+            groups = {row['id']: row for row in menu(None)['groups']}
         self.assertIn('7150', groups['season3']['ids'])
         self.assertIn('7104', groups['season4']['ids'])
         self.assertNotIn('7150', groups['permanent']['ids'])
@@ -55,7 +56,7 @@ class Events(unittest.TestCase):
                 self.assertEqual(row['vortex_tab'], 0, row['name'])
 
     def test_archive_groups_duplicate_tiles_without_dropping_stages(self):
-        from event_archive import events, listings, menu
+        from event_archive import events, listings, menu, weekly_events
         original = {str(row['area']): row for row in events()}
         groups = listings()
         covered = [str(row['area']) for row, _aliases in groups]
@@ -68,7 +69,7 @@ class Events(unittest.TestCase):
         result = menu(None, '')
         all_group = next(row for row in result['groups'] if row['id'] == 'all')
         self.assertEqual(all_group['count'], sum(str(row['area']) not in {'3279', '3282', '3264'}
-                                                for row, _aliases in groups))
+                                                for row, _aliases in listings(weekly_events())))
         vault = [(row, aliases) for row, aliases in groups if row['name'] == 'Vault of Hidden Treasures']
         self.assertEqual(len(vault), 1)
         self.assertEqual(len(vault[0][1]), 11)
@@ -83,7 +84,7 @@ class Events(unittest.TestCase):
             (7, '2020-05-01', 'collaborations'), (8, '2024-01-01', 'permanent'),
             (9, None, 'other'), (3279, '2023-03-23', 'permanent'),
             (3282, '2024-02-29', 'permanent'), (3264, '2022-03-17', 'permanent'))]
-        with patch.object(event_archive, 'events', return_value=rows):
+        with patch.object(event_archive, 'events', return_value=rows), patch.object(event_archive, 'weekly_events', return_value=rows):
             result = event_archive.menu(None)
         groups = {g['id']: g for g in result['groups']}
         expected = {'season1': ['1'], 'season2': ['2', '3'], 'season3': ['4', '7', '5'],
@@ -109,14 +110,14 @@ class Events(unittest.TestCase):
             p=Path(d)/'state/exvius_events.json';p.parent.mkdir();p.write_text('{bad')
             with self.assertRaises(ValueError):load_policy(d,[970])
     def test_existing_expired_row_extended_only_selected(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970','m8ivD4NX':'1','other':'keep'}, {'uv60hgDW':'888','m8ivD4NX':'2'}]}
-        out=apply_availability(source,{'version':1,'areas':[970],'permanent':True},now=2000000000)
+        source={'0xkoNP8U':[{'uv60hgDW':'999999','m8ivD4NX':'1','other':'keep'}, {'uv60hgDW':'999998','m8ivD4NX':'2'}]}
+        out=apply_availability(source,{'version':1,'areas':[999999],'permanent':True},now=2000000000)
         self.assertGreater(calendar.timegm(time.strptime(out['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S')),2000000000)
         self.assertEqual(out['0xkoNP8U'][0]['other'],'keep')
         self.assertEqual(source['0xkoNP8U'][0]['m8ivD4NX'],'1')
         self.assertEqual(out['0xkoNP8U'][1],source['0xkoNP8U'][1])
     def test_rolling_window_and_unresolved_not_changed(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970'}]};policy={'version':1,'areas':[970],'permanent':True}
+        source={'0xkoNP8U':[{'uv60hgDW':'999999'}]};policy={'version':1,'areas':[999999],'permanent':True}
         early=apply_availability(source,policy,100);late=apply_availability(source,policy,500)
         self.assertEqual(calendar.timegm(time.strptime(late['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S'))-calendar.timegm(time.strptime(early['0xkoNP8U'][0]['m8ivD4NX'], '%Y-%m-%d %H:%M:%S')),400)
         self.assertEqual(apply_availability(source,policy,500,[]),source)
@@ -131,8 +132,8 @@ class Events(unittest.TestCase):
         self.assertEqual(out['0xkoNP8U'][0]['m8ivD4NX'],'2100-01-01 00:00:00')
         self.assertEqual(source['0xkoNP8U'][0]['VjJQ51uG'],'1577836800')
     def test_historical_policy_preserves_rows(self):
-        source={'0xkoNP8U':[{'uv60hgDW':'970','m8ivD4NX':'1'}]}
-        self.assertEqual(apply_availability(source,{'version':1,'areas':[970],'permanent':False}),source)
+        source={'0xkoNP8U':[{'uv60hgDW':'999999','m8ivD4NX':'1'}]}
+        self.assertEqual(apply_availability(source,{'version':1,'areas':[999999],'permanent':False}),source)
 
 class Preflight(unittest.TestCase):
     def fixture(self,d):

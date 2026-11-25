@@ -208,8 +208,24 @@ def _row(entry: dict, now: datetime) -> tuple[dict, dict]:
 
 def marquee_rows(now: datetime | None = None) -> list:
     """The wire rows for the active selection. Empty when the feature is off."""
+    replay = _replay_rows(now)
+    if replay is not None:
+        return replay
     rows, _ = _rows_with_provenance(now)
     return rows
+
+
+def _replay_rows(now=None):
+    from engine_profile import current_profile
+    if current_profile().name != 'ios-revival':
+        return None
+    from ffbe_state import State
+    if State.player is None:
+        return None
+    from revival_marquee import rows
+    artwork = getattr(getattr(State, 'native_banners', None), 'home', None)
+    return rows(State.player.data, artwork, now=now, window_days=MARQUEE_WINDOW_DAYS,
+                location=f'{MARQUEE_LOCATION_GATE}:{MARQUEE_LOCATION_ID}')
 
 
 def _rows_with_provenance(now: datetime | None = None) -> tuple[list, list]:

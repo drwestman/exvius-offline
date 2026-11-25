@@ -37,12 +37,34 @@ _GLOBAL_BUNDLES = []
 
 
 def _global_bundles():
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_economy import bundles
+        from revival_summons import ticket_bundles
+        return ticket_bundles(bundles())
+    return _legacy_global_bundles()
+
+
+def _legacy_global_bundles():
     """The Global Premium Bundles from global_bundles.json (loaded once)."""
     if not _GLOBAL_BUNDLES:
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'global_bundles.json')
         with open(path, encoding='utf-8') as fh:
-            _GLOBAL_BUNDLES.extend(json.load(fh)['bundles'])
+            rows = json.load(fh)['bundles']
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            from revival_summons import ticket_bundles
+            rows = ticket_bundles(rows)
+        _GLOBAL_BUNDLES.extend(rows)
     return _GLOBAL_BUNDLES
+
+
+def _bundle_day():
+    from engine_profile import current_profile
+    if current_profile().replay is not None and State.player is not None:
+        from revival_daily import day
+        return day(State.player.data)[0]
+    return time.strftime('%Y-%m-%d')
 
 
 def _bundle_bought(bundle_id, limit):
@@ -50,18 +72,26 @@ def _bundle_bought(bundle_id, limit):
     record = (State.player.data.get('bundle_purchases') or {}).get(str(bundle_id)) if State.player else None
     if not record or not limit:
         return False
-    return limit == 'once' or record.get('last_day') == time.strftime('%Y-%m-%d')
+    return limit == 'once' or record.get('last_day') == _bundle_day()
 
 
 def _record_bundle_purchase(bundle_id):
     purchases = State.player.data.setdefault('bundle_purchases', {})
     record = purchases.setdefault(str(bundle_id), {'count': 0})
     record['count'] = int(record.get('count', 0)) + 1
-    record['last_day'] = time.strftime('%Y-%m-%d')
+    record['last_day'] = _bundle_day()
     State.player.dirty = True
 
 
 def serve_lapis_shop(spec, reply_id, plaintext=None):
+    from engine_profile import current_profile
+    if reply_id == 'w6Z9a6tD' and current_profile().replay is not None:
+        from revival_bundle_commands import purchase
+        return purchase(spec, reply_id, plaintext)
+    return _serve_lapis_shop(spec, reply_id, plaintext)
+
+
+def _serve_lapis_shop(spec, reply_id, plaintext=None):
     """Use the existing bundle price fields and purchase route for local Lapis."""
     bundle_tag, item_tag = 'fMohhKK8', 'pcjqhOI8'
     status_id, purchase_id = 'uLXAMvCT', 'w6Z9a6tD'
@@ -82,7 +112,14 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
     if reply_id == user_info_id:
         from exvius_actions_shops import archived_store_schedules
         existing = {str(row.get('Z20mNDvL')): dict(row) for row in out.get('3VS1Bhmf', [])}
-        existing.update({row['Z20mNDvL']: dict(row) for row in archived_store_schedules()})
+        available = archived_store_schedules()
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            from exvius_actions_shops import _archived_store_schedules
+            known = {row['Z20mNDvL'] for row in _archived_store_schedules()}
+            opened = {row['Z20mNDvL'] for row in available}
+            existing = {key: row for key, row in existing.items() if key not in known or key in opened}
+        existing.update({row['Z20mNDvL']: dict(row) for row in available})
         out['3VS1Bhmf'] = list(existing.values())
     definitions, items = {}, {}
     for payload in list(State.replies.values()) + [out]:
@@ -130,11 +167,20 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
     # The Global Premium Bundles (global_bundles.json, from the FFBE wiki). Cash prices use the same
     # rate as above; a bundle past its once/daily limit is left out, so the client stops listing it.
     limits = {}
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        known = {str(b['id']) for b in _global_bundles()} | {'990000107'}
+        definitions = {bid: row for bid, row in definitions.items() if bid not in known}
+        items = {key: row for key, row in items.items() if key[0] not in known}
     for bundle in _global_bundles():
         bid = str(bundle['id'])
         limits[bid] = bundle.get('limit')
         if _bundle_bought(bid, bundle.get('limit')):
             continue
+        if current_profile().replay is not None:
+            from revival_economy import bundle_active
+            if not bundle_active(State.player.data, bundle):
+                continue
         if 'usd' in bundle:
             cost_type = '50'
             price = int((Decimal(str(bundle['usd'])) * rate).to_integral_value(rounding=ROUND_CEILING))
@@ -182,7 +228,7 @@ def serve_lapis_shop(spec, reply_id, plaintext=None):
                     raise ValueError('Not enough gil')
             elif not player.spend_lapis(price):
                 raise ValueError('Not enough Lapis')
-            if player._grant_items(rewards) != rewards:
+            if player._grant_items(rewards, earned=False) != rewards:
                 raise ValueError('Bundle could not be granted')
             _record_bundle_purchase(selected)
             if _bundle_bought(selected, limits.get(selected)):
@@ -679,6 +725,10 @@ def serve_unit_mix(spec, plaintext: str | None):
     Preserve that single-result shape and publish all changed player groups.
     The existing authored success-type1 and gil0 values are unchanged.
     """
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import mix
+        return mix(spec, plaintext)
     req = _request_json(plaintext)
     rows = req.get(MIX_GROUP) if req else None
     if not isinstance(rows, list) or not rows:
@@ -743,6 +793,7 @@ def serve_unit_mix(spec, plaintext: str | None):
             if any(int(after or 0) > int(before or 0) for before, after in
                    zip(affinity_before, base.get('affinity_points') or ())):
                 score_quest_action('31')
+            score_daily("unit_fuse")
             lb_level, lb_exp = int(base.get('lb_level', 0) or 0), int(base.get('lb_exp', 0) or 0)
             (b_lv, b_ex), (a_lv, a_ex) = res['before'], res['after']
             before = _lv_half(b_lv, b_ex, unit_stats(base['master_id'], b_lv), lb_level, lb_exp)
@@ -820,20 +871,28 @@ def serve_switches(spec, reply_id=None):
     """
     if not isinstance(spec, dict):
         return spec
-    # Track an empty mission container for a fresh campaign. Never inherit the
-    # captured response's tutorial and first-stage completion flags.
-    if SWITCH_TYPE_MISSION not in State.player.switches:
-        State.player.switches[SWITCH_TYPE_MISSION] = set(SWITCH_BASE_INDICES)
-    # The offline event archive is available from Home. Use its original
-    # feature switch so the displayed Vortex button and native handler agree.
-    from player_state import _load_ndjson, switch_position
-    vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
-    unlock = switch_position(vortex.get('juA0Z4m7'))
-    if unlock:
-        State.player.grant_switch(*unlock)
+    from engine_profile import current_profile
+    if current_profile().name != 'ios-revival':
+        # Track an empty mission container for a fresh campaign. Never inherit the
+        # captured response's tutorial and first-stage completion flags.
+        if SWITCH_TYPE_MISSION not in State.player.switches:
+            State.player.switches[SWITCH_TYPE_MISSION] = set(SWITCH_BASE_INDICES)
+        # The offline event archive is available from Home. Use its original
+        # feature switch so the displayed Vortex button and native handler agree.
+        from player_state import _load_ndjson, switch_position
+        vortex = _load_ndjson('F_FUNCTION_MST.ndjson', 'G1nfeht7').get('FUNCTION_REEL_DIMENSION', {})
+        unlock = switch_position(vortex.get('juA0Z4m7'))
+        if unlock:
+            State.player.grant_switch(*unlock)
+    switches = State.player.switches
+    if current_profile().name == 'ios-revival':
+        # Before initialization, project a fresh mission container without
+        # adopting captured completion flags or mutating the campaign.
+        switches = dict(switches)
+        switches.setdefault(SWITCH_TYPE_MISSION, set(SWITCH_BASE_INDICES))
     wanted = {}
-    for stype in list(State.player.switches):
-        c = _switch_container(spec, stype)
+    for stype in list(switches):
+        c = _switch_container(spec, stype, switches=switches)
         if c is not None:
             wanted[stype] = c
     # Only groups that ALREADY carry switch rows may be rewritten or receive a synthesised type.
@@ -988,6 +1047,19 @@ def serve_login_bonus(spec, reply_id):
           + ("" if len(rows) == 28 else f" -- {28 - len(rows)} day(s) have no resolvable reward"))
     return spec
 def serve_mail(spec, reply_id, plaintext):
+    from engine_profile import current_profile
+    if State.player is not None and current_profile().replay is not None:
+        from revival_mail_commands import receipt, SYNC_REPLIES
+        if reply_id == 'XK7efER9':
+            return receipt(spec, plaintext)
+        if reply_id in SYNC_REPLIES:
+            out = dict(spec) if isinstance(spec, dict) else {}
+            out['t8TPs6o2'] = State.player.mail_counters()
+            return out
+    return _serve_mail(spec, reply_id, plaintext)
+
+
+def _serve_mail(spec, reply_id, plaintext):
     """The mailbox is server-authoritative.
 
     * `MailListRequest` (`KQHpi0D7`) -> `qja26wHb` rows **and** `t8TPs6o2` counters. Both are required: the page
@@ -1379,6 +1451,14 @@ def _quest_matches(action: str, meta: dict, cleared_mission) -> bool:
 
 
 def _daily_quests_for_action(action, player) -> list:
+    from engine_profile import current_profile
+    if current_profile().replay is not None and player is not None:
+        from revival_daily import action_rows
+        return action_rows(player, action)
+    return _legacy_daily_quests_for_action(action, player)
+
+
+def _legacy_daily_quests_for_action(action, player) -> list:
     """Today's daily quests the `action` scores: `[(counter key, quest id, target)]`.
 
     The join is by the `action` field `harness/gen_daily_quests.py` parsed out of each row's SHIPPED detail
@@ -1447,6 +1527,21 @@ def _exploration_missions():
         return set()
 
 
+def score_daily(action, amount=1, player=None):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_daily import score
+        score(player if player is not None else State.player, action, amount)
+
+
+def mission_daily_actions(mid):
+    from player_state import _load_ndjson, mission_row
+    actions = ['exploration_clear'] if str(mid) in _exploration_missions() else []
+    world = _load_ndjson('F_WORLD_MST.ndjson', '9Pb24aSy').get(str((mission_row(mid) or {}).get('9Pb24aSy')), {})
+    kind = str(world.get('dw2nvP3r') or '')
+    return actions + (['story_clear'] if kind == '1' else ['vortex_clear'] if kind in ('2', '3') else [])
+
+
 def score_completed_quest_mission(plaintext):
     from exvius_challenges import _counts, _party
     from exvius_repeat import claim_quest_progress
@@ -1457,7 +1552,12 @@ def score_completed_quest_mission(plaintext):
     mid = ctx.get('mission_id')
     if ctx['cleared'] is not True or not claim_quest_progress(State.player, mid):
         return False
+    from exvius_map_quests import score_defeats
+    score_defeats(State.player, ctx.get('monster_defeats'))
     score_quest_action('15', param=mid)
+    score_daily('mission_clear')
+    for action in mission_daily_actions(mid):
+        score_daily(action)
     score_quest_action('42', param=mid)
     if mid in _exploration_missions():
         score_quest_action('48')
@@ -1482,7 +1582,11 @@ def score_completed_quest_mission(plaintext):
     damage = metric('MAX_DAMAGE_TURN', 'DMG_RANK_MAX_DAMAGE_TURN')
     for code, channel, key in (('23', 'lb', 'LB'), ('26', 'magic', 'MAGIC'), ('27', 'beasts', 'BEAST')):
         counts = _counts(ctx, channel) or {}
-        score_quest_action(code, max(sum(counts.values()), metric(f'TOTAL_{key}_USE', f'DMG_RANK_TOTAL_{key}_USE')))
+        used = max(sum(counts.values()), metric(f'TOTAL_{key}_USE', f'DMG_RANK_TOTAL_{key}_USE'))
+        score_quest_action(code, used)
+        score_daily({'lb': 'lb_use', 'magic': 'magic_use', 'beasts': 'esper_use'}[channel], used)
+    if ctx.get('dead_count') == 0:
+        score_daily('no_ko_clear')
     for element, amount in (_counts(ctx, 'elements') or {}).items():
         score_quest_action('20', amount, element)
     for code, amount in (('39', damage), ('50', damage), ('40', metric('TOTAL_DAMAGE', 'DMG_RANK_TOTAL_DAMAGE'))):
@@ -1565,7 +1669,8 @@ def apply_progress(spec, reply_id, plaintext=None):
     # no `Pzn5h0Ga` column at all, and what the player must do is written in the row's shipped TEXT
     # ("Send gifts to 5 friends"). One action therefore scores both families from one store -- the reason
     # `quest_progress` is a single table and not one per feature.
-    dq_hit = _daily_quests_for_action(action, player)
+    from engine_profile import current_profile
+    dq_hit = [] if current_profile().replay is not None else _daily_quests_for_action(action, player)
     for key, qid, target in dq_hit:
         player.bump_progress(key, 1, cap=target or None, what=f"{action} -> daily quest {qid}")
     if dq_hit:
@@ -1735,6 +1840,14 @@ def _quest_reward(quest_id: str) -> list:
 # store. The full derivation and every address are in `docs/notes/daily_quests.md`.
 
 def daily_quest_catalogue() -> dict:
+    from engine_profile import current_profile
+    if current_profile().replay is not None and State.player is not None:
+        from revival_daily import catalogue
+        return catalogue(State.player.data)
+    return _legacy_daily_quest_catalogue()
+
+
+def _legacy_daily_quest_catalogue() -> dict:
     """`server/daily_quests.json`, loaded once. `{}` if it is missing -- and SAYS so.
 
     A missing catalogue must be loud rather than quietly serving an empty list, because an empty daily quest
@@ -2043,6 +2156,14 @@ def _daily_team_lv_string(player) -> str:
 
 
 def serve_daily_quest(spec, reply_id):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        from revival_daily import serve
+        return serve(spec, reply_id, State.player)
+    return _legacy_serve_daily_quest(spec, reply_id)
+
+
+def _legacy_serve_daily_quest(spec, reply_id):
     """The DAILY QUEST projection, and the two groups go on DIFFERENT carriers on purpose.
 
     `Hqdgx83H` (the rows) rides `DAILY_QUEST_CARRIERS` -- the quest screen's five requests -- because it is
@@ -2155,6 +2276,16 @@ def serve_daily_quest(spec, reply_id):
 
 
 def claim_daily_quest(spec, reply_id, plaintext=None):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        if reply_id in (DAILY_QUEST_CLAIM, DAILY_QUEST_CLAIM_ALL):
+            from revival_daily_commands import claim
+            return claim(spec, reply_id, plaintext)
+        return spec
+    return _legacy_claim_daily_quest(spec, reply_id, plaintext)
+
+
+def _legacy_claim_daily_quest(spec, reply_id, plaintext=None):
     """The CLAIM: `DailyQuestClaimRewardRequest` `Zy8fYJ5e` (one) and `DCmya9WD` (all).
 
     The body is measured, not assumed -- `createBody` 0x1999ef4 emits `{"vj87UqEd": [{"nYD7LvSG": "<id>"}]}`
@@ -2916,47 +3047,9 @@ def event_gate_art(area):
     return _EVENT_GATE_ART_CACHE.get(str(area), {}).get('filename')
 
 
-def serve_event_gate(spec, reply_id):
-    """0xkoNP8U -> one gate row per EVENT_GATE_AREAS area, APPENDED to the carrier's own rows.
-
-    SpDungeonCondMstResponse is what makes an area's tile exist at all (GateScene::setListLayout, and
-    AreaMapManager::drawDungeon asks the same list per tile) -- the survival family's own lesson, and
-    docs/notes/chamber_battle_authoring.md section 6 names this as the step a battle-authoring run does
-    NOT cover. DERIVED: the area id is the env word, and its dungeon + first mission are read from the
-    shipped tables. AUTHORED: the window, the tab (qnUhs32P, 1-BASED, 1 = Event), the 1/2 selector, and
-    the art (reused from a shipped row so the client can resolve it -- see the config's collision note).
-
-    APPENDED, never replaced: the list is replace-on-read, so this rides only the carriers that already
-    serve it (EVENT_GATE_CARRIERS), and an area already present in the carrier's rows is left alone.
-    """
-    from exvius_events import native_gate_dates
-    spec = native_gate_dates(spec)
-    if State.player is None or reply_id not in EVENT_GATE_CARRIERS:
-        return spec
-    try:
-        policy = load_policy(DATA_ROOT, EVENT_GATE_AREAS)
-        archive_events = None
-        from exvius_events import policy_path
-        saved_policy = policy_path(DATA_ROOT)
-        if (os.environ.get('EXVIUS_EVENT_ARCHIVE') == '1' and
-                not (saved_policy is not None and saved_policy.exists())):
-            from event_archive import area_ids, events
-            archive_events = events()
-            policy = dict(policy, areas=area_ids(), permanent=True)
-    except (OSError, ValueError) as exc:
-        _note("event policy invalid; no extra gates served: " + str(exc))
-        return spec
-    facts = ([(row['area'], row['first_dungeon'], row['first_mission']) for row in archive_events]
-             if archive_events is not None else _event_area_facts(policy["areas"]))
-    if not facts:
-        return spec
-    spec = _as_spec(spec)
-    rows = [dict(r) for r in (spec.get(EVENT_GATE_TAG) or []) if isinstance(r, dict)]
-    have = {str(r.get("uv60hgDW")) for r in rows}
+def _refresh_gate_rows(rows, selected, raids):
+    """Point already-served rows of selected areas at their art and reward banner; True if any changed."""
     gate_changed = False
-    selected = {f[0] for f in facts}
-    from exvius_raid_progress import personal_event
-    raids = {area: personal_event(dungeon_id=dungeon) for area, dungeon, _mission in facts}
     for row in rows:
         area = str(row.get('uv60hgDW'))
         image = event_gate_art(area) if area in selected else None
@@ -2972,37 +3065,47 @@ def serve_event_gate(spec, reply_id):
         if raid and row.get('fSxqkF10') != raid['reward_banner_id']:
             row['fSxqkF10'] = raid['reward_banner_id']
             gate_changed = True
+    return gate_changed
+
+
+def _new_gate_row(area, dungeon, mission, raid):
+    return {
+        "uv60hgDW": area,             # SubRegionId -- THE key the tile lookups match
+        "U9iHsau3": dungeon,          # the dungeon the tile opens
+        "qo3PECw6": mission,          # its first mission
+        "qnUhs32P": EVENT_GATE_TAB,   # 1-BASED tab: 1 = Event
+        "Z0EN6jSh": EVENT_GATE_KIND,  # +0x100 -- the 1/2 selector getAreaIdWithBannerTouch reads
+        "VjJQ51uG": EVENT_GATE_WINDOW_START,   # AcceptedDate
+        "m8ivD4NX": EVENT_GATE_WINDOW_END,     # CompletedDate
+        "NTXoA6e2": EVENT_GATE_WINDOW_START,
+        "V48um7Jw": EVENT_GATE_WINDOW_END,
+        "7Gvw6J82": EVENT_GATE_WINDOW_END,
+        "4yT7FUqj": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
+        "A5efbo71": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
+        "fSxqkF10": raid['reward_banner_id'] if raid else '0',
+        # The shipped rows' remaining fields, with their own values, so the row's SHAPE matches what
+        # the client has already parsed: the neutral zeros/empties where no reader was located.
+        "0iWgxc1X": "0", "45wVefcS": "", "5mouF8P1": "", "B2FW5Qjq": "",
+        "C8Qf5bs6": "1" if raid and raid.get('point_mode') != 'clear' else "0", "ET8L6iDw": "0", "M1p3ehVU": "", "MrxFQ63W": "",
+        "QCLs6SV8": "0", "mTHe6pI0": "", "oY0vAuE9": "0", "vnhT2EM5": "",
+        "xm7c08IS": "0", "z0ft1PK8": "0", "pAwU2R6W": "0", "td06MKEX": "0",
+        "BGFw7qi4": "", "2oL4dNFy": "", "uwHx3jk0": "", "XY5ZfS0w": "", "0dh7yRIN": "",
+    }
+
+
+def _append_gate_rows(rows, have, facts, raids):
     added = 0
     for area, dungeon, mission in facts:
         if area in have:
             continue
-        raid = raids.get(area)
-        rows.append({
-            "uv60hgDW": area,             # SubRegionId -- THE key the tile lookups match
-            "U9iHsau3": dungeon,          # the dungeon the tile opens
-            "qo3PECw6": mission,          # its first mission
-            "qnUhs32P": EVENT_GATE_TAB,   # 1-BASED tab: 1 = Event
-            "Z0EN6jSh": EVENT_GATE_KIND,  # +0x100 -- the 1/2 selector getAreaIdWithBannerTouch reads
-            "VjJQ51uG": EVENT_GATE_WINDOW_START,   # AcceptedDate
-            "m8ivD4NX": EVENT_GATE_WINDOW_END,     # CompletedDate
-            "NTXoA6e2": EVENT_GATE_WINDOW_START,
-            "V48um7Jw": EVENT_GATE_WINDOW_END,
-            "7Gvw6J82": EVENT_GATE_WINDOW_END,
-            "4yT7FUqj": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
-            "A5efbo71": event_gate_art(area) or (raid['menu_background'] if raid else EVENT_GATE_ART),
-            "fSxqkF10": raid['reward_banner_id'] if raid else '0',
-            # The shipped rows' remaining fields, with their own values, so the row's SHAPE matches what
-            # the client has already parsed: the neutral zeros/empties where no reader was located.
-            "0iWgxc1X": "0", "45wVefcS": "", "5mouF8P1": "", "B2FW5Qjq": "",
-            "C8Qf5bs6": "1" if raid and raid.get('point_mode') != 'clear' else "0", "ET8L6iDw": "0", "M1p3ehVU": "", "MrxFQ63W": "",
-            "QCLs6SV8": "0", "mTHe6pI0": "", "oY0vAuE9": "0", "vnhT2EM5": "",
-            "xm7c08IS": "0", "z0ft1PK8": "0", "pAwU2R6W": "0", "td06MKEX": "0",
-            "BGFw7qi4": "", "2oL4dNFy": "", "uwHx3jk0": "", "XY5ZfS0w": "", "0dh7yRIN": "",
-        })
+        rows.append(_new_gate_row(area, dungeon, mission, raids.get(area)))
         added += 1
-    # A raid mission with the original schedule flag is hidden unless its OWN
-    # mission ID has a SpDungeonCondMst row (GateUtil 0x1ab6bbc-0x1ab6bdc).
-    # One row for the first difficulty cannot open ADV, PRO or ELT.
+    return added
+
+
+def _append_mission_rows(rows, facts, selected, archive_events):
+    """One row per mission of each selected area, templated on the area's first row."""
+    added = 0
     event_missions = _load_mst_rows('F_MISSION_MST.ndjson')['__rows__']
     archive_missions = {mid for event in archive_events for mid in event['missions']} if archive_events is not None else None
     missions_by_area = {}
@@ -3019,9 +3122,10 @@ def serve_event_gate(spec, reply_id):
                 rows.append(dict(template, U9iHsau3=str(mission_row['U9iHsau3']), qo3PECw6=mid))
                 present_missions.add(mid)
                 added += 1
-    if added or gate_changed:
-        spec[EVENT_GATE_TAG] = rows
-    spec = serve_switches(apply_availability(spec, policy, resolved_areas=[f[0] for f in facts]))
+    return added
+
+
+def _publish_reward_schedules(spec, raids):
     # GateMissionScene keeps the Rewards link only when its BannerMst has an
     # active BannerScheduleMst row. The master table itself contains no dates.
     reward_ids = {raid['reward_banner_id'] for raid in raids.values() if raid}
@@ -3037,6 +3141,47 @@ def serve_event_gate(spec, reply_id):
     schedules = spec.setdefault('jBL5XNf6', [])
     have = {r['fSxqkF10'] for r in schedules}
     schedules.extend(r for r in schedule_rows() if r['fSxqkF10'] not in have)
+
+
+def serve_event_gate(spec, reply_id):
+    """0xkoNP8U -> one gate row per EVENT_GATE_AREAS area, APPENDED to the carrier's own rows.
+
+    SpDungeonCondMstResponse is what makes an area's tile exist at all (GateScene::setListLayout, and
+    AreaMapManager::drawDungeon asks the same list per tile) -- the survival family's own lesson, and
+    docs/notes/chamber_battle_authoring.md section 6 names this as the step a battle-authoring run does
+    NOT cover. DERIVED: the area id is the env word, and its dungeon + first mission are read from the
+    shipped tables. AUTHORED: the window, the tab (qnUhs32P, 1-BASED, 1 = Event), the 1/2 selector, and
+    the art (reused from a shipped row so the client can resolve it -- see the config's collision note).
+
+    Legacy appends on the existing carriers and preserves their rows. iOS also removes closed archive
+    gates. Dated gates in every edition use their annual calendar bounds.
+    """
+    from exvius_events import native_gate_dates
+    from event_availability import current
+    spec = native_gate_dates(spec)
+    if State.player is None or reply_id not in EVENT_GATE_CARRIERS:
+        return spec
+    source = current().gate_source(State.player)
+    if source is None:
+        return spec
+    facts = source.facts
+    if not facts and not source.serve_when_empty:
+        return source.window(spec, [])
+    spec = _as_spec(spec)
+    rows = source.prune([dict(r) for r in (spec.get(EVENT_GATE_TAG) or []) if isinstance(r, dict)])
+    have = {str(r.get("uv60hgDW")) for r in rows}
+    selected = {f[0] for f in facts}
+    from exvius_raid_progress import personal_event
+    raids = {area: personal_event(dungeon_id=dungeon) for area, dungeon, _mission in facts}
+    refreshed = _refresh_gate_rows(rows, selected, raids)  # always runs: it edits rows in place
+    gate_changed = source.rewrites or refreshed
+    added = _append_gate_rows(rows, have, facts, raids)
+    added += _append_mission_rows(rows, facts, selected, source.archive_events)
+    rows = source.order(rows)
+    if added or gate_changed:
+        spec[EVENT_GATE_TAG] = rows
+    spec = serve_switches(source.window(spec, facts))
+    _publish_reward_schedules(spec, raids)
     return spec
 
 

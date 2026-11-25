@@ -30,6 +30,8 @@ chaquopy {
         pip {
             install 'PyYAML==6.0.1'
             install 'cryptography==42.0.8'
+            // Embedded Python needs an IANA database for annual New York event dates.
+            install 'tzdata==2026.6'
         }
     }
     sourceSets {

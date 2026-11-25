@@ -1,0 +1,44 @@
+{
+ "_meta": {
+  "what": "Custom daily quests (operator's request, 2026-11-07): more variety and higher, varying rewards. Merged into daily_quests.json's catalogue by ffbe_player.daily_quest_catalogue when EXVIUS_DAILY_CUSTOM=1.",
+  "ids": "69xxxxx, a range the shipped tables don't use. The client draws a row's text from MST_DAILY_QUEST_NAME_<id> / MST_DAILY_QUEST_DETAIL_<id> (the list shows the DETAIL); ios_texts.py adds those rows to the iPhone's F_TEXT_DAILY_QUEST_NAME / _DETAIL.",
+  "rewards": "Each quest names a reward tier. The day's reward is drawn from the tier's list by (day, quest id) and is the same all day. Lapis amounts are before EXVIUS_LAPIS_MULTIPLIER; the row shows the amount after it, which is what is paid. Gil is written kind:amount:amount (the client draws gil's amount from the id field). A unit reward may carry the native trust metadata (kind:id:count:100:level:points:target); the row only shows kind:id:count.",
+  "actions": "Scored by ffbe_player.score_daily: story_clear / vortex_clear / exploration_clear / mission_clear (any quest) / no_ko_clear / lb_use / magic_use / esper_use on a cleared quest; trust_up (units that gained trust in a clear); level_up (unit levels gained in battle); unit_fuse; expedition_finish; arena_win; summon; friend_gift; gil_earn."
+ },
+ "tiers": {
+  "1": ["50:1:150", "30:50000:50000", "23:100:2", "23:50:1", "10:900020201:3"],
+  "2": ["50:1:300", "30:100000:100000", "23:50:2", "10:904000105:1:100:1:0:100000005", "10:900020301:1"],
+  "3": ["50:1:500", "23:50:3", "10:904000105:1:100:1:0:100000010", "10:900020301:2", "23:70:1"]
+ },
+ "pools": {
+  "custom_story": {"type": 4, "label": "Story and quest clears"},
+  "custom_vortex": {"type": 5, "label": "Vortex and explorations"},
+  "custom_battle": {"type": 4, "label": "Battle feats"},
+  "custom_growth": {"type": 3, "label": "Unit growth"},
+  "custom_social": {"type": 1, "label": "Friends, summons, Arena, Gil"}
+ },
+ "quests": [
+  {"id": "6900101", "pool": "custom_story", "type": 4, "action": "story_clear", "target": 5, "tier": 1, "name": "Storyteller I", "detail": "Clear 5 story quests"},
+  {"id": "6900102", "pool": "custom_story", "type": 4, "action": "story_clear", "target": 12, "tier": 2, "name": "Storyteller II", "detail": "Clear 12 story quests"},
+  {"id": "6900103", "pool": "custom_story", "type": 4, "action": "mission_clear", "target": 10, "tier": 1, "name": "Busy Day", "detail": "Clear 10 quests of any kind"},
+  {"id": "6900104", "pool": "custom_story", "type": 4, "action": "mission_clear", "target": 25, "tier": 3, "name": "Marathon", "detail": "Clear 25 quests of any kind"},
+  {"id": "6900201", "pool": "custom_vortex", "type": 5, "action": "vortex_clear", "target": 5, "tier": 1, "name": "Vortex Diver I", "detail": "Clear 5 Vortex quests"},
+  {"id": "6900202", "pool": "custom_vortex", "type": 5, "action": "vortex_clear", "target": 12, "tier": 2, "name": "Vortex Diver II", "detail": "Clear 12 Vortex quests"},
+  {"id": "6900203", "pool": "custom_vortex", "type": 2, "action": "exploration_clear", "target": 1, "tier": 1, "name": "Wanderer", "detail": "Clear 1 exploration quest"},
+  {"id": "6900204", "pool": "custom_vortex", "type": 2, "action": "exploration_clear", "target": 3, "tier": 3, "name": "Pathfinder", "detail": "Clear 3 exploration quests"},
+  {"id": "6900301", "pool": "custom_battle", "type": 4, "action": "lb_use", "target": 5, "tier": 1, "name": "Limit Breaker I", "detail": "Use 5 Limit Bursts in cleared quests"},
+  {"id": "6900302", "pool": "custom_battle", "type": 4, "action": "lb_use", "target": 15, "tier": 2, "name": "Limit Breaker II", "detail": "Use 15 Limit Bursts in cleared quests"},
+  {"id": "6900303", "pool": "custom_battle", "type": 4, "action": "magic_use", "target": 25, "tier": 1, "name": "Spellcaster", "detail": "Cast 25 spells in cleared quests"},
+  {"id": "6900304", "pool": "custom_battle", "type": 4, "action": "esper_use", "target": 3, "tier": 2, "name": "Summoner's Call", "detail": "Summon an Esper 3 times in cleared quests"},
+  {"id": "6900305", "pool": "custom_battle", "type": 4, "action": "no_ko_clear", "target": 5, "tier": 2, "name": "Flawless", "detail": "Clear 5 quests without any unit getting KO'd"},
+  {"id": "6900401", "pool": "custom_growth", "type": 3, "action": "trust_up", "target": 3, "tier": 1, "name": "Bonds I", "detail": "Raise a unit's trust 3 times by clearing quests"},
+  {"id": "6900402", "pool": "custom_growth", "type": 3, "action": "trust_up", "target": 8, "tier": 3, "name": "Bonds II", "detail": "Raise a unit's trust 8 times by clearing quests"},
+  {"id": "6900403", "pool": "custom_growth", "type": 3, "action": "level_up", "target": 10, "tier": 1, "name": "Training", "detail": "Gain 10 unit levels in battle"},
+  {"id": "6900404", "pool": "custom_growth", "type": 3, "action": "unit_fuse", "target": 3, "tier": 1, "name": "Fusion", "detail": "Fuse units 3 times"},
+  {"id": "6900405", "pool": "custom_growth", "type": 3, "action": "expedition_finish", "target": 2, "tier": 2, "name": "Expedition Leader", "detail": "Complete 2 expeditions"},
+  {"id": "6900501", "pool": "custom_social", "type": 1, "action": "friend_gift", "target": 10, "tier": 1, "name": "Good Friend", "detail": "Send gifts to 10 friends"},
+  {"id": "6900502", "pool": "custom_social", "type": 5, "action": "summon", "target": 3, "tier": 1, "name": "Summoner", "detail": "Summon 3 times"},
+  {"id": "6900503", "pool": "custom_social", "type": 4, "action": "arena_win", "target": 3, "tier": 2, "name": "Arena Victor", "detail": "Win 3 Arena battles"},
+  {"id": "6900504", "pool": "custom_social", "type": 5, "action": "gil_earn", "target": 30000, "tier": 1, "name": "Gil Hunter", "detail": "Earn 30,000 Gil"}
+ ]
+}

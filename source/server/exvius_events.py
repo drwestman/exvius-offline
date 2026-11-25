@@ -68,33 +68,57 @@ def event_facts(areas, dungeons, missions):
     return facts, missing
 
 
-def apply_availability(spec, policy, now=None, resolved_areas=None):
-    """Extend only selected AND resolved gate rows, including pre-existing rows.
+def apply_availability(spec, policy, now=None, resolved_areas=None, *, availability=None):
+    """Pure projection: apply annual bounds to dated gates; legacy overrides to undated gates.
 
-    A rolling ten-year horizon, refreshed each served gate response, removes a
-    calendar cutoff while avoiding an invented sentinel timestamp. Other gate
-    predicates, currencies, transitions and all unselected rows stay unchanged.
+    The caller supplies the event_calendar.Availability snapshot; without one no
+    area counts as dated, so only the legacy undated extension applies.
     """
+    from datetime import datetime, timezone
+    from event_calendar import Availability
     clean = validate_policy(policy)
-    if not clean['permanent'] or not isinstance(spec, dict):
+    if not isinstance(spec, dict) or not isinstance(spec.get('0xkoNP8U'), list):
         return spec
-    rows = spec.get('0xkoNP8U')
-    if not isinstance(rows, list):
-        return spec
+    now = time.time() if now is None else now
+    if availability is None:
+        availability = Availability.at((), datetime.fromtimestamp(now, timezone.utc))
     allowed = set(clean['areas'])
     if resolved_areas is not None:
         allowed &= set(map(str, resolved_areas))
-    now = int(time.time() if now is None else now)
     out = copy.deepcopy(spec)
+    out['0xkoNP8U'] = [row for row in out['0xkoNP8U'] if
+                       not isinstance(row, dict) or availability.is_open(row.get('uv60hgDW'))]
     for row in out['0xkoNP8U']:
         if not isinstance(row, dict) or str(row.get('uv60hgDW')) not in allowed:
             continue
-        # GL9 CommonUtils::convertToTime uses strptime, not an epoch parser.
-        for key in DATE_START:
-            row[key] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(max(0, now - 86400)))
-        for key in DATE_END:
-            row[key] = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(now + 10 * 366 * 86400))
+        occurrence = availability.window(row.get('uv60hgDW'))
+        if occurrence:
+            first, last = occurrence.wire()
+        elif clean['permanent']:
+            first = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(max(0, now - 86400)))
+            last = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(now + 10 * 366 * 86400))
+        else:
+            continue
+        row.update({key: first for key in DATE_START})
+        row.update({key: last for key in DATE_END})
     return out
+
+
+def request_moment():
+    """The one clock reading a command handler takes and passes to every guard."""
+    from event_availability import current
+    return current().now()
+
+
+def can_enter(data, mission, *, now, resume=False):
+    """Shared command guard; no state initialization or attempt creation.
+
+    `now` is explicit: handlers take it once from request_moment() so every row
+    they check, and the guard itself, agree on a single instant. The edition's
+    rule lives in event_availability.
+    """
+    from event_availability import current
+    return current().can_enter(data, mission, now=now, resume=resume)
 
 
 def native_gate_dates(spec):

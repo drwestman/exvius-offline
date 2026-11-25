@@ -10,7 +10,7 @@ import threading
 _LOCK = threading.RLock()
 
 
-def begin_attempt(player, mid, captures=None):
+def begin_attempt(player, mid, captures=None, map_quest_monsters=None):
     if player.mode == 'frozen' or not mid:
         return False
     with _LOCK:
@@ -20,8 +20,13 @@ def begin_attempt(player, mid, captures=None):
             return False  # repeated load while this mission is active
         state['attempt'] = {'mid': str(mid), 'sequence': current.get('sequence', 0) + 1,
                             'status': 'pending'}
+        from engine_profile import current_profile
+        if current_profile().name == 'ios-revival':
+            state['attempt']['carry_at_load'] = copy.deepcopy(player.data.get('inventory', {}).get('carry_items', []))
         if captures:
             state['attempt']['captures'] = captures
+        if map_quest_monsters is not None:
+            state['attempt']['map_quest_monsters'] = map_quest_monsters
         player.dirty = True
         return True
 
@@ -159,7 +164,16 @@ def observe_load(spec, mid, is_battle_bundle):
                 kind, unit, count = entry.split(':')
                 if kind == '10':
                     captures.append({'kind': 10, 'id': int(unit), 'count': int(count)})
-        if begin_attempt(State.player, mid, captures=captures):
+        from exvius_map_quests import monster_map
+        if begin_attempt(State.player, mid, captures=captures,
+                         map_quest_monsters=monster_map(spec)):
+            from engine_profile import current_profile
+            if current_profile().replay is not None:
+                from ffbe_battle import ENLIGHTENMENT_DROPS
+                import ffbe_state as runtime
+                if State.player.mode == 'live' and runtime.STATE_PERSIST and (mid in CAPTURE_MISSIONS or mid in ENLIGHTENMENT_DROPS):
+                    from revival_loot import record_fixed
+                    record_fixed(State.player, spec)
             from exvius_raid_progress import observe_personal_raid
             observe_personal_raid(State.player, mid, spec)
             State.state_dirty = True

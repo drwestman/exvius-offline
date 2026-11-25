@@ -16,8 +16,9 @@ The server must be able to run from an arbitrary data directory, outside the ffb
 With NO root set every path below is the exact one the server used before this contract existed, so an
 unset knob is behaviour-preserving. Per key the precedence is: explicit env override (the existing ones
 keep their exact semantics; `MST_DIR`/`TEXT_DIR`/`ART_ROOT` are new) > root-relative > checkout-relative
-legacy default. This module only READS the environment at import time; it never mutates or probes the
-filesystem. Import order matters: `capture_server` pre-parses `--data`/`--maxroster` and exports
+legacy default. The iOS profile separates FFBE_IOS_CONTENT_ROOT (read-only corpus) from FFBE_IOS_ROOT
+(private runtime, also DATA_ROOT for existing runtime-policy readers). This module resolves paths at
+import time and never writes to the filesystem. Import order matters: `capture_server` pre-parses `--data`/`--maxroster` and exports
 `FFBE_DATA`/`SERVE_NV_EX` BEFORE the first server module import, because the modules bind these paths at
 their own import time.
 """
@@ -25,13 +26,17 @@ from __future__ import annotations
 
 import os
 
+from engine_profile import current_profile
+
+PROFILE = current_profile()
+
 # --- version -----------------------------------------------------------------------------------------
 # The engine's own version, and the number of the data-path/CLI contract this file defines. The app
 # (server_app/) reads both from --print-paths and refuses to guess: a missing 'contract' line means the
 # engine predates this file; a smaller number than the app expects is an app/engine mismatch worth a
 # warning, not a crash. Bump ENGINE_VERSION with any served-behaviour change, CONTRACT_VERSION only
 # when the layout or the CLI below changes shape.
-ENGINE_VERSION = "0.1.4"
+ENGINE_VERSION = "0.1.5"
 CONTRACT_VERSION = 1
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -41,6 +46,16 @@ LEGACY = os.path.dirname(WORK)               # the ffbe worktree / checkout
 PACKAGE = "com.square_enix.android_googleplay.FFBEWW"
 
 DATA_ROOT = os.path.abspath(os.environ["FFBE_DATA"]) if os.environ.get("FFBE_DATA") else ""
+# Legacy DATA_ROOT is unchanged. For iOS it remains the engine's runtime/configuration
+# root, while CONTENT_ROOT is the independently selected, shared read-only corpus.
+if PROFILE.name == "ios-revival":
+    RUNTIME_ROOT = os.path.abspath(os.path.expanduser(os.environ.get("FFBE_IOS_ROOT") or
+                                   "~/Library/Application Support/Exvius Offline/iOS"))
+    CONTENT_ROOT = (os.path.abspath(os.environ["FFBE_IOS_CONTENT_ROOT"])
+                    if os.environ.get("FFBE_IOS_CONTENT_ROOT") else "")
+    DATA_ROOT = RUNTIME_ROOT
+else:
+    RUNTIME_ROOT = CONTENT_ROOT = DATA_ROOT
 
 
 def _env(name: str) -> str | None:
@@ -49,7 +64,7 @@ def _env(name: str) -> str | None:
 
 
 def _rooted(*parts: str) -> str:
-    return os.path.join(DATA_ROOT, *parts)
+    return os.path.join(CONTENT_ROOT, *parts)
 
 
 def _new(env_name: str, *root_parts: str, legacy: str) -> str:
@@ -57,7 +72,7 @@ def _new(env_name: str, *root_parts: str, legacy: str) -> str:
     raw = _env(env_name)
     if raw:
         return os.path.abspath(raw)
-    return _rooted(*root_parts) if DATA_ROOT else legacy
+    return _rooted(*root_parts) if CONTENT_ROOT else legacy
 
 
 def _existing(env_name: str, *root_parts: str, legacy: str) -> str:
@@ -65,7 +80,7 @@ def _existing(env_name: str, *root_parts: str, legacy: str) -> str:
     raw = _env(env_name)
     if raw:
         return raw
-    return _rooted(*root_parts) if DATA_ROOT else legacy
+    return _rooted(*root_parts) if CONTENT_ROOT else legacy
 
 
 # --- decoded data -----------------------------------------------------------------------------------
@@ -75,8 +90,10 @@ ART_ROOT = _new("ART_ROOT", "cpk_extract", legacy=os.path.join(LEGACY, "cpk_extr
 
 # --- the client's own tree --------------------------------------------------------------------------
 # GAME_FILES is the APK dump's `files/` (where the shipped MST/resource tree lives); it is NOT the
-# CDN_ROOT override -- the marquee cache etc. read the game tree even when the serving root is redirected.
-GAME_FILES = _rooted("client", "files") if DATA_ROOT else os.path.join(LEGACY, PACKAGE, "files")
+# CDN_ROOT override in legacy mode. The iOS profile uses the configured native tree for both readers.
+GAME_FILES = _rooted("client", "files") if CONTENT_ROOT else os.path.join(LEGACY, PACKAGE, "files")
+if PROFILE.name == "ios-revival":
+    GAME_FILES = _env("CDN_ROOT") or GAME_FILES
 CDN_ROOT = _existing("CDN_ROOT", "client", "files", legacy=GAME_FILES)
 CDN_OVERLAY = _existing("CDN_OVERLAY", "overlay", legacy=os.path.join(WORK, "out", "cdn_overlay"))
 VERSION_TABLE_XML = os.path.normpath(_existing(
@@ -84,11 +101,44 @@ VERSION_TABLE_XML = os.path.normpath(_existing(
     legacy=os.path.join(LEGACY, PACKAGE, "shared_prefs", "gamedata.xml")))
 
 # --- state ------------------------------------------------------------------------------------------
-STATE_DIR = _rooted("state") if DATA_ROOT else os.path.join(WORK, "out", "state")
-DEFAULT_STATE_FILE = _rooted("state", "state.json") if DATA_ROOT else os.path.join(WORK, "out", "state.json")
+# iOS content is shared read-only. Every writable path belongs to its private runtime.
+if PROFILE.name == "ios-revival" and CONTENT_ROOT:
+    content, runtime = os.path.realpath(CONTENT_ROOT), os.path.realpath(RUNTIME_ROOT)
+    if os.path.commonpath((content, runtime)) in (content, runtime):
+        raise ValueError("Private iOS runtime and shared game data must use separate directory trees.")
+STATE_DIR = os.path.join(RUNTIME_ROOT, "state") if RUNTIME_ROOT else os.path.join(WORK, "out", "state")
+DEFAULT_STATE_FILE = (os.path.join(RUNTIME_ROOT, "state", "state.json") if RUNTIME_ROOT
+                      else os.path.join(WORK, "out", "state.json"))
 STATE_FILE = _env("STATE_FILE") or DEFAULT_STATE_FILE
-REQUESTS_DIR = _env("OUT_REQUESTS") or (_rooted("state", "requests") if DATA_ROOT
-                                        else os.path.join(WORK, "out", "requests"))
+REQUESTS_DIR = _env("OUT_REQUESTS") or (
+    os.path.join(RUNTIME_ROOT, "requests" if PROFILE.name == "ios-revival" else "state/requests")
+    if RUNTIME_ROOT else os.path.join(WORK, "out", "requests"))
+
+
+def _private_path(path: str, root: str) -> str:
+    resolved, allowed = os.path.realpath(path), os.path.realpath(root)
+    if os.path.commonpath((resolved, allowed)) != allowed:
+        raise ValueError(f"iOS writable path escapes its private directory: {path}")
+    return path
+
+
+def validate_state_path(path: str) -> str:
+    """Keep explicit iOS CLI overrides inside the private state directory."""
+    if PROFILE.name == "ios-revival":
+        _private_path(STATE_DIR, RUNTIME_ROOT)
+        _private_path(path, STATE_DIR)
+    return path
+
+
+if PROFILE.name == "ios-revival":
+    _private_path(STATE_DIR, RUNTIME_ROOT)
+    _private_path(STATE_FILE, STATE_DIR)
+    _private_path(REQUESTS_DIR, RUNTIME_ROOT)
+
+BATTLE_CACHE_ROOT = (os.path.join(RUNTIME_ROOT, "cache", "battles") if PROFILE.name == "ios-revival"
+                     else os.path.join(WORK, "out", "battle_cache"))
+if PROFILE.name == "ios-revival":
+    _private_path(BATTLE_CACHE_ROOT, RUNTIME_ROOT)
 
 # --- the generated dispatch table --------------------------------------------------------------------
 # Generated by harness/build_endpoints.py from the contract, not a data-root corpus: it belongs to the
@@ -100,14 +150,17 @@ ENDPOINTS_FILE = _env("ENDPOINTS_FILE") or (
     else os.path.join(HERE, "endpoints.json"))
 
 # --- certificates -----------------------------------------------------------------------------------
-CERT_DIR = _rooted("certs") if DATA_ROOT else os.path.join(WORK, "harness", "certs")
+CERT_DIR = (os.path.join(RUNTIME_ROOT, "certs") if RUNTIME_ROOT
+            else os.path.join(WORK, "harness", "certs"))
+if PROFILE.name == "ios-revival":
+    _private_path(CERT_DIR, RUNTIME_ROOT)
 
 # --- optional corpora the server reads when present -------------------------------------------------
 # The community gacha art (harness/fetch_gacha_community.py; gitignored).
 COMMUNITY_ART_ROOT = _new("COMMUNITY_ART_ROOT", "gacha_community", "art",
                           legacy=os.path.join(LEGACY, "gacha_community", "art"))
 # The JP/Memorial battle oracle. OPTIONAL at serve time: the battle index ships in `server/content/battle/`.
-ORACLE_DIR = _rooted("jp_battle_oracle", "decoded") if DATA_ROOT \
+ORACLE_DIR = _rooted("jp_battle_oracle", "decoded") if CONTENT_ROOT \
     else os.path.join(LEGACY, "jp_battle_oracle", "decoded")
 
 
@@ -116,6 +169,10 @@ __all__ = [
     "ENDPOINTS_FILE",
     "CONTRACT_VERSION",
     "DATA_ROOT",
+    "CONTENT_ROOT",
+    "RUNTIME_ROOT",
+    "BATTLE_CACHE_ROOT",
+    "validate_state_path",
     "MST_DIR",
     "TEXT_DIR",
     "ART_ROOT",

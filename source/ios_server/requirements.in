@@ -1,0 +1,6 @@
+# Dedicated macOS Python 3.12 runtime; also supports the existing engine commands.
+cryptography==50.0.2
+dnslib==0.9.26
+PyYAML==6.0.3
+Pillow==13.0.0
+fastcrc==0.5.0

@@ -1,0 +1,23 @@
+{
+ "_meta": {
+  "what": "Mails Global sent to every player on a given day; replay_mails.py delivers each once history reaches its date. `by_days`: [[up to N days played, count], ..., [null, count]] of `item`, days counted in history from the replay start to the mail's date.",
+  "news": "https://lapis-prod-staticnews-gumi-sg.akamaized.net/prod/en/content/<source>"
+ },
+ "mails": [
+  {"id": 930000000001, "date": "2021-01-21", "title": "Guaranteed NV Summon Ticket",
+   "message": "A Guaranteed NV Summon Ticket for every player. Use it on the Guaranteed NV Summon for one of five selected NV units.",
+   "items": [[20, 1209001319, 1]], "source": "20210119GuaranteedNVSummon.html"},
+  {"id": 930000000002, "date": "2021-09-02", "title": "2021 Player Appreciation Campaign",
+   "message": "Thank you for playing! 2021 Player Appreciation Summon Tickets, by days played. Each one is a ten-unit 4★+/NV summon on the 2021 Player Appreciation Summon.",
+   "item": [20, 1209001468], "by_days": [[365, 3], [730, 6], [1095, 9], [1460, 12], [null, 15]],
+   "source": "20210831PlayerAppreciationCampaign.html"},
+  {"id": 930000000003, "date": "2022-02-24", "title": "Player Appreciation Tickets",
+   "message": "Player Appreciation Tickets, by days played. Each one is a ten-unit 4★+/NV summon on the Player Appreciation Ticket Summon.",
+   "item": [20, 1209001572], "by_days": [[365, 3], [730, 6], [1095, 9], [1460, 12], [null, 15]],
+   "source": "20220222PlayerAppreciationSummon.html"},
+  {"id": 930000000004, "date": "2022-06-30", "title": "6th Anniversary Player Appreciation Tickets",
+   "message": "Happy 6th Anniversary! Player Appreciation Summon Tickets, by days played. Each one is a ten-unit 4★+/NV summon on the 6th Anniversary Player Appreciation Summon.",
+   "item": [20, 1209001629], "by_days": [[365, 3], [730, 6], [1095, 9], [1460, 12], [null, 15]],
+   "source": "202206306thAnniversaryCelebrationCampaigns0824Update.html"}
+ ]
+}

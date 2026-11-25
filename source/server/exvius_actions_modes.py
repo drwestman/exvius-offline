@@ -177,6 +177,8 @@ def _begin(name, f, row, op, extra=None):
     if active:
         _need(active["mission"] == mid, "another mission is already active")
         return active
+    from exvius_events import can_enter, request_moment
+    _need(can_enter(State.player.data, row, now=request_moment()), 'event is outside its annual dates')
     _need(State.player.mode != "frozen", "player is frozen")
     for other in TAGS:
         if other != name:
@@ -954,6 +956,9 @@ def rm_dungeon_start(spec, req):
     did = str(node.get("U9iHsau3") or "")
     rows = _missions("rm", did)
     _need(bool(rows), "dungeon has no RM missions")
+    if not f.get('run'):
+        from exvius_events import can_enter, request_moment
+        _need(can_enter(State.player.data, rows[0], now=request_moment()), 'event is outside its annual dates')
     if f.get("run"):
         _need(f["dungeon"] == did, "another RM dungeon is active")
     else:

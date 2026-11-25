@@ -176,6 +176,8 @@ def _settle_expedition_tutorial(block):
         entries = (str(row.get('4Ya160s7') or '') + ',' + str(row.get('5Yn160s8') or '')).split(',')
         return ','.join(':'.join(p[:3]) for e in entries if len(p := e.split(':')) >= 3 and p[2] != '0')
     for mid in chain:
+        if mid not in masters:
+            continue
         expected = signature(masters[mid])
         if not expected or sum(signature(row) == expected for row in masters.values()) != 1:
             continue
@@ -194,19 +196,22 @@ def expedition_info(spec, req):
     """Open/reopen the native Expedition list with durable jobs and milestones."""
     if State.player.mode == 'frozen':
         return expedition_refresh(spec, {})
-    block = deepcopy(_store('expedition'))
+    before = _store('expedition')
+    block = deepcopy(before)
     unlocked = _settle_expedition_tutorial(block)
     chain = _expedition_policy()['tutorial_chain']
+    masters = _mst('F_EXPEDITION_MST.ndjson', 'Ko86047K')
     quests = block.setdefault('quests', {})
     out = _switches(spec, []) if unlocked else spec
     if not unlocked and not quests:
         mid = next((mid for mid in chain if not block['completed'].get(mid)), chain[-1])
-        serial = _int(block.get('serial')) + 1
-        key = 'offline-' + str(serial)
-        quests[key] = {'q3D53k94': key, 'Ko86047K': mid, '7mA422N6': '', 'Tx6MGkJ1': '0',
-                       '2CL6pZmE': '0', '3JND4wjr': '1', 'Sf2m961q': '0',
-                       'mqbn4Gdm': '0', 'O82h92n5': '0', '2A6fYiEC': ''}
-        block['serial'] = serial
+        if mid in masters:
+            serial = _int(block.get('serial')) + 1
+            key = 'offline-' + str(serial)
+            quests[key] = {'q3D53k94': key, 'Ko86047K': mid, '7mA422N6': '', 'Tx6MGkJ1': '0',
+                           '2CL6pZmE': '0', '3JND4wjr': '1', 'Sf2m961q': '0',
+                           'mqbn4Gdm': '0', 'O82h92n5': '0', '2A6fYiEC': ''}
+            block['serial'] = serial
     first_normal = unlocked and not block.get('normal_offers_started')
     seed_normal = False
     if first_normal:
@@ -216,7 +221,12 @@ def expedition_info(spec, req):
         if not any(str(q.get('Ko86047K')) not in chain for q in quests.values()):
             block['next_free'] = 0
             seed_normal = True
-    _put('expedition', block)
+    if not quests and 'quests' not in before:
+        block.pop('quests', None)
+    if not block.get('completed') and 'completed' not in before:
+        block.pop('completed', None)
+    if block != before:
+        _put('expedition', block)
     if unlocked and (seed_normal or not quests) and _int(block.get('next_free')) <= int(time.time()):
         return expedition_refresh(out, {QUEST: []})
     return expedition_refresh(out, {})
@@ -403,7 +413,9 @@ def expedition_end(spec, req):
     if grade == 1:
         for reward in bonus:
             reward['count'] *= 2
-    _grant(rewards + relics + bonus)
+    _grant(rewards + relics + bonus, earned=True)
+    from ffbe_player import score_daily
+    score_daily('expedition_finish')
     roster = {str(u['instance_id']): u for u in State.player.data['roster']}
     xp = max(1, _int(difficulty['7Ac7722s']) * policy['xp_per_hour'] // 3600)
     for entry in str(quest.get('7mA422N6') or '').split(','):
@@ -650,6 +662,11 @@ def mission_update(spec, req):
             saved[sid] = {'Z34jU7ue': qid, '7Svg2kdT': sid,
                           '4kcAD9fW': '2' if completed else '1', '0G7J2vfD': old.get('0G7J2vfD', '')}
             if completed:
+                from engine_profile import current_profile
+                if current_profile().name == 'ios-revival':
+                    switches = _csv(step.get('dIPkNn61'))
+                    _require(all(switch_position(v) is not None for v in switches), 'invalid quest completion switch')
+                    spec = _switches(spec, switches)
                 quest_steps = [r for r in steps.values() if r['Z34jU7ue'] == qid]
                 if all(saved.get(r['7Svg2kdT'], {}).get('4kcAD9fW') == '2' for r in quest_steps):
                     if qid not in block.setdefault('rewarded', []):

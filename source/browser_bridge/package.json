@@ -1,0 +1,30 @@
+{
+  "name": "exvius-browser-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc && tsc -p web/tsconfig.json && node build.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "@yume-chan/adb": "2.3.1",
+    "@yume-chan/adb-scrcpy": "2.3.2",
+    "@yume-chan/adb-server-node-tcp": "2.5.2",
+    "@yume-chan/scrcpy": "2.3.0",
+    "@yume-chan/scrcpy-decoder-webcodecs": "2.5.0",
+    "ws": "8.22.1",
+    "@yume-chan/stream-extra": "2.6.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "22.19.0",
+    "@types/ws": "8.18.1",
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3"
+  }
+}

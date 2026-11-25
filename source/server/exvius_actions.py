@@ -83,6 +83,10 @@ def mission_restart(spec, req):
 
 
 def unit_class_up(spec, req):
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import awaken
+        return awaken(spec, req)
     before, dirty = deepcopy(State.player.data), State.player.dirty
     try:
         return _unit_class_up(spec, req)
@@ -180,7 +184,6 @@ def _unit_class_up(spec, req):
         'result': dict(out['sWc7EH69'][0]), 'master_id': unit['master_id'], 'discount_flag': discount}
     return out
 
-
 def _parse_rewards(text):
     rows = []
     for entry in str(text or "").split(","):
@@ -254,6 +257,11 @@ def unit_equip(spec, req):
 
 def sacrifice(spec, req, group="6kvFj2Kw"):
     """Consume eligible units only after resolving the fragment rewards for the full batch."""
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_unit_commands import convert
+        result = convert(State.player, req.get(group), nv=group == '4Ncra9DF')
+        return dict(_refresh(spec), **{group: result}) if result is not None else _refresh(spec)
     from exvius_actions_shops import deployed_unit_ids
     from player_state import unit_mst
 
@@ -361,6 +369,13 @@ NOTICE_GROUPS = ('3BI1xSGW', 'R17unt2e', 'VKA5urE1', 'fzm3je8p', 'oUk10RXm', 'tN
 
 
 def notice_state(spec, req, reply_id):
+    from engine_profile import current_profile
+    if current_profile().replay is not None:
+        if reply_id == 'pC3a2JWU':
+            from revival_notice_commands import serve
+            return serve(spec, req, reply_id)
+        import revival_notices as policy
+        return policy.project_query(spec, State.player.data, reply_id)
     player = State.player
     if not isinstance(spec, dict):
         spec = {}

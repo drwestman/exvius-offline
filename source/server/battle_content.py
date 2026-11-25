@@ -71,7 +71,7 @@ def _break_status_default() -> str:
 
 
 BREAK_STATUS_DEFAULT = _break_status_default()
-CACHE_ROOT = os.path.join(WORK, "out", "battle_cache")
+CACHE_ROOT = data_paths.BATTLE_CACHE_ROOT
 BATTLE_BUNDLE_REPLY_ID = "jnw49dUq"
 # Groups that describe an encounter (phases, placement, enemies, skills). A
 # story map event uses the same carrier with all of them empty.
@@ -603,6 +603,15 @@ def field_mission_bundle(carrier: dict, mission: dict) -> dict:
         with open(path, encoding='utf8') as stream:
             _FIELD_GROUP_BINDINGS = json.load(stream)['missions']
     group_ids.update(_FIELD_GROUP_BINDINGS.get(mid, []))
+    if data_paths.PROFILE.name == 'ios-revival':
+        from revival_exploration import field_bundle
+        from revival_loot import settings
+        from ffbe_state import State
+        policy = settings(State.player.data) if State.player else None
+        planned = field_bundle(carrier, mission, source, group_ids,
+                               enabled=bool(policy and policy['field_encounters']))
+        if planned is not None:
+            return planned
     field = event_encounter(mid)
     explicit_field = bool(field and (field.get('6v0LPiRe') or
                                      (field.get('rqxw0p9k') and field.get('YjHhvN65'))))
@@ -710,6 +719,11 @@ def resource_kind(mission: str) -> str | None:
 
 
 def event_encounter(mission: str) -> dict | None:
+    if data_paths.PROFILE.name == 'ios-revival':
+        from revival_content import encounter
+        added = encounter(mission)
+        if added is not None:
+            return added
     global _EVENT_ENCOUNTERS
     if _EVENT_ENCOUNTERS is None:
         path = os.path.join(HERE, 'event_encounters.json')
@@ -836,7 +850,7 @@ class EventSource(Source):
 
 def assemble(mission: int | str, *, authored: dict | None = None, mode: str | None = None,
              source: Source | None = None, cache_root: str = CACHE_ROOT,
-             log=print, origin: dict | None = None) -> dict | None:
+             log=print, origin: dict | None = None, write_cache: bool | None = None) -> dict | None:
     """The wire bundle for `mission`, from authored -> cache -> the tracked index, else None.
 
     None means "nothing could be assembled": the caller keeps its bare-key fallback. `origin` is an
@@ -844,6 +858,9 @@ def assemble(mission: int | str, *, authored: dict | None = None, mode: str | No
     layer answered; the return contract stays the bundle itself.
     """
     mid = str(mission)
+    # iOS views can derive in memory; only an explicit preparation command writes
+    # disk caches. Legacy callers retain the established cache-on-miss behavior.
+    persist_cache = data_paths.PROFILE.name != 'ios-revival' if write_cache is None else write_cache
     key = f"{BATTLE_BUNDLE_REPLY_ID}@{mid}"
     if authored is None:
         with open(DEFAULT_RESPONSES, encoding="utf-8") as fh:
@@ -891,6 +908,11 @@ def assemble(mission: int | str, *, authored: dict | None = None, mode: str | No
             if original_mission:
                 bundle['1IfDqR4n'] = [original_mission]
         cached[mid] = bundle
+        if not persist_cache:
+            if origin is not None:
+                origin['where'] = 'index'
+            log(f"battle: mission {mid} derived from the index in memory ({len(bundle)} groups)")
+            return bundle
         os.makedirs(cache_root, exist_ok=True)
         tmp = f"{path}.tmp.{os.getpid()}"
         with open(tmp, "w", encoding="utf-8") as fh:

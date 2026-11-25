@@ -1,0 +1,166 @@
+"""Pure native table codecs: CBC/ECB JSON masters and ECB localized text records.
+
+Wire facts follow the pinned revival ios_tables/ios_texts implementations.
+Preserve each source line's padding shape and emit LF between encrypted lines.
+"""
+import base64
+import copy
+import json
+
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from ffbe_crypto import cbc_decrypt, cbc_encrypt, key16
+
+
+def master_rows(raw, key, *, mode='cbc'):
+    """Return an eager list for callers that need decoded records."""
+    return list(_master_rows(raw, key, mode=mode))
+
+
+def _master_lines(raw):
+    """Decode bounded chunks, retaining only fragments of an unfinished record."""
+    fragments = []
+    for offset in range(0, len(raw), 64 * 1024):
+        # Keep str.splitlines' ASCII separators, including CR-only sources. A
+        # CR/LF split across chunks adds a blank line, ignored by the reader.
+        for line in raw[offset:offset + 64 * 1024].decode('ascii').splitlines(keepends=True):
+            if not line.endswith(('\n', '\r', '\v', '\f', '\x1c', '\x1d', '\x1e')):
+                fragments.append(line)
+                continue
+            if fragments:
+                fragments.append(line)
+                line = ''.join(fragments)
+                fragments.clear()
+            yield line
+    if fragments:
+        yield ''.join(fragments)
+
+
+def _master_rows(raw, key, *, mode):
+    """Share all validation rules without retaining the decoded table."""
+    if mode not in ('cbc', 'ecb'):
+        raise ValueError('Unsupported native master cipher.')
+    found = False
+    for line in _master_lines(raw):
+        if not line.strip():
+            continue
+        base64.b64decode(line.strip(), validate=True)
+        if mode == 'cbc':
+            plain = cbc_decrypt(key16(key), line.strip())
+        else:
+            plain = _ecb(key, base64.b64decode(line.strip(), validate=True))
+            pad = plain[-1] if plain else 0
+            if not 1 <= pad <= 16 or plain[-pad:] != bytes([pad]) * pad:
+                raise ValueError('Invalid native master padding.')
+            plain = plain[:-pad]
+        pad = plain[-1] if plain else 0
+        double = 1 <= pad <= 16 and plain[-pad:] == bytes([pad]) * pad
+        row = json.loads(plain[:-pad] if double else plain)
+        if not isinstance(row, dict):
+            raise ValueError('Native master row must be a JSON object.')
+        found = True
+        yield line.strip(), row, double
+    if not found:
+        raise ValueError('Native master table has no rows.')
+
+
+def validate_master(raw, key, *, mode='cbc'):
+    """Check every record eagerly without retaining the decoded table."""
+    for _ in _master_rows(raw, key, mode=mode):
+        pass
+
+
+def patch_master(raw, key, transform, *, mode='cbc'):
+    out, changed = [], 0
+    for line, row, double in master_rows(raw, key, mode=mode):
+        result = transform(copy.deepcopy(row))
+        if result != row:
+            changed += 1
+            if result is None:
+                continue
+            plain = json.dumps(result, ensure_ascii=False, separators=(',', ':')).encode()
+            line = (cbc_encrypt(key16(key), plain, double_pad=double) if mode == 'cbc' else
+                    base64.b64encode(_ecb(key, _pad(plain, 2 if double else 1), True)).decode())
+        out.append(line)
+    return ('\n'.join(out) + '\n').encode('ascii'), changed
+
+
+def normalize_master(raw, key, *, mode='cbc'):
+    """Validate a passthrough table and normalize outer lines without copying rows."""
+    return ('\n'.join(line for line, _, _ in _master_rows(raw, key, mode=mode)) + '\n').encode('ascii')
+
+
+def append_master(raw, key, additions, *, mode='cbc'):
+    """Append records using the source table's registered cipher and padding shape."""
+    rows = master_rows(raw, key, mode=mode)
+    lines = [line for line, _, _ in rows]
+    double = rows[0][2]
+    for row in additions:
+        plain = json.dumps(row, ensure_ascii=False, separators=(',', ':')).encode()
+        lines.append(cbc_encrypt(key16(key), plain, double_pad=double) if mode == 'cbc' else
+                     base64.b64encode(_ecb(key, _pad(plain, 2 if double else 1), True)).decode())
+    return ('\n'.join(lines) + '\n').encode('ascii')
+
+
+def _ecb(key, data, encrypt=False):
+    cipher = Cipher(algorithms.AES(key16(key)), modes.ECB())
+    op = cipher.encryptor() if encrypt else cipher.decryptor()
+    return op.update(data) + op.finalize()
+
+
+def _pad(data, layers):
+    for _ in range(layers):
+        n = 16 - len(data) % 16
+        data += bytes([n]) * n
+    return data
+
+
+def text_lines(raw, key):
+    rows = []
+    for line in raw.decode('ascii').splitlines():
+        if not line.strip():
+            continue
+        plain = _ecb(key, base64.b64decode(line.strip(), validate=True))
+        layers = 0
+        while plain and 1 <= plain[-1] <= 16 and plain[-plain[-1]:] == bytes([plain[-1]]) * plain[-1]:
+            plain = plain[:-plain[-1]]
+            layers += 1
+        if layers not in (1, 2):
+            raise ValueError('Unsupported native text padding.')
+        records = plain.decode('utf-8').splitlines()
+        if not records or any(len(record.split('^')) < 2 or not record.split('^')[0] for record in records):
+            raise ValueError('Invalid native text record.')
+        rows.append((line.strip(), records, layers))
+    if not rows:
+        raise ValueError('Native text table has no records.')
+    return rows
+
+
+def patch_text(raw, key, entries):
+    """Apply explicit text replacements/additions while retaining native columns."""
+    out, seen, changed = [], set(), 0
+    columns, shape_layers = None, None
+    for line, records, layers in text_lines(raw, key):
+        touched = False
+        for index, record in enumerate(records):
+            fields = record.split('^')
+            seen.add(fields[0])
+            if columns is None:
+                columns, shape_layers = len(fields) - 1, layers
+            if fields[0] in entries:
+                entry = entries[fields[0]]
+                value, replace = entry if isinstance(entry, tuple) else (entry, True)
+                replacement = [value] * (len(fields) - 1)
+                if replace and fields[1:] != replacement:
+                    records[index] = '^'.join([fields[0], *replacement])
+                    touched = True
+                    changed += 1
+        if touched:
+            line = base64.b64encode(_ecb(key, _pad(('\n'.join(records)+'\n').encode(), layers), True)).decode()
+        out.append(line)
+    missing = sorted(entries.keys() - seen)
+    if missing:
+        plain = ''.join('^'.join([name] + [entries[name][0] if isinstance(entries[name], tuple) else entries[name]] * columns)
+                        + '\n' for name in missing).encode()
+        out.append(base64.b64encode(_ecb(key, _pad(plain, shape_layers), True)).decode())
+        changed += len(missing)
+    return ('\n'.join(out) + '\n').encode('ascii'), changed
