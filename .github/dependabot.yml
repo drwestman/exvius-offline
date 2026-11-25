@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Browser streaming bridge (Node.js / TypeScript)
+  - package-ecosystem: "npm"
+    directory: "/source/browser_bridge"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Native iOS server Python dependencies (requirements.in)
+  - package-ecosystem: "pip"
+    directory: "/source/ios_server"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Synthetic server launcher app (Rust)
+  - package-ecosystem: "cargo"
+    directory: "/source/server_app"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Android local runtime wrapper (Gradle)
+  - package-ecosystem: "gradle"
+    directory: "/source/memorial/android"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
