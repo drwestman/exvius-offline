@@ -1,6 +1,6 @@
 plugins {
     id 'com.android.application' version '9.5.2'
-    id 'com.chaquo.python' version '16.1.0'
+    id 'com.chaquo.python' version '17.2.0'
 }
 
 buildDir = file('../../build/android/local-runtime')
