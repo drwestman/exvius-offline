@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application' version '7.4.2'
+    id 'com.android.application' version '9.5.2'
     id 'com.chaquo.python' version '16.1.0'
 }
 
