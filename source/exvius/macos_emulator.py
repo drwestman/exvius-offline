@@ -308,7 +308,7 @@ class Emulator:
                 if 'versionCode=' not in self.adb(serial, 'shell', 'dumpsys', 'package', PACKAGE):
                     raise SetupError('Android needs at least 18 GB free internal storage for first setup.')
             self.install(serial, apk, manifest)
-            print('Setup complete. Double-click Play Exvius.command to open the game.', flush=True)
+            print('Setup complete. Double-click scripts/Play_Exvius.command to open the game.', flush=True)
 
     def launch(self):
         self.require_host()

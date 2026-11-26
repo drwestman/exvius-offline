@@ -83,7 +83,7 @@ accepts the required Android SDK licenses, and creates `Exvius_Offline_API_33` w
 `release/app.json`, verifies its size and SHA-256, and installs it into that device.
 Install [Homebrew](https://brew.sh) first if it is not already installed.
 
-Then double-click **`Play Exvius.command`** in Finder, or run:
+Then double-click **`scripts/Play_Exvius.command`** in Finder, or run:
 
 ```sh
 python3 source/exvius/macos_emulator.py launch
@@ -142,7 +142,7 @@ python3 source/exvius/macos_emulator.py setup-browser --lan
 python3 source/exvius/macos_emulator.py browser --lan
 ```
 
-Subsequent launches can use **Play Exvius in Browser.command**. The terminal prints
+Subsequent launches can use **`scripts/Play_Exvius_in_Browser.command`**. The terminal prints
 the LAN URL and access code. Other devices need a one-time local certificate trust
 step; see [browser setup, controls, and troubleshooting](source/browser_bridge/README.md).
 One player can connect at a time. Keep the Mac awake and the launcher terminal open.

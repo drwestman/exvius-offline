@@ -32,7 +32,7 @@ or Android setup. After setup, the entrypoint reuses the dedicated environment;
 `serve` does not install packages or initialize a campaign.
 
 For subsequent sessions, double-click
-[Check Exvius iPhone Connection.command](../../Check%20Exvius%20iPhone%20Connection.command).
+[scripts/Check_Exvius_iPhone_Connection.command](../../scripts/Check_Exvius_iPhone_Connection.command).
 Keep the Mac awake and leave its terminal open. Ctrl+C stops all listeners.
 
 The foreground server prints the Mac’s setup URL and HTTPS hello URL only after
@@ -345,12 +345,12 @@ older than three days and then oldest-first above 300 MiB. Other files and
 symlinks are excluded. Maintenance runs under the engine state lock. Existing
 bounded transport logs and stable certificate renewal remain in effect.
 
-[Play Exvius on iPhone.command](../../Play%20Exvius%20on%20iPhone.command) starts
+[scripts/Play_Exvius_on_iPhone.command](../../scripts/Play_Exvius_on_iPhone.command) starts
 foreground gameplay using an existing installation in the checkout's `data/`
 directory, or the prepared `source/out/browser-data/` folder when `data/` contains
 only release metadata. Startup still validates the selected assets and campaign;
 it does not download or prepare them.
-For another prepared path, run `./"Play Exvius on iPhone.command" --data /path/to/data`
+For another prepared path, run `./scripts/Play_Exvius_on_iPhone.command --data /path/to/data`
 or set `FFBE_IOS_DATA` in its environment. The existing connection-check launcher
 continues to run `serve` independently of game data.
 

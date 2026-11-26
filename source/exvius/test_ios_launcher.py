@@ -8,8 +8,8 @@ import tempfile
 import unittest
 
 
-LAUNCHER = Path(__file__).resolve().parents[2] / 'Play Exvius on iPhone.command'
-UPDATER = Path(__file__).resolve().parents[2] / 'Update Exvius iOS Data.command'
+LAUNCHER = Path(__file__).resolve().parents[2] / 'scripts' / 'Play_Exvius_on_iPhone.command'
+UPDATER = Path(__file__).resolve().parents[2] / 'scripts' / 'Update_Exvius_iOS_Data.command'
 
 
 class IPhoneLauncher(unittest.TestCase):
@@ -26,9 +26,11 @@ class IPhoneLauncher(unittest.TestCase):
             'parser.add_argument("--data")\n'
             'args, extra = parser.parse_known_args()\n'
             'print(json.dumps(dict(command=args.command, data=args.data, extra=extra)))\n')
-        self.launcher = self.checkout / LAUNCHER.name
+        scripts_dir = self.checkout / 'scripts'
+        scripts_dir.mkdir(parents=True)
+        self.launcher = scripts_dir / LAUNCHER.name
         shutil.copy2(LAUNCHER, self.launcher)
-        self.updater = self.checkout / UPDATER.name
+        self.updater = scripts_dir / UPDATER.name
         shutil.copy2(UPDATER, self.updater)
         self.data = self.checkout / 'data'
         self.data.mkdir()
@@ -157,7 +159,7 @@ class IPhoneLauncher(unittest.TestCase):
                 self._install_recording_entrypoint(check_code=2)
                 res = self._run_script(self.launcher, user_input=answer)
                 self.assertEqual(res.returncode, 0, res.stderr + res.stdout)
-                self.assertIn('Update Exvius iOS Data.command', res.stderr)
+                self.assertIn('Update_Exvius_iOS_Data.command', res.stderr)
                 calls = [json.loads(line) for line in self.calls_log.read_text().splitlines()]
                 self.assertEqual([c['command'] for c in calls], ['check-update'])
 

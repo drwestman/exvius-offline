@@ -1,7 +1,8 @@
 #!/bin/bash
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
-python3 "$SCRIPT_DIR/source/exvius/macos_emulator.py" browser --lan
+ROOT_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+python3 "$ROOT_DIR/source/exvius/macos_emulator.py" browser --lan
 result=$?
 if [ "$result" -ne 0 ]; then
     printf '\nPress Return to close this window.\n'

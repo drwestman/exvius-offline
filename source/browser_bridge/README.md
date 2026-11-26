@@ -41,7 +41,7 @@ still fail setup. Do not run the whole setup command with `sudo`.
 
 ### Start playing
 
-Double-click **Play Exvius in Browser.command** for subsequent launches. Keep its
+Double-click **`scripts/Play_Exvius_in_Browser.command`** for subsequent launches. Keep its
 terminal open. It opens a tab on the Mac and prints the LAN URL and an eight-digit
 access code. Open that URL from a device on the same home network, enter the code,
 then tap **Play** to enable sound and video. One player can connect at a time.
