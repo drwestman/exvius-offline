@@ -17,13 +17,13 @@
     "@yume-chan/adb-server-node-tcp": "2.5.2",
     "@yume-chan/scrcpy": "2.3.0",
     "@yume-chan/scrcpy-decoder-webcodecs": "2.5.0",
-    "ws": "8.22.1",
+    "ws": "8.23.0",
     "@yume-chan/stream-extra": "2.6.1"
   },
   "devDependencies": {
     "@playwright/test": "1.65.1",
     "@types/node": "22.19.0",
-    "@types/ws": "8.18.1",
+    "@types/ws": "8.18.2",
     "esbuild": "0.28.2",
     "typescript": "5.9.3"
   }
