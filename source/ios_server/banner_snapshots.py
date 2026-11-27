@@ -66,9 +66,9 @@ class Banners:
         return out
 
 
-def collect(config):
+def collect(config, *, pipeline: int | None = None):
     try:
-        return banner_inputs.collect(config)
+        return banner_inputs.collect(config, pipeline=pipeline)
     except (KeyError, TypeError, AttributeError) as exc:
         raise ValueError(f'Invalid summon artwork metadata: {exc}') from exc
 
@@ -161,10 +161,11 @@ def verify(config):
         return {'ok': False, 'scope': SCOPE, 'error': str(exc), 'gameplay_ready': False}
 
 
-def prepare(config):
+def prepare(config, *, renderer: banner_fit.BannerFrameRenderer | None = None):
     with InstanceLock(config.root):
         old = load(config)
-        inputs = collect(config)
+        active_renderer = banner_fit.DEFAULT_RENDERER if renderer is None else renderer
+        inputs = collect(config, pipeline=active_renderer.pipeline)
         if old is not None and old.manifest['fingerprint'] == inputs.fingerprint:
             if old.manifest['sources'] != inputs.sources or old.manifest['source_root'] != str(config.data):
                 raise ValueError('Invalid summon snapshot provenance')
@@ -172,13 +173,19 @@ def prepare(config):
         generation = old.manifest['generation'] + 1 if old else 1
         if generation > 99999999:
             raise ValueError('Summon artwork generation is out of range')
+        modes = tuple(banner_fit.FRAMES)
         entries, outputs = {}, {}
         for name, raw in inputs.images.items():
-            for mode in banner_fit.FRAMES:
-                image = banner_fit.render(raw, mode)
+            original = inputs.sources['images'][name]
+            size = (original['width'], original['height'])
+            seen = set()
+            for frame in active_renderer.render_frames(raw, modes):
+                mode = frame.mode
+                if mode not in banner_fit.FRAMES or mode in seen:
+                    raise ValueError('Fitted summon image returned unexpected frame mode')
+                seen.add(mode)
+                image = frame.raw
                 sha = digest(image); width, height = banner_fit.inspect(image)
-                original = inputs.sources['images'][name]
-                size = (original['width'], original['height'])
                 if ((width, height) != banner_fit.dimensions(size, mode)
                         or (width, height) == size and sha != original['sha256']):
                     raise ValueError('Fitted summon image disagrees with its source dimensions')
@@ -186,6 +193,8 @@ def prepare(config):
                 entries[key] = {'source': name, 'mode': mode, 'path': PREFIX + 'ios-fit-' + sha + '.png',
                                 'sha256': sha, 'size': len(image), 'width': width, 'height': height}
                 outputs[key] = image
+            if seen != set(modes):
+                raise ValueError('Fitted summon image missed required frame modes')
         doc = {'version': 1, 'scope': SCOPE, 'source_root': str(config.data), 'generation': generation,
                'fingerprint': inputs.fingerprint, 'sources': inputs.sources, 'images': entries}
         directory = _publish(config, doc, outputs, pointer_name=POINTER, entries=entries)

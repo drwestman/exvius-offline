@@ -1,5 +1,6 @@
 """BDD for SOLID/CQRS iOS data updater, flat & managed layouts, and compatibility normalization."""
 import copy
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
 import io
 import json
@@ -467,6 +468,26 @@ class SnapshotOrchestrationTests(unittest.TestCase):
             result = handler.execute(self.config, self.manifest, emit=lambda _m: None)
         self.assertFalse(result['ok'])
         self.assertIn('checksum gate failed', result['error'])
+
+    def test_given_successful_or_failed_update_when_invoked_via_cli_then_stderr_reports_only_real_failures(self):
+        out, err = io.StringIO(), io.StringIO()
+        ok_status = {'ok': True, 'update_needed': True, 'updated_now': True, 'error': None}
+        with patch('ios_server.update_commands.run_update', return_value=ok_status), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = cli.main(['update', '--root', str(self.config.root), '--data', str(self.config.data),
+                             '--manifest', str(self.manifest)])
+        self.assertEqual(code, 0)
+        self.assertEqual(err.getvalue(), '')
+        self.assertTrue(json.loads(out.getvalue())['ok'])
+
+        out, err = io.StringIO(), io.StringIO()
+        fail_status = {'ok': False, 'update_needed': True, 'updated_now': True, 'error': 'Final gate failed'}
+        with patch('ios_server.update_commands.run_update', return_value=fail_status), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = cli.main(['update', '--root', str(self.config.root), '--data', str(self.config.data),
+                             '--manifest', str(self.manifest)])
+        self.assertEqual(code, 1)
+        self.assertEqual(err.getvalue().strip(), 'Final gate failed')
 
 
 if __name__ == '__main__':

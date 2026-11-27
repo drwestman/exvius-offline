@@ -69,7 +69,7 @@ def main(argv=None) -> int:
             from ios_server.update_commands import run_update
             manifest = args.manifest if args.manifest is not None else pack_manifest.DEFAULT
             result = run_update(config, manifest, archive_dir=args.archive_dir)
-            if not result.get('ok') or 'error' in result:
+            if not result.get('ok') or result.get('error') is not None:
                 print(result.get('error') or 'Update failed.', file=sys.stderr, flush=True)
         elif args.command in ('setup', 'stop', 'init-campaign'):
             from ios_server.commands import lifecycle
