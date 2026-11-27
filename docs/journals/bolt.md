@@ -25,3 +25,7 @@
 ## 2026-11-26 - Vortex gate reads build the full summon plan
 **Learning:** A fourteen-process native gate projection baseline measured 703 ms cold and 27.2 ms warm under the canonical request lock. Cold profiling attributed 630 ms to `revival_summons.event_context()` and its full `plan()` path, including 1,342 offer-identity encodings, although the gate only reads replay week, window, holiday, and anchor facts.
 **Action:** Route only the event-gate projection through narrow replay-calendar facts. Keep full summon plans for exchanges and other consumers, fall back when the active holiday lacks event-history coverage, and do not cache campaign- or time-dependent facts across requests.
+
+## 2026-11-27 - PNG encoding dominates summon-art preparation
+**Learning:** Three fresh-root preparations of the current iOS summon-art corpus each took about 122 seconds. A focused profile attributed about 89% of its measured frame-render time to PNG encoding; source discovery was about one second for the full inventory. A temporary level-6 encoder probe preserved decoded pixels on its sample but increased output bytes by 4.55%.
+**Action:** Profile the encoder before optimizing artwork scans or source decoding. Any PNG-setting change must pass whole-corpus pixel parity and a strict output-size budget, and must bump `banner_fit.PIPELINE` so existing snapshots cannot be reused silently.

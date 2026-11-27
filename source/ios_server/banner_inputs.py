@@ -49,7 +49,10 @@ class Inputs:
     fingerprint: str
 
 
-def collect(config):
+def collect(config, *, pipeline: int | None = None):
+    active_pipeline = banner_fit.DEFAULT_RENDERER.pipeline if pipeline is None else pipeline
+    if type(active_pipeline) is not int or active_pipeline < 1:
+        raise ValueError('Invalid summon renderer pipeline')
     env = config.engine_environment()
     docs, hashes = {}, {}
     for name in DOCUMENTS:
@@ -94,6 +97,6 @@ def collect(config):
         records[name] = {'path': str(selected.relative_to(config.data)), 'sha256': hashlib.sha256(raw).hexdigest(),
                          'width': size[0], 'height': size[1]}
     sources = {'documents': hashes, 'images': records, 'missing': missing, 'requested': wanted,
-               'banners': count, 'pipeline': banner_fit.PIPELINE, 'pillow': version('Pillow')}
+               'banners': count, 'pipeline': active_pipeline, 'pillow': version('Pillow')}
     fingerprint = hashlib.sha256(json.dumps(sources, sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
     return Inputs(images, sources, fingerprint)
