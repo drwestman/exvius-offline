@@ -17,3 +17,11 @@
 ## 2026-11-24 - Native News list builds unused detail projections
 **Learning:** The `CQ4jTm2F` native list query runs under the canonical `STATE_LOCK`. `revival_notices.add_rows()` builds a full summary for every retained week, then uses only its caption; an eight-week synthetic baseline measured about 53 ms warm and profiled eight summon plans, eight event plans, and roughly 116,000 recursive copy calls.
 **Action:** Keep native captions as a read-only projection separate from HTML summaries, and do not retain campaign- or time-dependent notice results across requests.
+
+## 2026-11-25 - Support reads rebuild the full simulated friend catalogue twice
+**Learning:** The iOS `GetReinforcementInfoRequest` reply adapter calls `friend_list` and `friend_reinforcements`; each independently builds all 200 generated peers. A disposable 15-friend/10-suggestion baseline measured 9.29 ms warm and profiled 400 `CompanionDirectory.by_id()` calls although both reply views needed the same request-local rows.
+**Action:** Share one targeted request-local friend projection across the two iOS read views. Keep the full catalogue API for other callers and avoid cross-request caching of roster- or replay-dependent eligibility.
+
+## 2026-11-26 - Vortex gate reads build the full summon plan
+**Learning:** A fourteen-process native gate projection baseline measured 703 ms cold and 27.2 ms warm under the canonical request lock. Cold profiling attributed 630 ms to `revival_summons.event_context()` and its full `plan()` path, including 1,342 offer-identity encodings, although the gate only reads replay week, window, holiday, and anchor facts.
+**Action:** Route only the event-gate projection through narrow replay-calendar facts. Keep full summon plans for exchanges and other consumers, fall back when the active holiday lacks event-history coverage, and do not cache campaign- or time-dependent facts across requests.

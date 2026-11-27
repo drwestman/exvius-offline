@@ -300,8 +300,10 @@ def serve_friends(spec, reply_id=None):
         if State.player is None:
             return spec
         from exvius_actions_arena import friend_list, friend_reinforcements
-        out = friend_list(spec, {})
-        return friend_reinforcements(out, {}) if reply_id == REINFORCE_REPLY else out
+        from revival_friends import read_model
+        model = read_model(State.player.data)
+        out = friend_list(spec, {}, model)
+        return friend_reinforcements(out, {}, model) if reply_id == REINFORCE_REPLY else out
     try:
         friends = load_friends()
     except (ValueError, OSError) as error:

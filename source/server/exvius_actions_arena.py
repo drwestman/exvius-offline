@@ -337,8 +337,10 @@ def clsm_end(spec, req):
     return end(spec, req)
 
 
-def _friends():
+def _friends(model=None):
     from engine_profile import current_profile
+    if model is not None:
+        return model[0], model[1]
     if current_profile().replay is not None:
         from revival_friends import catalogue, state_view
         catalog = catalogue(State.player.data)
@@ -492,20 +494,21 @@ def friend_suggest(spec, req):
     return _friend_reply(spec, 'f6yGgCj2', _suggestions(catalog, state))
 
 
-def _suggestions(catalog, state):
+def _suggestions(catalog, state, ids=None):
     own = str(State.player.data["identity"]["user_id"])
     from engine_profile import current_profile
     if current_profile().replay is not None:
         from revival_friends import suggestion_ids
-        ids = suggestion_ids(State.player.data)
+        if ids is None:
+            ids = suggestion_ids(State.player.data)
         catalog = {fid: catalog[fid] for fid in ids if fid in catalog}
     return [(friend, _friend_row(friend, {}, 5)) for fid, friend in catalog.items()
             if fid != own and state["relations"].get(fid, {}).get("type", 0) == 0]
 
 
-def friend_list(spec, req):
+def friend_list(spec, req, model=None):
     """Read projection needed so a later list refresh cannot undo these actions."""
-    catalog, state = _friends()
+    catalog, state = _friends(model)
     out = _out(spec)
     for category, tag in ((1, "56gJBnVh"), (2, "hZR64mDe"), (3, "9Qt5cI0n")):
         rows = [(friend, _friend_row(friend, state["relations"][fid]))
@@ -513,14 +516,15 @@ def friend_list(spec, req):
         out = _friend_reply(out, tag, rows)
     from engine_profile import current_profile
     if current_profile().replay is not None:
-        out = _friend_reply(out, 'f6yGgCj2', _suggestions(catalog, state))
+        out = _friend_reply(out, 'f6yGgCj2', _suggestions(
+            catalog, state, model[2] if model is not None else None))
     elif _writable() and "exvius_friends" not in State.player.data:
         _save_friends(state)
     return _ope(_refresh(out))
 
 
-def friend_reinforcements(spec, req):
-    catalog, state = _friends()
+def friend_reinforcements(spec, req, model=None):
+    catalog, state = _friends(model)
     rows = [(friend, _reinforce_row(friend)) for fid, friend in catalog.items()
             if state["relations"].get(fid, {}).get("type") == 1]
     out = _out(spec)
