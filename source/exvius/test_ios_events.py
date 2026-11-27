@@ -1,8 +1,11 @@
 """BDD for the iOS replay Vortex and exchange shops; no production saves or listeners."""
+from concurrent.futures import ThreadPoolExecutor
 import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import random
 import sys
+from types import SimpleNamespace
 import unittest
 import json
 from unittest.mock import patch
@@ -171,6 +174,165 @@ class ReplayEventBehavior(unittest.TestCase):
             with self.subTest(raw=raw), patch.object(Path, 'read_text', return_value=raw):
                 with self.assertRaisesRegex(ValueError, 'Invalid pinned event history'):
                     events.history()
+
+    def test_given_gate_planner_when_compared_with_full_planner_then_output_and_windows_match(self):
+        from revival_update import initialize
+        rows = [
+            event(100, '2016-10-26'),
+            event(101, '2017-11-15'),
+            event(200, group='permanent', name='Chamber', art_url='same'),
+            event(201, group='permanent', name='Chamber', art_url='same'),
+            event(905, group='permanent', name='Cactuar', art_url='cactuar'),
+            event(102, group='permanent', name='Cactuar', art_url='cactuar'),
+            event(906, '2016-12-23', name='Christmas event'),
+            event(708, group='permanent', missions=[str(mid) for mid in range(7080101, 7080111)]),
+        ]
+        spec = {'0xkoNP8U': [{'uv60hgDW': str(row['area']), 'qo3PECw6': row['first_mission']} for row in rows]}
+        christmas = datetime(2026, 12, 31, 12, tzinfo=timezone.utc)
+        finished_now = datetime(2031, 11, 16, 12, tzinfo=timezone.utc)
+        updated_data = campaign()
+        initialize(updated_data)
+        cases = [
+            ('active', campaign(), NOW),
+            ('updated', updated_data, NOW),
+            ('holiday', campaign(christmas), christmas),
+            ('finished', campaign(), finished_now),
+        ]
+        for label, data, moment in cases:
+            with self.subTest(case=label):
+                oracle = events.plan(data, moment, rows=rows, art={})
+                gate = events.plan_for_gate(data, moment, rows=rows, art={})
+                self.assertEqual(gate.events, oracle.events)
+                self.assertEqual(gate.areas, oracle.areas)
+                self.assertEqual(gate.known_areas, oracle.known_areas)
+                self.assertEqual(
+                    json.dumps(gate.gate_windows(spec), sort_keys=True),
+                    json.dumps(oracle.gate_windows(spec), sort_keys=True),
+                )
+                for row in rows:
+                    mission = {'uv60hgDW': str(row['area']), 'qo3PECw6': row['first_mission']}
+                    self.assertEqual(gate.can_enter(data, mission), oracle.can_enter(data, mission))
+
+    def test_given_active_holiday_with_event_keys_when_serving_gate_source_then_skip_summon_catalogue(self):
+        import event_availability as availability
+        christmas = datetime(2026, 12, 24, 12, tzinfo=timezone.utc)
+        data = campaign(christmas)
+        rows = (
+            event(906, '2016-12-23', name='Christmas event'),
+            event(905, group='permanent', name='Cactuar', art_url='cactuar'),
+            event(102, group='permanent', name='Cactuar', art_url='cactuar'),
+        )
+        player = SimpleNamespace(data=data, switches={}, mode='frozen', dirty=False)
+        oracle = events.plan(data, christmas, rows=rows, art={})
+        self.assertEqual(oracle.context['holiday'], 'Christmas')
+        with patch.object(events, 'catalogue', return_value=rows), \
+             patch.object(events, '_art', return_value={}), \
+             patch.object(summons, 'clock', return_value=christmas), \
+             patch.object(summons, 'plan', side_effect=AssertionError('summons.plan called')), \
+             patch.object(summons, 'catalogue', side_effect=AssertionError('summons.catalogue called')), \
+             patch.object(summons, '_catalogue_offer_identities',
+                          side_effect=AssertionError('_catalogue_offer_identities called')):
+            source = availability.ReplayAvailability().gate_source(player)
+        self.assertEqual(
+            source.facts,
+            [(row['area'], row['first_dungeon'], row['first_mission']) for row in oracle.events],
+        )
+        self.assertEqual(list(source.archive_events), list(oracle.events))
+        # Also verify Dependency Inversion via an explicit custom provider collaborator.
+        seen_calls = []
+        def custom_provider(d, now, event_keys):
+            seen_calls.append((d is data, now, sorted(event_keys)))
+            return summons.gate_calendar_facts(d, now, event_keys)
+        with patch.object(events, 'catalogue', return_value=rows), \
+             patch.object(events, '_art', return_value={}), \
+             patch.object(summons, 'clock', return_value=christmas):
+            injected = availability.ReplayAvailability(facts_provider=custom_provider).gate_source(player)
+        self.assertEqual(len(seen_calls), 1)
+        self.assertTrue(seen_calls[0][0])
+        self.assertEqual(injected.facts, source.facts)
+
+    def test_given_holiday_week_without_event_keys_when_planning_gate_then_fall_back_to_full_context(self):
+        christmas = datetime(2026, 12, 24, 12, tzinfo=timezone.utc)
+        data = campaign(christmas)
+        rows = [
+            event(905, group='permanent', name='Cactuar', art_url='cactuar'),
+            event(102, group='permanent', name='Cactuar', art_url='cactuar'),
+        ]
+        self.assertIsNone(summons.gate_calendar_facts(data, christmas, {}))
+        oracle = events.plan(data, christmas, rows=rows, art={})
+        self.assertEqual(oracle.context['holiday'], 'Christmas')
+        fallback_calls = []
+        real_event_context = summons.event_context
+        def spy_event_context(*args, **kwargs):
+            fallback_calls.append(args)
+            return real_event_context(*args, **kwargs)
+        with patch.object(summons, 'event_context', side_effect=spy_event_context):
+            gate = events.plan_for_gate(data, christmas, rows=rows, art={})
+        self.assertEqual(len(fallback_calls), 1)
+        self.assertEqual(gate.events, oracle.events)
+        self.assertEqual(gate.context['holiday'], oracle.context['holiday'])
+        self.assertEqual(gate.areas, oracle.areas)
+
+    def test_given_missing_or_malformed_anchor_when_planning_gate_then_preserve_provisional_and_validation(self):
+        rows = [event(100, '2016-10-26'), event(104, group='permanent')]
+        unanchored = {}
+        oracle = events.plan(unanchored, NOW, rows=rows, art={})
+        gate = events.plan_for_gate(unanchored, NOW, rows=rows, art={})
+        self.assertEqual(gate.events, oracle.events)
+        self.assertFalse(gate.can_enter(unanchored, {'uv60hgDW': '100', 'qo3PECw6': '1000101'}))
+        self.assertTrue(gate.can_enter(unanchored, {'uv60hgDW': '1', 'qo3PECw6': '1'}))
+        self.assertEqual(unanchored, {})
+
+        broken = campaign()
+        broken['ios_revival']['replay']['anchor_week'] = 'broken'
+        with self.assertRaisesRegex(ValueError, 'Invalid iOS replay anchor'):
+            events.plan_for_gate(broken, NOW, rows=rows, art={})
+
+    def test_given_changed_state_or_time_when_repeating_gate_projection_then_never_cache_facts(self):
+        from revival_update import initialize
+        rows = [
+            event(100, '2016-10-26'),
+            event(101, '2017-11-15'),
+            event(711, group='permanent'),
+        ]
+        first_data = campaign(NOW)
+        shifted_data = campaign(NOW - timedelta(weeks=20))
+        updated_data = campaign(NOW)
+        initialize(updated_data)
+        sequence = [
+            (first_data, NOW),
+            (shifted_data, NOW),
+            (updated_data, NOW),
+            (first_data, NOW + timedelta(weeks=1)),
+        ]
+        for data, moment in sequence:
+            gate = events.plan_for_gate(data, moment, rows=rows, art={})
+            oracle = events.plan(data, moment, rows=rows, art={})
+            self.assertEqual(gate.events, oracle.events)
+            self.assertEqual(gate.areas, oracle.areas)
+
+    def test_given_concurrent_gate_queries_when_running_in_parallel_then_each_matches_its_own_oracle(self):
+        from revival_update import initialize
+        rows = tuple(events.catalogue())
+        updated = campaign(NOW)
+        initialize(updated)
+        inputs = [
+            (campaign(NOW), NOW),
+            (campaign(NOW), NOW + timedelta(weeks=1)),
+            (campaign(NOW - timedelta(weeks=12)), NOW),
+            (updated, NOW),
+            ({}, NOW),
+        ]
+        oracles = [events.plan(data, moment, rows=rows) for data, moment in inputs]
+        def run_one(item):
+            data, moment = item
+            return events.plan_for_gate(data, moment, rows=rows)
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            results = list(pool.map(run_one, inputs * 3))
+        for index, result in enumerate(results):
+            oracle = oracles[index % len(inputs)]
+            self.assertEqual(result.events, oracle.events)
+            self.assertEqual(result.known_areas, oracle.known_areas)
 
 
 class ReplayExchangeBehavior(unittest.TestCase):
@@ -469,6 +631,120 @@ with patch.object(summons, 'clock', return_value=datetime(2026, 12, 1, 4, 59, tz
     assert receipt_key('940000000', offer) == november
 with patch.object(summons, 'clock', return_value=datetime(2026, 12, 1, 5, tzinfo=timezone.utc)):
     assert receipt_key('940000000', offer) != november
+''')
+
+    def test_given_saved_campaign_when_serving_event_gate_read_only_and_restarting_then_parity_and_retry_hold(self):
+        self.run_engine('''
+import os
+import random
+import subprocess
+import textwrap
+import event_availability as availability
+import revival_events as events
+from test_ios_events import event
+from ffbe_player import serve_event_gate
+from ffbe_config import EVENT_GATE_CARRIERS, EVENT_GATE_TAG
+
+rows = (event(100, '2016-10-26'), event(101, '2017-11-15'))
+mid = '1000101'
+server.State.replies['jnw49dUq@' + mid] = {'an6TB4WS': [{'qo3PECw6': mid, 'gou39JeI': '0'}]}
+payload = {'1zTjkp5B': [{'6uIYE15X': mid}]}
+carrier = {EVENT_GATE_TAG: [{'uv60hgDW': '101', 'qo3PECw6': '1010101'},
+                            {'uv60hgDW': '1', 'qo3PECw6': '1'}]}
+original_carrier = copy.deepcopy(carrier)
+
+def full_oracle_gate(spec, reply_id):
+    def full_gate_source(_self, player_obj):
+        revival = events.plan(player_obj.data)
+        selected = revival.events
+        missions = {m for ev in selected for m in ev['missions']}
+        order = {str(r['area']): i for i, r in enumerate(selected)}
+        return availability.GateSource(
+            [(r['area'], r['first_dungeon'], r['first_mission']) for r in selected], selected,
+            serve_when_empty=True, rewrites=True,
+            prune=lambda rs: [r for r in rs if str(r.get('uv60hgDW')) not in revival.known_areas or
+                              (str(r.get('uv60hgDW')) in revival.areas and str(r.get('qo3PECw6')) in missions)],
+            order=lambda rs: sorted(rs, key=lambda r: order.get(str(r.get('uv60hgDW')), len(order))),
+            window=lambda sp, chosen: revival.gate_windows(sp))
+    with patch.object(availability.ReplayAvailability, 'gate_source', full_gate_source):
+        return serve_event_gate(copy.deepcopy(spec), reply_id)
+
+with patch.object(events, 'catalogue', return_value=rows), \
+     patch.object(summons, 'clock', return_value=NOW):
+    before, saved = copy.deepcopy(player.data), config.state_file.read_bytes()
+    rng_before = random.getstate()
+    with patch.object(type(player), 'save', side_effect=AssertionError('gate query saved')), \
+         patch.object(summons, 'plan', side_effect=AssertionError('gate query built summon plan')):
+        fast_result = serve_event_gate(copy.deepcopy(carrier), EVENT_GATE_CARRIERS[0])
+    assert player.data == before and config.state_file.read_bytes() == saved
+    assert random.getstate() == rng_before
+    assert carrier == original_carrier
+    oracle_result = full_oracle_gate(carrier, EVENT_GATE_CARRIERS[0])
+    assert json.dumps(fast_result).encode('utf-8') == json.dumps(oracle_result).encode('utf-8')
+    assert request('DungeonResourceLoadMstListRequest', payload)
+    attempt = copy.deepcopy(player.data['exvius_repeat']['attempt'])
+    assert attempt['mid'] == mid and attempt['status'] == 'pending'
+    player.save(str(config.state_file))
+
+engine.close()
+
+restart_script = """
+import copy, json, sys
+from datetime import timedelta
+from pathlib import Path
+from unittest.mock import patch
+sys.path[:0] = sys.argv[1:4]
+from ios_server.config import Configuration
+from ios_server.engine import Engine
+
+config = Configuration(Path(sys.argv[4]), Path(sys.argv[5]))
+engine = Engine(config)
+server = engine.initialize()
+from local_game import LocalGame
+import ffbe_crypto as crypto
+import revival_events as events
+import revival_summons as summons
+from test_ios_events import event
+from test_ios_summons import NOW
+from ffbe_player import serve_event_gate
+from ffbe_config import EVENT_GATE_CARRIERS, EVENT_GATE_TAG
+from exvius_repeat import complete_attempt
+try:
+    player = server.State.player
+    rows = (event(100, '2016-10-26'), event(101, '2017-11-15'))
+    mid = '1000101'
+    attempt = copy.deepcopy(player.data['exvius_repeat']['attempt'])
+    assert attempt['mid'] == mid and attempt['status'] == 'pending'
+    server.State.replies['jnw49dUq@' + mid] = {'an6TB4WS': [{'qo3PECw6': mid, 'gou39JeI': '0'}]}
+    endpoints = json.loads((Path(sys.argv[2]) / 'endpoints.json').read_text())['by_class']
+    endpoint = endpoints['DungeonResourceLoadMstListRequest']
+    key = crypto.key16(endpoint['encode_key'])
+    envelope = {'TEAYk6R1': {'z5hB3P01': endpoint['request_id'], 'ytHoz4E2': '1', '9K0Pzcpd': '1167'},
+                't7n6cVWf': {'qrVcDe48': crypto.cbc_encrypt(key, json.dumps({'1zTjkp5B': [{'6uIYE15X': mid}]}).encode(), double_pad=True)}}
+    rollover = NOW + timedelta(weeks=1)
+    with patch.object(events, 'catalogue', return_value=rows), \\
+         patch.object(summons, 'clock', return_value=rollover), \\
+         patch.object(summons, 'plan', side_effect=AssertionError('gate query built summon plan')):
+        before, saved = copy.deepcopy(player.data), config.state_file.read_bytes()
+        gate = serve_event_gate({EVENT_GATE_TAG: []}, EVENT_GATE_CARRIERS[0])
+        assert {r['uv60hgDW'] for r in gate[EVENT_GATE_TAG]} == {'101'}
+        assert player.data == before and config.state_file.read_bytes() == saved
+    with patch.object(events, 'catalogue', return_value=rows), \\
+         patch.object(summons, 'clock', return_value=rollover), \\
+         patch('revival_daily.clock', return_value=rollover):
+        resp = LocalGame.request(engine, 'POST', endpoint['url'], json.dumps(envelope))
+        assert resp.status == 200 and json.loads(resp.body)['t7n6cVWf']['qrVcDe48']
+        assert player.data['exvius_repeat']['attempt'] == attempt
+        assert complete_attempt(player, mid, False, [], {}, {})['reason'] == 'completed'
+finally:
+    engine.close()
+"""
+env = {k: v for k, v in os.environ.items() if not k.startswith(('FFBE_', 'EXVIUS_', 'STATE_', 'CDN_', 'OUT_'))}
+run = subprocess.run(
+    [sys.executable, '-B', '-c', textwrap.dedent(restart_script), sys.argv[1], sys.argv[2], str(Path(sys.argv[1]) / 'exvius'),
+     str(config.root), str(config.data)],
+    env=env, capture_output=True, text=True, timeout=60)
+assert run.returncode == 0, run.stdout[-2000:] + run.stderr
 ''')
 
 

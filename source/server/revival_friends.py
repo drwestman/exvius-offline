@@ -271,13 +271,33 @@ class CompanionDirectory(Directory):
                           'unit': {'master_id': uid, 'level': level}})
 
 
-def catalogue(data, now=None):
+def catalogue(data, now=None, ids=None):
+    """Full catalogue; `ids` limits only the generated peers that get built."""
     from ffbe_friends import configured_friends
     yaml = {str(f['friend_id']): f for f in configured_friends()}
     directory = CompanionDirectory(data, now)
     curated = {fid: directory.curated(friend) for fid, friend in yaml.items()}
-    generated = {fid: directory.by_id(fid) for fid in directory.ids() if fid not in yaml}
+    wanted = None if ids is None else frozenset(ids)
+    generated = {fid: directory.by_id(fid) for fid in directory.ids()
+                 if fid not in yaml and (wanted is None or fid in wanted)}
     return {fid: friend for fid, friend in {**curated, **generated}.items() if friend is not None}
+
+
+def read_model(data, now=None):
+    """Request-local (catalog, state, suggestion_ids) for friend list/support reads.
+
+    One timestamp feeds both the catalogue and the suggestions. Only generated
+    peers with a visible relation (types 1-3) or a current suggestion are built.
+    Rows and state are read-only; nothing is cached or saved.
+    """
+    now = now if now is not None else clock()
+    settings(data)
+    suggested = suggestion_ids(data, now)
+    relations = data.get('exvius_friends', {}).get('relations', {})
+    wanted = {fid for fid, relation in relations.items() if relation['type'] in (1, 2, 3)}
+    wanted.update(suggested)
+    catalog = catalogue(data, now, ids=wanted)
+    return catalog, state_view(data, catalog), suggested
 
 
 def curated_arena_friends(data):

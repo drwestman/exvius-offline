@@ -118,6 +118,7 @@ class EventPlan:
     events: tuple
     known_areas: frozenset
     context: dict
+    _facts: revival_summons.GateCalendarFacts | None = None
 
     @property
     def areas(self):
@@ -126,7 +127,8 @@ class EventPlan:
     def can_enter(self, data, mission, *, resume=False):
         if not mission or str(mission.get('uv60hgDW')) not in self.known_areas:
             return True  # Story and unrelated modes keep their existing entry contract.
-        if not self.context['summons'].anchored:
+        anchored = self._facts.anchored if self._facts is not None else self.context['summons'].anchored
+        if not anchored:
             return False
         mid = str(mission.get('qo3PECw6'))
         if resume:
@@ -157,21 +159,29 @@ class EventPlan:
                  'missions': len(row['missions']), 'event_windows': copy.deepcopy(row.get('event_windows', []))} for row in self.events]
 
 
-def plan(data, now=None, *, rows=None, summons=None, art=None, until=None):
-    now = now if now is not None else revival_summons.clock()
-    supplied = rows is not None
-    rows = catalogue() if rows is None else rows
-    art = _art() if art is None else art
-    holiday_runs = {str(row['area']): _holiday_runs(row) for row in rows}
+def _event_keys(rows):
     event_keys = {}
-    for runs in holiday_runs.values():
-        for run, name in runs.items():
+    for row in rows:
+        for run, name in _holiday_runs(row).items():
             event_keys.setdefault(name, []).append(run.isoformat())
-    context = revival_summons.event_context(data, now, event_keys, selected=summons)
-    current, week = context['summons'], context['week']
+    return event_keys
+
+
+def _facts_from_context(context):
+    current = context['summons']
+    return revival_summons.GateCalendarFacts(
+        anchored=current.anchored,
+        replay_to=current.window['to'],
+        finished=current.finished,
+        week=context['week'],
+        holiday=context['holiday'],
+    )
+
+
+def _select_events(data, now, rows, art, until, supplied, facts, context):
     from event_calendar import select
-    holiday = context['holiday']
-    number = week.number
+    holiday = facts.holiday
+    number = facts.week.number
     from revival_update import settings as update_settings
     update = update_settings(data)
     kept, extra, permanent = [], [], []
@@ -208,7 +218,7 @@ def plan(data, now=None, *, rows=None, summons=None, art=None, until=None):
     if update:
         from revival_update import document
         mission_dates = document('event_quest_dates.json')['missions']
-        cutoff = current.window['to'] if not current.finished else '9999-12-31'
+        cutoff = facts.replay_to if not facts.finished else '9999-12-31'
         filtered = []
         for row in selected:
             if str(row['area']) == '711':
@@ -224,7 +234,33 @@ def plan(data, now=None, *, rows=None, summons=None, art=None, until=None):
     known = {str(row['area']) for row in rows}
     if not supplied:
         known.update(str(row['area']) for row in history()['added'])
-    return EventPlan(tuple(selected), frozenset(known), context)
+    return EventPlan(tuple(selected), frozenset(known), context, _facts=None if 'summons' in context else facts)
+
+
+def plan(data, now=None, *, rows=None, summons=None, art=None, until=None):
+    now = now if now is not None else revival_summons.clock()
+    supplied = rows is not None
+    rows = catalogue() if rows is None else rows
+    art = _art() if art is None else art
+    context = revival_summons.event_context(data, now, _event_keys(rows), selected=summons)
+    return _select_events(data, now, rows, art, until, supplied, _facts_from_context(context), context)
+
+
+def plan_for_gate(data, now=None, *, rows=None, art=None, until=None, facts_provider=None):
+    """Select Vortex gate events using narrow calendar facts, falling back to full context if incomplete."""
+    now = now if now is not None else revival_summons.clock()
+    supplied = rows is not None
+    rows = catalogue() if rows is None else rows
+    art = _art() if art is None else art
+    event_keys = _event_keys(rows)
+    provider = revival_summons.gate_calendar_facts if facts_provider is None else facts_provider
+    facts = provider(data, now, event_keys)
+    if facts is None:
+        context = revival_summons.event_context(data, now, event_keys)
+        facts = _facts_from_context(context)
+    else:
+        context = {'week': facts.week, 'holiday': facts.holiday}
+    return _select_events(data, now, rows, art, until, supplied, facts, context)
 
 
 def can_enter(data, mission, *, resume=False):

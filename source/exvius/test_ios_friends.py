@@ -244,6 +244,31 @@ assert player.data == before
 assert config.state_file.read_bytes() == saved
 ''')
 
+    def test_given_support_read_when_projected_then_match_full_catalogue_and_build_only_needed_peers(self):
+        self.run_engine('''
+import revival_friends as friends
+before = copy.deepcopy(player.data)
+with patch.object(friends, 'clock', return_value=NOW):
+    full = friends.catalogue(player.data, NOW)
+    calls = []
+    original = friends.Directory.by_id
+    def counting(self, friend_id):
+        calls.append(friend_id)
+        return original(self, friend_id)
+    with patch.object(friends.Directory, 'by_id', counting):
+        catalog, state, suggested = friends.read_model(player.data, NOW)
+    needed = set(friends.accepted_ids(player.data)) | set(suggested)
+    assert set(calls) == {fid for fid in needed if fid in full} | (set(calls) - needed) and set(calls) <= needed, calls
+    assert len(calls) < len(full)
+    assert list(catalog) == [fid for fid in full if fid in catalog]
+    assert all(catalog[fid] == full[fid] for fid in catalog)
+    assert set(suggested) <= set(catalog)
+    assert state['relations'] == friends.state_view(player.data, full)['relations'] or all(
+        state['relations'][fid] == relation for fid, relation in state['relations'].items() if fid in full)
+    assert len(request('GetReinforcementInfoRequest')['pzf5se6V']) == 15
+assert player.data == before
+''')
+
     def test_given_suggested_player_when_added_favorited_removed_and_reloaded_then_persist_once(self):
         self.run_engine('''
 import revival_friends as friends

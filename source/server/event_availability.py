@@ -96,6 +96,9 @@ class AnnualAvailability:
 class ReplayAvailability:
     """iOS revival edition: annual dates plus the saved campaign's dungeon rotation."""
 
+    def __init__(self, facts_provider=None):
+        self._facts_provider = facts_provider
+
     def now(self):
         import revival_summons
         return revival_summons.clock()
@@ -112,8 +115,8 @@ class ReplayAvailability:
         return list(plan(player.data if player else {}, now).events)
 
     def gate_source(self, player):
-        from revival_events import plan
-        revival = plan(player.data)
+        from revival_events import plan_for_gate
+        revival = plan_for_gate(player.data, facts_provider=self._facts_provider)
         events = revival.events
         missions = {mid for event in events for mid in event['missions']}
         order = {str(row['area']): index for index, row in enumerate(events)}

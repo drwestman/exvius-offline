@@ -13,10 +13,11 @@ import json
 from pathlib import Path
 import random
 import re
+from typing import Protocol
 from zoneinfo import ZoneInfo
 
 from engine_profile import IOS_REVIVAL
-from replay_calendar import historical_start, new_anchor, preview, read_anchor, rotation_week
+from replay_calendar import RotationWeek, historical_start, new_anchor, preview, read_anchor, rotation_week
 
 HERE = Path(__file__).resolve().parent
 PERMANENT_NAMES = {'Standard Summon', 'Rare Summon', 'Premium 10+1 Summon',
@@ -304,7 +305,24 @@ class SummonPlan:
                     sets=[{'release': key, 'banners': [row(bid) for bid in ids]} for key, ids in self.sets])
 
 
-def plan(data, now=None, *, banners=None, families=None):
+@dataclass(frozen=True)
+class GateCalendarFacts:
+    """Read-only replay-calendar facts consumed by the Vortex gate projection."""
+    anchored: bool
+    replay_to: str
+    finished: bool
+    week: RotationWeek
+    holiday: str | None
+
+
+class GateCalendarFactsProvider(Protocol):
+    """Narrow collaborator providing replay-calendar facts for event-gate selection."""
+
+    def __call__(self, data: dict, now: datetime | None,
+                 event_keys: dict | None) -> GateCalendarFacts | None: ...
+
+
+def _replay_state(data, now=None):
     now = now if now is not None else clock()
     calendar = preview(data, now)
     anchor, settings = read_anchor(data) or (calendar['anchor_week'], IOS_REVIVAL.replay)
@@ -316,6 +334,35 @@ def plan(data, now=None, *, banners=None, families=None):
     updated = update is not None
     last = max(max(unit_dates(updated).values()), '2024-10-30' if updated else '2024-08-22')
     finished = window['from'] > last
+    return now, calendar, anchor, settings, window, week, update, finished
+
+
+def gate_calendar_facts(data, now=None, event_keys=None):
+    """Compute replay-calendar facts for Vortex gate selection without building the summon catalogue.
+
+    Returns None when the active holiday week has no event-history key so the caller falls back
+    to full `event_context()` for summon-only holiday coverage.
+    """
+    _now, calendar, _anchor, _settings, window, week, _update, finished = _replay_state(data, now)
+    occurrence = _holiday_this_week(week.starts, week.ends)
+    holiday = None
+    if occurrence:
+        name = occurrence[0]
+        if not (event_keys or {}).get(name):
+            return None
+        holiday = name
+    return GateCalendarFacts(
+        anchored=calendar['anchored'],
+        replay_to=window['to'],
+        finished=finished,
+        week=week,
+        holiday=holiday,
+    )
+
+
+def plan(data, now=None, *, banners=None, families=None):
+    now, calendar, anchor, settings, window, week, update, finished = _replay_state(data, now)
+    updated = update is not None
     use_catalogue_cache = banners is None
     banners = catalogue(updated and update['late_banners']) if use_catalogue_cache else banners
     families = {str(b['id']) for b in _standard()} if families is None else families
