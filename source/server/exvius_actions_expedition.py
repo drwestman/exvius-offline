@@ -960,15 +960,24 @@ def party_save(spec, req):
     # authoritative assignments alongside them for actual server-side loading.
     fields = ('equipment', 'materia', 'vision_card', 'skin', 'skin_id',
               'brave_shift', 'shift_equipment', 'shift_materia', 'shift_vision_card')
-    slot['loadouts'] = {p[2]: {k: deepcopy(roster[p[2]].get(k)) for k in fields
-                              if k in roster[p[2]]} for p in members}
+    did = str(node.get('r21y0YzS', party['active_deck']))
+    from engine_profile import current_profile
+    deck_loadouts = party.get('deck_loadouts') if not kind and current_profile().name == 'ios-revival' else None
+    per_deck = deck_loadouts.get(did, {}) if isinstance(deck_loadouts, dict) else None
+    slot['loadouts'] = {
+        p[2]: {
+            k: deepcopy((per_deck.get(p[2], {}) if per_deck is not None else roster[p[2]]).get(k))
+            for k in fields
+            if k in (per_deck.get(p[2], {}) if per_deck is not None else roster[p[2]])
+        }
+        for p in members
+    }
     try:
         decoded, espers = _wire_loadouts(slot, slot['loadouts'], size)
     except (ValueError, TypeError):
         return _refuse(spec, 'invalid saved loadout')
     for iid, values in decoded.items():
         slot['loadouts'][iid].update(values)
-    did = str(node.get('r21y0YzS', party['active_deck']))
     beast_decks = party.get('beast_decks', {}) if kind else State.player.data.get('beast_decks', {})
     slot['espers'] = espers if slot['XZ4Kh7Ic'] else deepcopy(beast_decks.get(did, [0] * size))
     block = deepcopy(_store("party_register"))
@@ -1018,7 +1027,22 @@ def party_load(spec, req):
         return _refuse(spec, 'invalid saved loadout')
     # Some old saves represent ownership only through equipped references. Retain
     # those copies in the established inventory before clearing any assignments.
-    owned = _retain_owned_equipment()
+    from engine_profile import current_profile
+    ios_per_deck = not kind and current_profile().name == 'ios-revival'
+    if ios_per_deck:
+        from revival_party_commands import retain_owned_equipment
+        from revival_party_domain import (
+            LOADOUT_FIELDS,
+            ensure_deck_loadouts_initialized,
+            owned_equipment_counts,
+            owned_materia_counts,
+            owned_vision_card_ids,
+            sync_active_deck_to_roster,
+        )
+        retain_owned_equipment(State.player)
+        deck_loadouts = ensure_deck_loadouts_initialized(State.player.data, roster)
+    else:
+        owned = _retain_owned_equipment()
     deck["members"] = [{"member_type": int(t), "disp_order": int(p), "instance_id": iid} for t, p, iid in pairs]
     party['active_deck'] = int(did)
     if kind == '11':
@@ -1026,64 +1050,86 @@ def party_load(spec, req):
     espers = deepcopy(slot.get('espers', wire_espers))
     beast_owner = party if kind else State.player.data
     beast_owner.setdefault('beast_decks', {})[did] = [e if not e or State.player.owns_beast(e) else 0 for e in espers]
-    for _, _, iid in pairs:
-        saved = slot.get('loadouts', {}).get(iid)
-        if saved is not None:
-            roster[iid].update(deepcopy(saved))
-        else:
-            roster[iid].update(deepcopy(decoded.get(iid, {})))
-    # Restore only copies that still exist. Prioritize the loaded members and
-    # remove conflicting assignments from other units rather than minting gear.
-    gear_left = Counter({r['J1YX9kmM']: int(r['Qy5EvcK1']) for r in owned})
-    materia_left = Counter({r['H5jBL0Vf']: int(r['Qy5EvcK1']) for r in State.player.materia_rows()})
-    cards_left = {str(c['user_vc_id']) for c in State.player.data.get('vision_cards', [])}
-    selected = [p[2] for p in pairs]
-    order = selected + [iid for iid in roster if iid not in selected]
-    for iid in order:
-        unit = roster[iid]
-        used_gear, used_materia, used_cards = Counter(), Counter(), set()
-        for field in ('equipment', 'shift_equipment'):
-            counts = Counter()
-            clean = {}
-            for position, item in (unit.get(field) or {}).items():
-                item = str(item)
-                counts[item] += 1
-                # The same unit's two forms may share owned equipment copies.
-                if item != '0' and counts[item] <= gear_left[item] + used_gear[item]:
-                    clean[position] = item
-                else:
-                    clean[position] = '0'
-            unit[field] = clean
-            needed = Counter(clean.values())
-            for item, count in needed.items():
-                if item == '0':
-                    continue
-                extra = max(0, count - used_gear[item])
-                gear_left[item] -= extra
-                used_gear[item] += extra
-        for field in ('materia', 'shift_materia'):
-            clean, counts = [], Counter()
-            for item in unit.get(field) or []:
-                item = str(item)
-                counts[item] += 1
-                clean.append(item if item != '0' and counts[item] <= materia_left[item] + used_materia[item] else '0')
-            unit[field] = clean
-            for item, count in Counter(clean).items():
-                if item != '0':
-                    extra = max(0, count - used_materia[item])
-                    materia_left[item] -= extra
-                    used_materia[item] += extra
-        for field in ('vision_card', 'shift_vision_card'):
-            card = str(unit.get(field) or '')
-            instance = card.split('-')[-1] if card else ''
-            unit[field] = card if instance == '0' or instance in cards_left or instance in used_cards else ''
-            if unit[field]:
-                cards_left.discard(instance)
-                used_cards.add(instance)
+
+    if ios_per_deck:
+        deck_map = {}
+        for _, _, iid in pairs:
+            saved = slot.get('loadouts', {}).get(iid)
+            source = saved if saved is not None else decoded.get(iid, {})
+            deck_map[iid] = {k: deepcopy(source[k]) for k in LOADOUT_FIELDS if k in source}
+        _, eq_counts = owned_equipment_counts(State.player.data)
+        _, mat_counts = owned_materia_counts(State.player.data)
+        gear_left = Counter(eq_counts)
+        materia_left = Counter(mat_counts)
+        cards_left = owned_vision_card_ids(State.player.data)
+        selected = [p[2] for p in pairs]
+        for iid in selected:
+            _clamp_unit_loadout_ownership(deck_map[iid], gear_left, materia_left, cards_left)
+        deck_loadouts[did] = deck_map
+        sync_active_deck_to_roster(State.player.data)
+    else:
+        for _, _, iid in pairs:
+            saved = slot.get('loadouts', {}).get(iid)
+            if saved is not None:
+                roster[iid].update(deepcopy(saved))
+            else:
+                roster[iid].update(deepcopy(decoded.get(iid, {})))
+        # Restore only copies that still exist. Prioritize the loaded members and
+        # remove conflicting assignments from other units rather than minting gear.
+        gear_left = Counter({r['J1YX9kmM']: int(r['Qy5EvcK1']) for r in owned})
+        materia_left = Counter({r['H5jBL0Vf']: int(r['Qy5EvcK1']) for r in State.player.materia_rows()})
+        cards_left = {str(c['user_vc_id']) for c in State.player.data.get('vision_cards', [])}
+        selected = [p[2] for p in pairs]
+        order = selected + [iid for iid in roster if iid not in selected]
+        for iid in order:
+            _clamp_unit_loadout_ownership(roster[iid], gear_left, materia_left, cards_left)
     block = deepcopy(_store("party_register"))
     block["last_load"] = {"slot": _slot_key(node), "deck": did, "party_type": kind or '1'}
     _put("party_register", block)
     return _out(_refresh(spec), **{"0wV1vDmK": [_slot_row(slot)]})
+
+
+def _clamp_unit_loadout_ownership(unit: dict, gear_left: Counter, materia_left: Counter, cards_left: set) -> None:
+    """Strip unowned or excess item references from one unit/deck loadout in place."""
+    used_gear, used_materia, used_cards = Counter(), Counter(), set()
+    for field in ('equipment', 'shift_equipment'):
+        counts = Counter()
+        clean = {}
+        for position, item in (unit.get(field) or {}).items():
+            item = str(item)
+            counts[item] += 1
+            # The same unit's two forms may share owned equipment copies.
+            if item != '0' and counts[item] <= gear_left[item] + used_gear[item]:
+                clean[position] = item
+            else:
+                clean[position] = '0'
+        unit[field] = clean
+        needed = Counter(clean.values())
+        for item, count in needed.items():
+            if item == '0':
+                continue
+            extra = max(0, count - used_gear[item])
+            gear_left[item] -= extra
+            used_gear[item] += extra
+    for field in ('materia', 'shift_materia'):
+        clean, counts = [], Counter()
+        for item in unit.get(field) or []:
+            item = str(item)
+            counts[item] += 1
+            clean.append(item if item != '0' and counts[item] <= materia_left[item] + used_materia[item] else '0')
+        unit[field] = clean
+        for item, count in Counter(clean).items():
+            if item != '0':
+                extra = max(0, count - used_materia[item])
+                materia_left[item] -= extra
+                used_materia[item] += extra
+    for field in ('vision_card', 'shift_vision_card'):
+        card = str(unit.get(field) or '')
+        instance = card.split('-')[-1] if card else ''
+        unit[field] = card if instance == '0' or instance in cards_left or instance in used_cards else ''
+        if unit[field]:
+            cards_left.discard(instance)
+            used_cards.add(instance)
 
 
 HANDLERS = {

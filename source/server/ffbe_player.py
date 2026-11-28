@@ -319,6 +319,11 @@ def apply_party_edit(plaintext: str | None) -> None:
     """
     if not plaintext or State.player is None:
         return
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_party_commands import handle_party_deck_edit
+        handle_party_deck_edit(plaintext)
+        return
     if State.player.mode == "frozen":
         _note("apply_party_edit: frozen state policy -- deck edit not applied")
         return

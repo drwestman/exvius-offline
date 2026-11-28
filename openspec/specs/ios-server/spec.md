@@ -2300,3 +2300,42 @@ upfront CPKs through to `capture_server.py`.
 - Then the drifted upfront CPK is bumped into the managed version namespace, staged under `assets/upfront/blobs/`, and advertised in `F_RESOURCE_VERSION_MST_LOCALIZE` and `F_RESOURCE_CHECKSUM_MST`
 - And unchanged tables, sound banks, and Vortex pack retain their prior versions
 - And GET/HEAD for the bumped path returns 200 while the stock version returns 404.
+
+### Requirement: ManagePartyEditAndEquipPersistence
+
+Under `ios-revival`, `PartyDeckEditRequest` (`TS5Dx9aZ`) and `UnitEquipRequest` (`pB3st6Tg`)
+SHALL execute within atomic `revival_battle_commands.settle` transactions (retaining the
+previous state and save bytes on validation or persistence failure), preserve `legacy`
+behavior untouched, and keep action-scoped projections symmetric across the `Manage Party`
+exit sequence (`mRPo5n2j` -> `TS5Dx9aZ` -> `pB3st6Tg`). Specifically, `mRPo5n2j` SHALL omit
+all player groups, `TS5Dx9aZ` SHALL omit clear-and-rebuild unit and equipment groups
+(`B71MekS8`, `TJ9eL80N`, `DW7uH6Mn`, `VE7KZ8CY`, `wc8vSHPS`, `IqkX0gV1`), and `pB3st6Tg`
+SHALL omit clear-and-rebuild party-deck, esper-deck, and active-deck groups (`5Eb0Rig6`,
+`fqTUI1z6`, `GV7Ej6n0`, `zeucwm6H`, `49rQB3fP`, `REbh19u0`, `qVX5Lab8`, `g8ZuTVvQ`, `8PEB5o7G`).
+`UnitEquipRequest` (`Er92Kdhm`) SHALL parse `;`-delimited multi-deck `r21y0YzS` lists and
+parallel `;`-delimited per-deck loadout strings (with `,`-separated units and optional `|`
+Brave Shift forms), skip and log unsupported `xBi3L6yR` rows without discarding valid
+Normal Party updates, retain inferred starter equipment before replacement, store Normal Party
+loadouts per `(deck_id, unit_instance_id)` under `party.deck_loadouts` (migrating pre-existing
+decks from `roster` before first overwrite, mirroring the complete `active_deck` loadout
+set back to `roster` including clearing absent fields, and synchronizing `party_load`/`party_save`
+plus shop sale/craft worn accounting), keep Arena `IqkX0gV1` on single-row-per-unit active-deck
+projections via `arena_equip_rows`, project `TJ9eL80N` rows tagged with each normal deck's
+`r21y0YzS` alongside reconciled `MBPCGT84`/`rL81fVUI` ownership counts, and emit structured
+diagnostics on invalid or unowned items. Projection helpers SHALL remain strictly read-only
+with zero state or filesystem writes, and command/query modules SHALL share pure domain logic
+through `revival_party_domain.py` without command-to-query imports.
+
+- **Implementation**: `owned_equipment_counts::source/server/revival_party_domain.py`, `sync_active_deck_to_roster::source/server/revival_party_domain.py`, `MultiDeckWireLoadoutParser::source/server/revival_party_commands.py`, `OwnershipValidator::source/server/revival_party_commands.py`, `PerDeckLoadoutStore::source/server/revival_party_commands.py`, `apply_unit_equip::source/server/revival_party_commands.py`, `apply_party_deck_edit::source/server/revival_party_commands.py`, `filter_reply_groups::source/server/revival_party_projections.py`, `PerDeckEquipmentStrategy::source/server/revival_party_projections.py`, `reconcile_equipped_counts::source/server/revival_party_projections.py`, `reconcile_materia_counts::source/server/revival_party_projections.py`, `project_equip_rows::source/server/revival_party_projections.py`, `arena_equip_rows::source/server/player_state.py`, `party_load::source/server/exvius_actions_expedition.py`, `item_sell::source/server/exvius_actions_shops.py`, `reply_pipeline::source/server/ffbe_pipeline.py`
+
+#### Scenario: Multi-deck Manage Party exit saves Party 2 equipment across reload without dropping Party 1
+
+- Given an initialized `ios-revival` save with units across Party 1, Party 2, and Party 3
+- When `mRPo5n2j`, `TS5Dx9aZ` (switching `active_deck` to `"2"`), and `pB3st6Tg` (carrying `"xBi3L6yR": "1"`, `"r21y0YzS": "1;2"`, and `;`-delimited equipment, materia, vision card, and skin segments) run in sequence
+- Then `TS5Dx9aZ` omits `TJ9eL80N` and `B71MekS8`, `pB3st6Tg` omits `5Eb0Rig6`, `49rQB3fP`, and `8PEB5o7G`, `TJ9eL80N` preserves `r21y0YzS="0"` rows for Party 1 alongside `r21y0YzS="1"`/`"2"` rows for Party 2 and Party 3, same-unit distinct gear across Party 1 and Party 2 persists in `party.deck_loadouts` and `X07iYtp5` after reload, pre-existing Track A saves migrate without losing Party 1 gear, and `state_coherence_issues()` remains empty.
+
+#### Scenario: Mixed party types and failed save preserve valid updates and atomic invariants
+
+- Given an `Er92Kdhm` batch mixing a valid `xBi3L6yR="1"` row with an unsupported `xBi3L6yR` row, or an unowned item / simulated save `OSError`
+- When `UnitEquipRequest` executes under `ios-revival`
+- Then unsupported rows are logged without dropping the valid Normal Party row, while invalid/unowned items or persistence failures leave `player.data` and save bytes unchanged.

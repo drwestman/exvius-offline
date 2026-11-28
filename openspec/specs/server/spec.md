@@ -22,12 +22,13 @@ ledger identifies pending upstream capabilities; these selective ports SHALL NOT
 be represented as complete parity with d6e8858. In `ffbe_pipeline`, the iOS
 early resource-catalog projection (`project_revival_boot_early` via
 `revival_boot.project_for_reply`) is segregated as a read-only `spec` step from
-login/home receipt persistence (`synchronize_revival_boot` via
-`revival_boot.synchronize`); see `RecordNativeBootstrapAndCarryFacts` and
-`AdvertiseResourceCatalogEarlyForReturningDevices` in
-`openspec/specs/ios-server/spec.md`.
+boot steps (`project_revival_boot_early` / `synchronize_revival_boot`) and iOS Manage Party
+edit/equip persistence (`TS5Dx9aZ` / `pB3st6Tg` via `revival_party_commands.py`,
+`revival_party_projections.py`, and `revival_party_domain.py`); see
+`ManagePartyEditAndEquipPersistence`, `RecordNativeBootstrapAndCarryFacts`, and
+`AdvertiseResourceCatalogEarlyForReturningDevices` in `openspec/specs/ios-server/spec.md`.
 
-- **Implementation**: `reply_pipeline::source/server/ffbe_pipeline.py`, `sacrifice::source/server/exvius_actions.py`, `unit_class_up::source/server/exvius_actions.py`
+- **Implementation**: `reply_pipeline::source/server/ffbe_pipeline.py`, `sacrifice::source/server/exvius_actions.py`, `unit_class_up::source/server/exvius_actions.py`, `unit_equip::source/server/exvius_actions.py`, `apply_party_edit::source/server/ffbe_player.py`
 - **Implementation**: `project_for_reply::source/server/revival_boot.py`, `synchronize::source/server/revival_boot.py`, `build_early_version_rows::source/server/revival_boot.py`, `next_receipt_ledger::source/server/revival_boot.py`
 - **Implementation**: `_execute::source/server/exvius_gacha_select.py`, `_action::source/server/exvius_actions_shops.py`, `mission_update::source/server/exvius_actions_expedition.py`
 - **Implementation**: `begin_attempt::source/server/exvius_repeat.py`, `serve_unit_mix::source/server/ffbe_player.py`, `_handle::source/server/capture_server.py`
