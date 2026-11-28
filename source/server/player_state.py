@@ -2062,6 +2062,42 @@ def state_coherence_issues(data: dict) -> list[str]:
         iid = str(member.get("instance_id") or "")
         if iid in by_iid and int(by_iid[iid].get("storage_state", 0) or 0) != 0:
             issues.append(f"active deck {active} contains stored unit {iid}")
+    if "deck_loadouts" in party:
+        deck_loadouts = party.get("deck_loadouts")
+        if not isinstance(deck_loadouts, dict):
+            issues.append("party.deck_loadouts is not an object")
+        else:
+            known_items = _load_ndjson("F_EQUIP_ITEM_MST.ndjson", "J1YX9kmM")
+            for did, entries in deck_loadouts.items():
+                if str(did) not in deck_ids:
+                    issues.append(f"party.deck_loadouts references missing deck {did!r}")
+                    continue
+                if not isinstance(entries, dict):
+                    issues.append(f"party.deck_loadouts[{did!r}] is not an object")
+                    continue
+                for iid, loadout in entries.items():
+                    if str(iid) not in by_iid:
+                        issues.append(f"party.deck_loadouts[{did!r}] references non-roster instance {iid!r}")
+                        continue
+                    if not isinstance(loadout, dict):
+                        issues.append(f"party.deck_loadouts[{did!r}][{iid!r}] is not an object")
+                        continue
+                    for field in ("equipment", "shift_equipment"):
+                        gear = loadout.get(field)
+                        if gear is None:
+                            continue
+                        if not isinstance(gear, dict):
+                            issues.append(f"party.deck_loadouts[{did!r}][{iid!r}].{field} is not an object")
+                            continue
+                        for slot, item_id in gear.items():
+                            if str(slot) not in {"1", "2", "3", "4", "5", "6"}:
+                                issues.append(
+                                    f"party.deck_loadouts[{did!r}][{iid!r}].{field} has invalid slot {slot!r}"
+                                )
+                            if str(item_id) not in ("", "0") and known_items.get(str(item_id)) is None:
+                                issues.append(
+                                    f"party.deck_loadouts[{did!r}][{iid!r}].{field} equips unknown item {item_id}"
+                                )
 
     counts = data.get("counts") or {}
     expected_counts = {
@@ -2997,6 +3033,13 @@ class PlayerState:
             kept = [m for m in members if str(m.get("instance_id")) not in wanted]
             if len(kept) != len(members):
                 deck["members"] = kept
+        deck_loadouts = (self.data.get("party") or {}).get("deck_loadouts")
+        if isinstance(deck_loadouts, dict):
+            for entries in deck_loadouts.values():
+                if isinstance(entries, dict):
+                    for iid in list(entries):
+                        if str(iid) in wanted:
+                            entries.pop(iid, None)
         _refresh_derived_counts(self.data)
         self.dirty = True
         return removed
@@ -3177,6 +3220,9 @@ class PlayerState:
 
     def materia_rows(self) -> list:
         """GL9 UserMateriaInfoResponse mode 0: item ID followed by quantity."""
+        if current_profile().name == 'ios-revival' and 'deck_loadouts' in (self.data.get('party') or {}):
+            from revival_party_projections import reconcile_materia_counts
+            return reconcile_materia_counts(self)
         return [{"H5jBL0Vf": str(it['item_id']), "Qy5EvcK1": str(it['count'])}
                 for it in self._items()
                 if str(it.get('item_type')) == '22' and int(it.get('count', 0)) > 0]
@@ -3250,6 +3296,9 @@ class PlayerState:
         Token map (`readParam` `0x19244c4`, 2 tokens): `J1YX9kmM` = itemId, `Qy5EvcK1` = itemNum (>= 1; a
         zero would be read as a delete).
         """
+        if current_profile().name == 'ios-revival' and 'deck_loadouts' in (self.data.get('party') or {}):
+            from revival_party_projections import reconcile_equipped_counts
+            return reconcile_equipped_counts(self)
         counts: dict[str, int] = {}
         order: list[str] = []
         for u in self.data["roster"]:
@@ -5242,6 +5291,9 @@ class PlayerState:
             if favourites.get('pJ9Eo6cn'):
                 out['8QNSBeP9'] = [{'H5jBL0Vf': iid, 'zF6QIY2r': group}
                                    for iid, group in favourites['pJ9Eo6cn'].items()]
+        if current_profile().name == 'ios-revival':
+            from revival_party_projections import filter_reply_groups
+            return filter_reply_groups(reply_id, out, groups)
         if str(reply_id) == "mRPo5n2j":
             # UpdateSwitchInfoRequest only records switch flags, and the client sends it while the party
             # and equipment editors still hold unsaved changes (leaving Manage Party sends it right before
@@ -5335,51 +5387,91 @@ class PlayerState:
                 tags[2]: self._beast_deck_rows(party)}
 
     def _equip_rows(self, party=None) -> list:
+        if current_profile().name == 'ios-revival':
+            from revival_party_projections import project_equip_rows
+            return project_equip_rows(self, party=party)
+        return self._build_equip_rows(party=party)
+
+    def arena_equip_rows(self) -> list:
+        """Project single-row-per-unit equipment rows for Arena list 2 (``IqkX0gV1``)."""
+        return self._build_equip_rows()
+
+    @staticmethod
+    def _format_equip_row(unit: dict, saved: dict | None, deck_id, *, fallback_to_unit: bool = True) -> dict:
+        saved = saved or {}
+        src = (
+            (lambda key, default=None: saved.get(key, unit.get(key, default)))
+            if fallback_to_unit
+            else (lambda key, default=None: saved.get(key, default))
+        )
+        equip = src("equipment") or {}
+        has_shift = bool(src("shift_equipment") or src("shift_materia") or src("shift_vision_card"))
+        slots = "@".join(f"{slot}-{equip.get(str(slot), equip.get(slot, '0'))}"
+                         for slot in range(1, 7))
+        if has_shift:
+            shift = src("shift_equipment") or {}
+            slots += '|' + '@'.join(f"{n}-{shift.get(str(n), shift.get(n, '0'))}" for n in range(1, 7))
+        materia = src("materia") or []
+        mat = "@".join(f"{i + 1}-{materia[i] if i < len(materia) else '0'}"
+                       for i in range(unit_materia_slots(unit)))
+        if has_shift:
+            shift_materia = src("shift_materia") or []
+            mat += '|' + '@'.join(
+                f"{i + 1}-{shift_materia[i] if i < len(shift_materia) else '0'}"
+                for i in range(unit_materia_slots(unit, shifted=True)))
+        card = src("vision_card") or src("shift_vision_card") or '0-0'
+        if not str(card).startswith('0-'):
+            card = '0-' + str(card)
+        row = {"og2GHy49": str(unit["instance_id"]),
+               "r21y0YzS": str(deck_id),
+               "93Y6evuT": slots, "80NUYFMJ": mat,
+               "nQ1iAGf3": card}
+        has_skin = ('skin_id' in saved) or (fallback_to_unit and 'skin_id' in unit)
+        if has_skin:
+            row['2c8nqLrM'] = str(saved.get('skin_id', unit.get('skin_id')))
+        return row
+
+    def _build_equip_rows(self, party=None) -> list:
         party = self.data['party'] if party is None else party
-        rows = []
         # Normal equipment belongs to roster rows. Separate modes alone use
         # party overrides, including both Brave Shift forms.
         saved_loadouts = (party.get("loadouts") or {}) if party is not self.data['party'] else {}
-        for u in self.data["roster"]:
-            saved = saved_loadouts.get(str(u.get("instance_id"))) or {}
-            equip = saved.get("equipment", u.get("equipment")) or {}
-            has_shift = bool(saved.get('shift_equipment', u.get('shift_equipment')) or
-                             saved.get('shift_materia', u.get('shift_materia')) or
-                             saved.get('shift_vision_card', u.get('shift_vision_card')))
-            slots = "@".join(f"{slot}-{equip.get(str(slot), equip.get(slot, '0'))}"
-                             for slot in range(1, 7))
-            if has_shift:
-                shift = saved.get("shift_equipment", u.get('shift_equipment')) or {}
-                slots += '|' + '@'.join(f"{n}-{shift.get(str(n), shift.get(n, '0'))}" for n in range(1, 7))
-            materia = saved.get("materia", u.get("materia")) or []
-            mat = "@".join(f"{i + 1}-{materia[i] if i < len(materia) else '0'}"
-                           for i in range(unit_materia_slots(u)))
-            if has_shift:
-                shift_materia = saved.get("shift_materia", u.get('shift_materia')) or []
-                mat += '|' + '@'.join(
-                    f"{i + 1}-{shift_materia[i] if i < len(shift_materia) else '0'}"
-                    for i in range(unit_materia_slots(u, shifted=True)))
-            card = saved.get("vision_card", u.get('vision_card')) or \
-                saved.get("shift_vision_card", u.get('shift_vision_card')) or '0-0'
-            if not str(card).startswith('0-'):
-                card = '0-' + str(card)
-            rows.append({"og2GHy49": str(u["instance_id"]),
-                         "r21y0YzS": str(party["active_deck"]),
-                         "93Y6evuT": slots, "80NUYFMJ": mat,
-                         "nQ1iAGf3": card})
-            if 'skin_id' in u:
-                rows[-1]['2c8nqLrM'] = str(u['skin_id'])
-        return rows
+        return [
+            self._format_equip_row(
+                u,
+                saved_loadouts.get(str(u.get("instance_id"))) or {},
+                party["active_deck"],
+                fallback_to_unit=True,
+            )
+            for u in self.data["roster"]
+        ]
 
     def _deck_rows(self, party=None) -> list:
         party = self.data['party'] if party is None else party
+        is_ios_per_deck = (
+            party is self.data['party']
+            and current_profile().name == 'ios-revival'
+            and isinstance(party.get('deck_loadouts'), dict)
+        )
+        is_ios_special = (
+            party is not self.data['party']
+            and current_profile().name == 'ios-revival'
+        )
+        deck_loadouts = party.get('deck_loadouts') or {} if is_ios_per_deck else {}
+        special_loadouts = party.get('loadouts') or {} if is_ios_special else {}
         rows = []
+        roster = {str(u['instance_id']): u for u in self.data['roster']}
         for deck in party["decks"]:
             members = ",".join(f"{m['member_type']}:{m['disp_order']}:{m['instance_id']}"
                                for m in deck["members"])
-            roster = {str(u['instance_id']): u for u in self.data['roster']}
-            shift = ','.join(f"{m['instance_id']}:{int(roster.get(str(m['instance_id']), {}).get('brave_shift', 0))}"
-                             for m in deck['members'])
+            per_deck = (
+                (deck_loadouts.get(str(deck["id"])) or {})
+                if is_ios_per_deck
+                else special_loadouts
+            )
+            shift = ','.join(
+                f"{m['instance_id']}:{int(per_deck.get(str(m['instance_id']), {}).get('brave_shift', roster.get(str(m['instance_id']), {}).get('brave_shift', 0)))}"
+                for m in deck['members'])
             rows.append({"r21y0YzS": str(deck["id"]), "G4L0YIB2": deck["name"],
                          "2A6fYiEC": members, "w1JG7i9j": shift})
         return rows

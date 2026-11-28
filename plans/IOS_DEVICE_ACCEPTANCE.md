@@ -88,6 +88,7 @@ and DNS setup can be reused, but current gameplay reachability needs a fresh tes
 | Friends | List, companion selection and battle use passed on iPhone | User confirms the borrowed unit fights normally and the Chamber of Experience battle/rewards complete |
 | Arena | Expected story lock observed; gameplay deferred | Home button is dark/inert; its unlock comes from Grandshelt Castle – Throne Room, not yet cleared |
 | Artwork and taps | Vortex entry recovered on iPhone; Daybreak inner tiles unresolved | User confirms icons and Vortex recovered after the Home wait and relaunch. No code or generation change intervened; logs and OS fault support incomplete background masters. Experimental inner icons remain disabled. See the [investigation](../docs/reviews/2026-11-18-ios-vortex-crash.md) |
+| Manage Party (Party 2 equip) | Track A partial; Track B pending physical verification | Physical test after Track A confirmed Party 2 (`r21y0YzS="1"`) now saves and displays equipment, but Party 1 (`r21y0YzS="0"`) vanished in UI because `TJ9eL80N` stamped all rows with `active_deck="1"`; Track B per-deck `TJ9eL80N` + `party.deck_loadouts` implemented (`ADR-0019`). Re-test on iPhone after equipping Party 2 (`"1"`) and returning to Party 1 (`"0"`) across re-entry, restart, and battle |
 | Restart persistence | Passed on iPhone and saved | After clean server stop/start and fresh login, user confirms rank 3, 1,350 Lapis and Strago; saved settlement remains completed |
 
 The first-login relaunch comes from the pinned fork's play instructions: patched

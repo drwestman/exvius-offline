@@ -188,6 +188,27 @@ def _grant(rows, *, earned=False):
         State.player.dirty = True
 
 
+def _worn_equipment_and_materia():
+    from engine_profile import current_profile
+    party = State.player.data.get("party") or {}
+    if current_profile().name == 'ios-revival' and isinstance(party.get('deck_loadouts'), dict):
+        from revival_party_domain import worn_counts_for_sale
+        return worn_counts_for_sale(State.player.data)
+    worn_gear, worn_materia = Counter(), Counter()
+    for unit in State.player.data["roster"]:
+        normal = Counter(str(iid) for iid in (unit.get('equipment') or {}).values()
+                         if str(iid) not in ('', '0'))
+        shifted = Counter(str(iid) for iid in (unit.get('shift_equipment') or {}).values()
+                          if str(iid) not in ('', '0'))
+        worn_gear.update(normal | shifted)
+        normal_materia = Counter(str(iid) for iid in (unit.get('materia') or [])
+                                 if str(iid) not in ('', '0'))
+        shifted_materia = Counter(str(iid) for iid in (unit.get('shift_materia') or [])
+                                  if str(iid) not in ('', '0'))
+        worn_materia.update(normal_materia | shifted_materia)
+    return worn_gear, worn_materia
+
+
 def _pay(materials=(), gil=0):
     """Aggregate the entire batch before spending anything, including repeated costs."""
     totals = {}
@@ -197,18 +218,11 @@ def _pay(materials=(), gil=0):
         totals[kind, iid] = totals.get((kind, iid), 0) + row["count"]
     _require(State.player.currencies.get("gil", 0) >= gil, "insufficient gil")
     equipment = {r['J1YX9kmM']: int(r['Qy5EvcK1']) for r in State.player.equip_item_rows()}
-    worn = Counter()
-    for unit in State.player.data['roster']:
-        for kind, field in ((21, 'equipment'), (22, 'materia')):
-            def counts(name):
-                value = unit.get(name) or {}
-                return Counter(str(v) for v in (value.values() if isinstance(value, dict) else value)
-                               if str(v) not in ('', '0'))
-            for iid, count in (counts(field) | counts('shift_' + field)).items():
-                worn[kind, iid] += count
+    worn_gear, worn_materia = _worn_equipment_and_materia()
     for (kind, iid), count in totals.items():
         owned = equipment.get(iid, 0) if kind == 21 else State.player.item_count(kind, iid)
-        _require(owned - worn[kind, iid] >= count, "insufficient unequipped materials")
+        worn = worn_gear[iid] if kind == 21 else worn_materia[iid] if kind == 22 else 0
+        _require(owned - worn >= count, "insufficient unequipped materials")
     for (kind, iid), count in totals.items():
         if kind == 21:
             bag = State.player.data['inventory'].setdefault('equipment', [])
@@ -306,14 +320,7 @@ def item_sell(spec, req):
     _require(_int(node.get("97h4mIQo")) == price, "sale price mismatch")
     equipment = State.player.data.get("inventory", {}).get("equipment", [])
     owned = {r["J1YX9kmM"]: int(r["Qy5EvcK1"]) for r in State.player.equip_item_rows()}
-    worn, worn_materia = Counter(), Counter()
-    for unit in State.player.data["roster"]:
-        normal = Counter(str(iid) for iid in (unit.get('equipment') or {}).values())
-        shifted = Counter(str(iid) for iid in (unit.get('shift_equipment') or {}).values())
-        worn.update(normal | shifted)
-        normal_materia = Counter(map(str, unit.get('materia') or []))
-        shifted_materia = Counter(map(str, unit.get('shift_materia') or []))
-        worn_materia.update(normal_materia | shifted_materia)
+    worn, worn_materia = _worn_equipment_and_materia()
     for (kind, iid), count in totals.items():
         available = (owned.get(iid, 0) - worn.get(iid, 0) if kind == 21
                      else State.player.item_count(kind, iid) - (worn_materia[iid] if kind == 22 else 0))

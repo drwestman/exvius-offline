@@ -151,7 +151,7 @@ def _entry_reply(spec, arena, rows, candidates):
     from exvius_arena import _versus
     out.update(_versus(arena, 2 if arena.get('active') else 0))
     out['H54XvPis'] = copy.deepcopy(arena['groups'])
-    out['IqkX0gV1'] = State.player._equip_rows()
+    out['IqkX0gV1'] = State.player.arena_equip_rows()
     pieces = _mst('F_RB_TRADE_BOARD_PIECE_MST.ndjson', 'AyCR5h7s')
     projected = _board_reply({}, arena, pieces)
     for tag in ('2pJ8F0SK', 'ki9hJ5vq'):

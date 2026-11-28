@@ -148,7 +148,7 @@ def _reply(spec, model, state=0):
     out['H54XvPis'] = copy.deepcopy(model['groups'])
     # GL's Arena temporarily selects equipment list 2. Its native clear-and-add
     # response tag is IqkX0gV1 (factory 0x1918ae4), separate from normal list 1.
-    out['IqkX0gV1'] = State.player._equip_rows()
+    out['IqkX0gV1'] = State.player.arena_equip_rows()
     return out
 
 

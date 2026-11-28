@@ -194,6 +194,10 @@ def _parse_rewards(text):
 
 
 def unit_equip(spec, req):
+    from engine_profile import current_profile
+    if current_profile().name == 'ios-revival':
+        from revival_party_commands import handle_unit_equip
+        return handle_unit_equip(spec, req)
     from exvius_actions_expedition import _retain_owned_equipment, _wire_loadouts
 
     player = State.player

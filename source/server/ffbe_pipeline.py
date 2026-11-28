@@ -515,6 +515,8 @@ PIPELINE_EDGES: tuple = (
          "precede the projection"),
     Edge("apply_orb_recharge", "save_state", "State.player.orbs",
          "the filled bar and the spent lapis have to survive the restart that ends the run"),
+    Edge("apply_party_edit", "apply_to_reply", "State.player.party", "party deck and active-deck edits precede player-group projection"),
+    Edge("serve_actions", "apply_to_reply", "State.player", "unit equipment and action mutations precede player-group projection"),
     Edge("serve_beast_board", "save_state", "State.player.beasts",
          "the learned bits and the spent CP have to survive the restart that ends the run, or the board "
          "silently reverts to what we served before the tap"),
@@ -590,7 +592,8 @@ def reply_pipeline(spec, reply_id: str, plaintext: str | None, mid: str | None,
             return None  # Same empty-content contract as an unavailable local battle.
     ctx = _Ctx(spec, reply_id, plaintext, mid, spec_key)
     roster_command = (str(reply_id) in ({'UiSC9y8R', 'zf49XKg8', '7tWdn9zH', 'x94MnujU',
-        'Pf5C8xjJ', 'V8GtMQ2q', 'xio14KrL', 'bgast6dR', 'UM7hA0Zd', 'j5JHKq6S', 'G1hQM8Dr', 'jnw49dUq'}
+        'Pf5C8xjJ', 'V8GtMQ2q', 'xio14KrL', 'bgast6dR', 'UM7hA0Zd', 'j5JHKq6S', 'G1hQM8Dr', 'jnw49dUq',
+        'TS5Dx9aZ', 'pB3st6Tg'}
         | __import__('revival_carry').ENDS)
         and st.STATE_PERSIST and State.player is not None and State.player.mode == 'live')
     if (current_profile().replay is not None and
